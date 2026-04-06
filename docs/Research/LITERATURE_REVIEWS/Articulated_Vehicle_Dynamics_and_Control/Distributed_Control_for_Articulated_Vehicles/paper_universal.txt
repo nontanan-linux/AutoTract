@@ -1,0 +1,1499 @@
+3748
+
+IEEE TRANSACTIONS ON VEHICULAR TECHNOLOGY, VOL. 69, NO. 4, APRIL 2020
+
+A Universal and Reconfigurable Stability Control
+Methodology for Articulated Vehicles
+With Any Configurations
+Yubiao Zhang , Amir Khajepour , and Mansour Ataei
+
+Abstract—To meet with many different transportation needs,
+it comes in a rich diversity and variety of articulated vehicles.
+Vehicle combinations are seen in different axle configurations,
+number of articulations, powertrain, active actuation systems, etc.
+This research is, therefore, motivated to develop a model-based
+control system in a universal and reconfigurable fashion to any
+articulated vehicles stability control. To achieve its universality
+and reconfigurability, we introduce a hierarchical (two-layer) control system. Namely, the high layer formulates a model predictive
+control (MPC) tracking problem to generate corrective Center of
+Gravity (C.G.) forces/moment. The lower-level controller is formulated as Control Allocation (CA) algorithm to regulate steering
+or torque (brake) at each wheel optimally and reconfigurable as
+to meet high-level calculations. Real-time constraints, i.e. actuator
+limits, tire capacity, and actuator failure are discussed. Diverse
+applications are presented that the universal and reconfigurable
+methodology is handy, capable and effective on stability control
+while applying to various vehicle configurations and objectives.
+Index Terms—Articulated vehicles, control allocation,
+integrated vehicle stability, model predictive control, universal
+and reconfigurable control.
+
+transported with just one driver. In a public transport system,
+buses have been playing a significant role with their advantageous features in carrying capacity, transport productivity and
+reduction of transport costs [3]. Buses have more than two axles
+usually three (known as a tri-axle bus). Extra axles are usually
+added for legal weight restriction reasons, or usually we can see
+using articulation to implement trailer buses.
+The popularity of such vehicles, however, garnered increased
+public attention to safety problems. Annually, approximately
+500,000 accidents involving trucks or buses occur in U.S. Of
+the approximately 415,000 crashes involving large trucks in
+2016, there were 4440 fatal crashes and estimated 119,000
+injury crashes [4], [5]. Worse yet, the majority of accidents
+with heavy trucks involved are trucks against passenger cars,
+where the severity is much worse for the passenger car due to its
+vulnerability. Nevertheless, nowadays, only a minority of these
+commercial vehicles are equipped with stability control systems.
+B. Diversity, Challenges and Attempts
+
+I. INTRODUCTION
+N ORDER to transport a larger volume of freights or passengers via a relatively fixed infrastructure, one way to increase
+transportation efficiency is to employ longer vehicles with more
+axles or multiple articulated units [1], [2]. These vehicles are
+used most often in trucks, tractor-trailers, coaches/uses, and less
+frequently on passenger cars.
+
+I
+
+A. Background
+Articulated multi-axle vehicles, e.g., trucks, are the main
+transportation means of goods all around the world. More than
+80% of inland freight volume is transported by road vehicles
+today. Each year, road transport carries 6,000 billion tonnekilometres of goods in the EU, USA, CIS, China, and Japan
+alone. In the concept of ‘bigger is better,’ the bigger the vehicle
+within a practical limitation, the more payload that can be
+Manuscript received February 26, 2019; revised November 1, 2019; accepted
+February 5, 2020. Date of publication February 11, 2020; date of current version
+April 16, 2020. The review of this article was coordinated by Dr. A. Heydari.
+(Corresponding author: Yubiao Zhang.)
+The authors are with the Department of Mechanical and Mechatronics Engineering, University of Waterloo, Waterloo, ON N2L 3G1, Canada (e-mail:
+gary.zhang@uwaterloo.ca; a.khajepour@uwaterloo.ca; mataei@uwaterloo.ca).
+Digital Object Identifier 10.1109/TVT.2020.2973082
+
+Articulated vehicles differ from the passenger car quite a lot
+and it makes a big challenge for dynamics controls. One of them
+is to design a controller that applies to diverse configurations
+of these vehicles. Distinctive configurations might be seen in
+several dimensions. 1) Axle/articulation configuration. To meet
+many different transportation purposes, a wide range of combinations exists. There are vehicles with one unit of multiple axles
+or multiple articulated units where each unit could be different.
+2) Powertrain/steering configuration. The powertrain of a vehicle describes the main components that in which way it generates
+power and how it delivers to the road surface. Depending on the
+needs, there are various drive modes and steer modes, seen in [6].
+3) Active actuators configuration. Active actuators determine the
+active control strategy in lower level implementation. Common
+actuators are: a) active torque differential, including torque
+vectoring and differential braking [7], [8]. b) active steering
+systems [9]–[11]; c) (semi)active suspension systems, including
+anti-roll bar [12]–[14]; Considering attributes such as physical
+complexity and cost, active actuators configurations vary from
+vehicle to vehicle.
+Another challenge comes from the complex dynamics characteristics. Multi-axle vehicles are usually characterized by a
+high wheelbase to track ratio, a high center of gravity (CG), and
+uneven weight distribution between axles, prone to instability or
+
+0018-9545 © 2020 IEEE. Personal use is permitted, but republication/redistribution requires IEEE permission.
+See https://www.ieee.org/publications/rights/index.html for more information.
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 02:39:42 UTC from IEEE Xplore. Restrictions apply.
+
+ZHANG et al.: UNIVERSAL AND RECONFIGURABLE STABILITY CONTROL METHODOLOGY
+
+even roll over. Especially, the existence of articulation makes it
+complex while developing the dynamics modeling and control
+system. Compared to passenger cars, more control objectives
+come up, for instance, trailer sway, jackknife, off-tracking,
+rearward amplification. These objectives have to be prioritized
+considering the vehicle characteristics and application context.
+An ideal controller should be inclusive yet reconfigurable and
+selective to these stability objectives.
+Although most work focus on two-axle vehicles, the state of
+the art for control strategies/concepts in literature inspire us go
+further. In [15], it well reviewed Integrated Vehicle Dynamics
+Control (IVDC) architectures, that are differentiated as centralized, supervisory, hierarchical, and coordinated control. Among
+them, research in integrated vehicle dynamics control( [8], [16]),
+and reconfigurable control using optimal control techniques
+([17], [18]) are very active. For instance, [16] proposed unified
+chassis control(UCC) strategy for improving agility, maneuverability, and vehicle lateral stability by the integration of active
+steering and differential braking. A coordinated and reconfigurable vehicle dynamics control system in [17] is presented by
+high-level sliding mode control to achieve generalize forces,
+and distributed to the slip and slip angle of each tire by control
+allocation (CA)in a lower-level controller. In [18], a Holistic
+Corner Control (HCC) strategy is introduced, in which provides
+real-time vehicle stability control while minimizing tire forces
+and control efforts by formulating a quadratic programming
+optimization. More extended works in in [19] proposed a reconfigurable modelling and control approach that applied to an
+SUV with different types and combinations of control actuation.
+C. Contributions and Novelties
+Under the challenges of configuration diversity, multiple objectives, and actuation redundancy in articulated vehicles, the
+main contribution as well as the core goal of this paper is to
+develop a universal and reconfigurable methodology that could
+apply to any configurations of these vehicles for dynamics
+control. The reconfigurable modeling and control framework
+has been introduced and effectively applied to any multi-axle
+(non-articulated) vehicles, reported in [20], [21], nevertheless
+articulated vehicles are excluded. Differentiating from the previous work, this framework introduced an extended modeling
+process, a newly designed controller and very different vehicle
+cases study in application part. Leveraging this methodology,
+there is no need to reformulate the control problem when a new
+vehicle with new configurations comes. One could just set the
+defined ‘Boolean Matrix’ values based on vehicle configuration
+and do the minor tuning, a new and ad-hoc controller will be
+formulated. It is hoped that this methodology will provide a
+new perspective on articulated vehicle dynamics control and aid
+us all in implementing many different active systems.
+The paper is structured as follows. Section II briefly describes
+the framework of reconfigurable modeling which serves for
+model-based controller design. Section III outlines the potential
+control objectives in yaw and roll planes. Section IV formulates
+the reconfigurable controller from prediction model to high-level
+and lower-level schemes, and discusses real-time constraints.
+
+Fig. 1.
+
+3749
+
+From a single unit to articulated multi-unit vehicle.
+
+Section V comes to four cases with different configurations
+of axle, powertrain, active actuator and different emphasis on
+control purposes. Section VI concludes the paper along with
+recommendations and future work.
+II. DYNAMICS AND CONTROL-ORIENTED MODELING
+A. Philosophy of Reconfigurable Modeling
+The reconfigurable modeling to any vehicles is originally
+elaborated in [20], where details, e.g. derivation process and
+symbols/nomenclature are well explained. It should be mentioned that vehicle unit configured with 2 to 4 axles are only
+reported there for the sake of demonstrating simplicity. It finalizes ‘One Formulation’ that units any multi-axle vehicles, no
+matter it is articulated or not. For the convenience of developing
+the controller, the modeling process is briefly introduced here.
+In the modeling process, the vehicle dynamics is firstly derived from the tire forces to corner forces. Next, all the forces of
+the tires are equalized to the CG of the vehicle, which will result
+in CG forces/moment. At last, treating the body as a point mass,
+the desired dynamics equations are formulated. We novelly
+defined ‘Actuator Boolean Matrix’ to determine the availability
+(or configuration) of the active actuation and ‘Axle Boolean
+Matrix,’ the availability (or configuration) of axles, namely, the
+axle’s quantity. How are articulated multi-unit vehicles then
+modeled? The benefits of ‘reconfigurable modeling process of a
+single vehicle unit’ is taken. In Fig. 1, the vehicle is articulated
+with two arbitrary units by a physical articulation. Following
+this intuition, the model can be formulated as a two vehicle
+units dynamics modeling developed, along with corresponding
+dynamics/kinematic constraints at articulation point. The ‘Articulation Boolean Matrix’ is defined to judge the availability of
+the articulation, namely, the vehicle is articulated or not.
+B. A Single Unit Vehicle
+To establish the modeling formulation of articulated vehicles,
+we start from the reconfigurable modeling of a single unit
+vehicle. Neglecting the effect of camber angles, it is assumed the
+vehicle equips with two basic actuators at each corner, which are
+driving/braking and steering. The relationship of corner forces
+and local(tire) forces including the actuator configuration is
+expressed as matrix form,
+Fc = Lw (f + Tw Δf ) , ∈ R16×1
+
+(1)
+
+where we defined corner force vector Fc is the result of the
+normalized tire force vector f /Δf with respect to x and y axis.
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 02:39:42 UTC from IEEE Xplore. Restrictions apply.
+
+3750
+
+IEEE TRANSACTIONS ON VEHICULAR TECHNOLOGY, VOL. 69, NO. 4, APRIL 2020
+
+Vector f includes each tire’s longitudianal and lateral force while
+Δf suggests the augmenting forces on the local forces applied
+by the active controller. Lw is the mapping matrix. Tw is defined
+as the ‘Actuator Boolean Matrix,’ where configures the active
+actuators. Concretely, this matrix is changeable based upon
+what actuation system the vehicle has, for example, differential
+braking or active steering [20].
+To map each wheel’s corner forces to CG location, the total
+longitudinal force, total lateral force and total moment at CG are
+expressed as,
+FCG = Lc Tc Fc , ∈ R3×1
+
+(2)
+
+where Lc is the mapping matrix from corner forces to CG forces.
+As a result, the force vector at CG (x-y plane) is defined that
+FCG = [Fx Fy Mz ]T , wherein Fx is the total CG longitudinal
+force; Fy , the total CG lateral force; Mz , the total CG yaw
+moment;. Tc is defined as the ‘Axle Boolean Matrix,’ which
+determines the availability of axles, i.e. how many axles the
+vehicle has.
+Coupling 4 degree-of-freedom, i.e., the longitudinal, lateral,
+yaw, and roll motion, the linearized vehicle motion can be
+described as a state space form with the input of CG forces [20],
+ẋ = Ax + BFCG
+
+(3)
+
+where the state x = [vx vy r φ φ̇]T that represents the
+longtidunal speed (vx ), lateral speed (vy ), yaw rate(r), and roll
+angle/ roll rate (φ/φ̇).
+In this research, the brush tire model is used to calculate the
+lateral tire force. For the computation’s sake, it is linearized
+at the slip angle operating point considering the vertical load
+and road condition [22], [23]. Given a nonlinear explicit tire
+model, we take the zeroth and first-order terms of its Taylor
+expansion to achieve an affine model. The longitudinal tire force
+is proportional to the wheel torque assuming small slip ratios.
+From the single-track model, the tire slip angles can be expressed
+as vehicle state x and steering angle. Given vehicle state x,
+driver input vector w, i.e torque and steering inputs, and active
+controller input u, we write the linearized tire (local) forces in
+matrix form,
+f = Atire x + B tire w + dtire
+
+(4)
+
+Δf = B tire u
+
+(5)
+
+where the inputs vector are defined as:
+
+T
+
+w = w1T w2T · · · w8T , wi = Qi
+
+u = uT
+1
+
+uT
+2
+
+···
+
+uT
+8
+
+T
+
+
+, ui = ΔQi
+
+δi
+
+T
+
+Δδi
+
+;
+
+T
+
+.
+
+Symbol Q/δ denotes torque (driving or braking) and steering
+angle.
+Combining the derived formulation of tires forces and vehicle
+dynamics in (1)-(5), the whole vehicle model yields the following expression as a standard state-space form in a continuous
+time,
+ẋ = Ac x + Bc v + Gc w + dc
+
+(6)
+
+Fig. 2.
+
+Separated units of an articulated vehicle.
+
+T
+
+where v = ΔFx ΔFy ΔMz is the virtual corrective CG
+forces to be calculated from the high-level controller. We name
+(6) as the ‘reconfigurable vehicle model.’ Given any multi-axle
+vehicles (one-unit), there is no need to start over again to model
+for every vehicle. It is readily achieved by easily configuring the
+‘Axle Boolean Matrix Tc ’ and ‘Actuator Boolean Matrix Tw .’
+C. Articulated Multi-Unit Vehicles
+Articulated vehicles dynamics is complex due to the coupled constraints at articulation. Many tried to model it directly
+through differential equations and complex transformations and
+items elimination. Our idea is simple and straightforward. Intuitively, the dynamics of articulated vehicles(one articulation)
+is ‘dynamics of two separate units + constraints at hitch point.’
+Following the idea, now the modeling is moving from a single
+vehicle unit to articulated vehicle. Taking the tractor-trailer in
+Fig. 2 as an example, the articulated vehicle has 6 DoFs, where
+the tractor unit has the freedom to go forward, side-slip, yaw,
+and roll, while the trailer has the freedom to yaw relative to the
+tractor and to roll.
+Tractor/Trailer Dynamics: Following the same method of
+linearization on one unit dynamics formulation (3), we separate
+two units and express as,
+n
++ C n Fhn ; (n = t, i)
+ẋn = An xn + B n FCG
+
+(7)
+
+where parameters or variables with superscript t denotes to the
+tractor, and i to the trailer. The only difference shown here is the
+force term C n Fhn due to the existence of the articulation, Fht /Fhi
+denotes the hitch force vector with respect to the tractor/trailer
+while decoupling two units.
+Articulation Constraints: Two groups of constraints are suggested at articulation point. The kinematic constraint, namely,
+the velocities (vxi , vyi ) at the CG of the trailer can be written with
+respect to the velocities at the CG of the tractor (vxt , vyt ) and the
+articulation angle (λ),
+vxi = vxt cos λ + (v t − lht rt ) sin λ
+
+(8)
+
+vyi = −vxt sin λ + (vyt − lht rt ) cos λ − lhi ri
+
+(9)
+
+where lht /lhi is the distance between the articulation point and
+the CG of the tractor/trailer.
+The dynamics constraint, namely, the relationship of the longitudinal and lateral force between the tractor and trailer at the
+articulation is written as,
+t
+i
+i
+= −Fx,h
+cos λ − Fy,h
+sin λ
+Fx,h
+
+(10)
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 02:39:42 UTC from IEEE Xplore. Restrictions apply.
+
+ZHANG et al.: UNIVERSAL AND RECONFIGURABLE STABILITY CONTROL METHODOLOGY
+
+TABLE I
+THE RULE OF ARTICULATED VEHICLES MODEL
+
+t
+i
+i
+Fy,h
+= Fx,h
+sin λ − Fy,h
+cos λ
+
+(11)
+
+t
+And the interaction yaw moment (Mz,h
+) and roll moment
+t
+(Mx,h ) at articulation yield,
+t
+i
+= −Mz,h
+= Kλ λ + Cλ λ̇
+Mz,h
+
+(12)
+
+t
+i
+= −Mx,h
+= Kt,i (φt − φi )
+Mx,h
+
+(13)
+
+t,i
+t,i
+where Kλ,h
+and Cλ,h
+are the articulation angle stiffness coeffit,i
+cient and damping coefficient,and Kφ,h
+is the roll stiffness of
+articulation point to calculate the roll moment due to the roll
+angle difference between two units.
+Model Finalization: The constraints of the moment at articulation point and kinematic relationships are as demonstrated
+from (8) to (13). By summarizing above equations, the matrix
+form with the equality constraints of the articulated vehicle is
+written as,
+
+s.s form. ẋ = Ax + BFCG + Tε (CFH )
+2 units
+
+t
+FH
+= Lt−i FH i
+v i = vxt cos λ + (v t − lht rt ) sin λ
+s. t. xi
+vy = −vxt sin λ + (vyt − lht rt ) cos λ − lhi ri
+λ̇ = ri − rt
+
+desired rollover index. Readers can find the detailed derivation in
+listed literature. Although not studied in this paper, longitudinal
+dynamics is included in the modelling. Desired longitudinal
+speed is set by the driver or active controller, for instance,
+in adaptive cruise control/emergency braking control. Vehicle
+lateral speed (or slip angle) is unavoidable in cornering. The
+controller only articulates the lateral speed while large body slip
+occurs [24]. Desired lateral speed (vyd ) is hence defined as a
+envelop control, which reduces frequent control activation and
+energy consumption. The desired yaw rate (rd ) is obtained from
+interpreting the driver’s intention. [20] reports how to derive the
+desired yaw rate for multi-axle vehicles. Rollover index (RI) is a
+common coefficient that reflects the vehicle lateral load transfer.
+In this research, un-tripped rollover is considered and a general
+RI is used for vehicle rollover control [25]. Alternatively, [26],
+[27] proposed the zero-moment point (ZMP) based on a simplified kinematic model of the vehicle while conventional approaches require tyre forces measurement/estimation. The ZMP
+is analyzed and validated across several vehicle configurations
+and this would be beneficial when limited sensors are equipped
+in the vehicle. Similar to lateral stability, the desired rollover
+index (RId ) is only tracked when exceeding a defined threshold
+(RImax ) [28].
+Generally, for articulated 2-unit vehicles (tractor-trailer), we
+control the articulation angle instead of the trailer yaw rate, to
+prevent instability such as trailer sway and jackknife. The desired
+articulation angle is developed by considering the steady-state
+handling behavior [29]. By referring to the articulation angle
+gain with respect to the front steer angle, it is achieved as,
+
+(14)
+
+where,
+ 
+
+
+
+
+xt
+At
+Bt
+0(5×5)
+0(5×5)
+x = i ,A =
+,B =
+,
+x
+0(5×5)
+Ai
+0(5×5)
+Bi
+
+
+
+
+
+
+FCG t
+FH t
+Ct
+0(5×3)
+FCG =
+,C =
+, FH =
+,
+FCG i
+0(5×3)
+Ct
+FH i
+Tε is defined as ‘Articulation Boolean Matrix’ in Table I to
+determine the availability of the articulation, i.e whether the
+vehicle is articulated or not. Note that, by following the modeling
+approach, we could readily extend the one-articulation vehicle
+to any number of articulations vehicles. Each unit of the vehicle
+is allowed to allocate any axles, and each axle is allowed to
+steer or drive/brake independently. Readers can find the work of
+extension to any articulated n-unit vehicles in [20].
+III. STABILITY CONTROL OBJECTIVES
+Vehicle stability references (or desired states) are well studied
+from vehicle fundamental dynamics, which are not repeated
+here. As the control-oriented model includes 4 DoF of each
+unit, the desired vehicle response consists of the desired longitudinal speed, desired yaw rate, desired lateral speed, and
+
+3751
+
+λd =
+
+i
+v2
+(Li + lht ) + Kus
+δ
+t
+t
+2
+L + Kus v
+
+(15)
+
+t
+is the understeer coefficient of the tractor unit while
+where Kus
+i
+Kus , that of the trailer unit. Lt /Li is tractor/trailer wheelbase.
+To make sure both units are directional stable, both units are
+t
+i
+and Kus
+are designed to be very
+designed to be understeer. Kus
+small positive. They are calculated by the axle cornering stiffness
+and its weight distribution.
+
+IV. UNIVERSAL CONTROLLER DESIGN
+To achieve the universality, reconfigurability, and integratability of the controller, a two-layer control structure was developed,
+illustrated in Fig. 3, It could apply to any multi-axle vehicles
+with any control objectives in yaw and roll dynamics plane.
+However, depending on a specific application, part of the CG
+corrective forces, e.g. only the CG corrective yaw moment, and
+selected objectives may be adopted. The objective of control
+strategy falls into two layers: At each time step, the high-level
+controller is to ensure the vehicle follows the state references,
+and guarantees stability and safety by solving the following MPC
+problem:
+min tracking error + CG corrections + oscillation
+s.t.
+
+vehicle dynamics model
+input boundary
+feasibility and stability
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 02:39:42 UTC from IEEE Xplore. Restrictions apply.
+
+3752
+
+Fig. 3.
+
+IEEE TRANSACTIONS ON VEHICULAR TECHNOLOGY, VOL. 69, NO. 4, APRIL 2020
+
+A complete structure of controller.
+
+Once the optimal CG corrections are computed, lower level
+controller allocates the wheel steering, drive/braking torque
+optimal by solving the following control allocation problem:
+min
+
+mapping error + control eﬀorts
+
+s.t.
+
+input boundary
+
+Basically, the proposed controller framework consists of
+four parts, namely, the reference model module, high-level
+controller, lower-level controller, and real-time constraints,
+whereas the estimation module is out of the paper’s scope.
+The driver’s steering and drive/brake torque commands are
+passed to the vehicle. Based on that, the desired dynamics
+states (yd ) are calculated together with other information. The
+high-level controller uses a MPC algorithm to optimal corrective CG forces (ΔFx , ΔFy , ΔMz ) of each unit by minimizing the errors between the reference sequences and sequences predicted in the control horizon using current state
+and driver inputs. These control inputs are virtual but universal
+to any vehicles. Now feeding into the lower-level controller,
+the augmented torque or braking (ΔQ1 , ΔQ2 , . . . , ΔQi ) or/and
+steering (Δδ1 , Δδ2 , . . . , Δδi ) are optimally distributed by solving a constrained quadratic problem at each time step. Real
+time constraints bound the final control inputs to violate not,
+such as actuator limits, tire capacity. Not only, the lowerlevel control allocation provides optimal control actions, but
+also gives freedom and reconfigurability for different actuation
+systems.
+A. Prediction Model
+The prediction model’s accuracy and complexity have a critical impact on the closed-loop optimization, i.e. computational
+cost and performance. The accuracy of this paper is guaranteed
+using the nonlinear tire model meanwhile complexity is considered by linearizing the body dynamics and tire operating point.
+Regarding non-articulated vehicles, the prediction model is explicitly given in (6). But the final model of articulated vehicles is
+formulated in an indirect manner (14), which has difficulties to
+
+serve as a standard prediction model. A reformation is therefore
+introduced.
+For a further simplification, assuming the articulation angle
+λ is small, the kinematic relationships and force constraints of
+the articulation point is linearized to rewrite (14) as,
+s.s form.
+
+ẋ = Ax + BFCG + CFH
+
+s.t.
+
+M(2×10) ẋ = P(2×10) x
+N(6×8) FH = Q(6×10)
+
+2 units
+
+(16)
+
+where,
+
+
+1
+M(2×10) =
+0
+
+0
+and P(2×10) =
+0
+
+0
+1
+
+0
+−lht
+
+0
+0
+
+0
+0
+
+−1 0
+0 −1
+
+0
+−lhi
+
+0
+0
+
+0
+−vxt
+
+0
+0
+
+0
+0
+
+0
+0
+
+0
+0
+
+0
+0
+
+0
+vxt
+
+
+0 0
+,
+0 0
+
+0
+.
+0
+
+In the matrix N(6×8) , elements N1,1 , N1,5 , N2,2 , N2,5 , N3,3 ,
+N3,7 , N4,4 , N4,8 , N5,4 , N6,8 are equal to 1 and the rests are zeros.
+In the matrix Q(6×10) , elements Q6,5 and Q6,10 equal to −Kt−i
+t
+and Kt−i , respectively, and the rests are zeros. FH = [Fx,h
+t
+t
+t
+i
+i
+i
+i
+T
+Fy,h Mz,h Mx,h Fx,h Fy,h Mz,h Mx,h ]
+represents
+the forces at the hitch point. The first constraint in (16) means
+there are two independent linear algebraic equations in terms
+of ẋ and x while the second one means six independent linear
+algebraic equations in terms of FH t and FH i . Multiply M to
+both sides of ( 16), it gives,
+M ẋ = M Ax + M BFCG + M CFH
+
+(17)
+
+Combining ( 17) with the constraint M ẋ = P x, by taking the
+right-hand side of both equation, it gives,
+M Ax + M BFCG + M CFH = P x
+⇒ M CFH = (P − M A)x − M BFCG
+
+(18)
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 02:39:42 UTC from IEEE Xplore. Restrictions apply.
+
+ZHANG et al.: UNIVERSAL AND RECONFIGURABLE STABILITY CONTROL METHODOLOGY
+
+Next, integrating the constraint N(6×8) FH = Q(6×10) in one
+matrix operation form, it gives,
+
+
+
+
+(N6×8)
+Q(6×10) x
+FH =
+(M C)(2×8)
+((P − M A)x − M BFCG )(2×1)
+(19)
+To achieve a form that connects the FH and state variables x
+and FCG , here a trick of matrix transform is used, it holds that,
+ 
+
+
+Q(6×10) x
+Q(6×10)
+=
+x
+((P − M A)x − M BFCG )(2×1)
+(P − M A)
+
+
+0(6×6)
+−
+FCG (20)
+MB
+Since the matrix associated with FH holds full rank, FH can be
+expressed in terms of x and FCG ,
+−1 
+
+
+N(6×8)
+Q(6×10)
+FH =
+x
+(M C)(2×8)
+(P − M A)
+
+
+
+
+
+
+J
+
+N(6×8)
+−
+(M C)(2×8)
+
+
+J
+
+−1 
+
+K1
+
+
+0(6×6)
+FCG
+MB
+ 
+
+(21)
+
+K2
+
+Substituting it back to ( 16), the state-space formulations
+becomes,
+ẋ = Ax + BFCG + C(JK1 x − JK2 FCG )
+⇒ ẋ = (A + CJK1 )x + (B − CJK2 )FCG
+T
+
+(22)
+
+T
+
+t
+i
+FCG
+]T . Applying the same procedure
+where FCG = [FCG
+where FCG is derived from a single vehicle unit, FCG can
+be expressed in terms of tire model along with vehicle states
+and driver inputs. Eventually, it will achieve the full model
+configuration similar with (6).
+
+B. High-Level MPC
+The high-level MPC is designed to compute the corrective CG
+forces for stability’s sake. MPC naturally handles multivariable
+systems without additional design complexity, thus simplifying
+the controller development with multivariables. Furthermore,
+states and actuator constraints are easily formulated into the
+optimization problem. Desired references of the lateral speed,
+the yaw rate, and articulation angle and the rollover index are
+generated and updated from the reference module,
+yd = vxt d vyt d rdt RIdt λd RIdi
+
+T
+
+(23)
+
+Note that, (23) is the full state of a two-unit vehicle. When it
+comes to real implementation, the reference vector and prediction model are simplified as to meet the desired objectives. For
+instance, a yaw-plane dynamics control for tractor-trailer gives
+yd = [vyt d rdt λd ]T . In an MPC scheme, the model of the plant
+is used to predict the future evolution of the system, and the
+controller action sequence is achieved by repeatedly solving
+
+3753
+
+finite time optimal control problems in a receding horizon
+fashion [30]. The optimization is formulated as a constrained
+quadratic program.
+The linear-time-varying(LTV) model is discretized using the
+Euler method (Zero Order Holder) with sampling period Ts ,
+x(k + 1) = Ad x(k) + Bd v(k) + Gd w(k) + dd (k)
+y(k) = Cd x(k)
+
+(24)
+(25)
+
+where
+the
+current
+control
+vector
+v(k) =
+[ΔFxt ΔFyt ΔMzt ΔFxi ΔFyi ΔMzi ]T . y(k) is the defined
+output used to track references. We define the cost function in
+a finte horizon Np as,
+Np −1
+
+Np
+2
+
+vt+k,t 2R
+
+yt+k,t − yd t+k,t Q +
+
+J(x(t), Vt ) =
+k=1
+
+k=0
+
++ vt+k,t − vt+k−1,t 2S
+
+(26)
+
+where Vt = [vt,t , · · · vt+Np −1,t ]T ∈ R6Np ×1 , represents the
+optimization sequence at time t. Index t + k, t denotes the
+predicted value at k steps ahead of the current time t. The
+first term in (26) is the tracking error of the references. The
+second term is the prospective CG forces and minimizes the
+control efforts. The third term is optional and enforces proximity
+to the previous step to prevent oscillation in control actions.
+The positive semi-definite Q, R and S are weighting matrices
+that reflect the importance of these terms in the cost function.
+Alghouth not the focus of this paper, it is worthy to mention
+here, regarding vehicle stability objectives, they can be prioritized by regulating the corresponding weights of Q. Generally,
+priority from high to lower should be, rollover prevention >
+anti-excessive sideslip>yaw rate tracking. By making certain
+rules, one could achieve the objective prioritization [31]. At
+each time step the following finite horizon (Np ) optimal control
+problem is solved on-line,
+min
+
+J(x(t), Vt )
+
+s.t.
+
+x(k + 1) = Ad x(k) + Bd v(k) + Gd w(k) + dd (k)
+y(k) = Cd x(k)
+ymin ≤ yk,t ≤ ymax
+vmin ≤ vk,t ≤ vmax
+vk,t = vk−1,t + Δvk,t
+
+Vt
+
+yt+Np −1,t − yd t+Np −1,t
+k = t, . . . , t + Np − 1
+
+2
+
+Q
+
+2
+
++ ut+Np −1,t R ≤ γ
+(27)
+
+Iteration Algorithm:
+1. Acquire the new state x(t), driver input w(t), reference
+state yd (t);
+2. Solve the QP optimization problem (27);
+3. Apply v(t) = v(t + 0, t)
+4. t ← t + 1. Go to 1.
+Remark: The second last constraint in (27) refers to the terminal constraint to guarantee the stability the LTV MPC scheme.
+Detailed work could be found in [32]. The Batch approach
+is used to formulate the problem as a standard QP problem.
+The objective function can be expressed as a function of the
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 02:39:42 UTC from IEEE Xplore. Restrictions apply.
+
+3754
+
+IEEE TRANSACTIONS ON VEHICULAR TECHNOLOGY, VOL. 69, NO. 4, APRIL 2020
+
+initial state x0,t and sequences of reference, driver input. The
+solver, qpOASES, based on a structure-exploiting active-set
+method, provides fast and reliable solutions and is used in this
+research [33]. The corrective control vector should be bounded
+by the maximum CG forces/moment a specific vehicle can generate. The high-level controller hence completes the calculation
+of optimal corrective GG forces.
+C. Lower-Level Control Allocation
+In this section, calculations by high-level MPC are applied
+through corner modular, i.e. drive/braking and steering. Articulated vehicles are usually over-actuated mechanical systems, i.e.
+brake system in more than two wheels; active steering system.
+The lower-level controller should be able to handle redundancy
+and various configuration of active actuators. We use the technique of Control Allocation (CA) to cope with such redundant
+actuation systems [17], [34]. As a result, CA offers an optimal
+distribution on actuator commands, meanwhile minimization of
+the CG corrective forces errors.
+To achieve a dynamics stability, the requested corrective CG
+forces calculated by the high-level MPC are denoted by,
+T
+
+v ∗ = ΔFxt∗ ΔFyt∗ ΔMzt∗ ΔFxi∗ ΔFyi∗ ΔMzi∗
+(28)
+Using the mappings of aforementioned modeling, the actual CG
+forces generated by lower-level CA are denoted by,
+T
+
+v = ΔFxt ΔFyt ΔMzt ΔFxi ΔFyi ΔMzi = Bp u
+(29)
+where Bp = Lc Tc Lw Tw B1 , is the control effectiveness matrix
+(or mapping matrix), that connects all the possible actuator
+configurations of the vehicle. That is why CA offers the great
+convenience to adapt different actuation configurations. u is
+the lower-level control actions, e.g. torques or steerings defined
+in (5).
+CA is formulated as a convex quadratic programming with
+linear constraints. Therefore, at each time step, the lower level
+controller solves the following optimization problem,
+min ξ v ∗ − Bp u2We + u2Wu
+u
+
+s.t.
+
+Aeq u = beq
+lb ≤ u ≤ ub
+
+(30)
+
+where, the first term in the objective function of (30) is to minimize the CG forces error, while the second term is to minimize
+the control efforts of actuations. lb, ub are the lower and upper
+bounds, We , Wu are positive definite weighting matrices, which
+give a compromise between two costs. ξ is a used to emphasize the importance of minimizing the allocation error, that
+typically set very large. The equality constraint (Aeq u = beq )
+could be useful while considering some engineering practices.
+For instance, active steering strategy usually makes the steering
+angles of the left wheel and right wheel equal. We , Wu may
+be time-varying, depending on the driver inputs or road conditions. It reflects how the available actuators will be preferred
+and utilized for a integrated control strategy. This brings up a
+
+interesting topic, actuators prioritization, which is omitted for
+sake of brevity.
+D. Real-Time Constraints
+This section discusses about the constraints
+from different
+T
+sides. According to ui = ΔQi Δδi , lbi (2)/ubi (2) denotes
+the lower/upper boundary of the active steering angles. They are
+mainly constrained by the maximum steering angle of the physical limitation. lbi (1)/ubi (1) denotes the lower/upper boundary
+of the active torques (drive or brake),
+fail
+lbi (1) = max(Qbrake
+, −Qtire
+i
+i , −Qi ) − Qi
+
+(31)
+
+fail
+ubi (1) = min(Qdrive
+, Qtire
+i
+i , Qi ) − Qi
+
+(32)
+
+where Qi is the estimated torque of wheel ‘i‘ from the driver’s
+request. The lower/upper boundary is obtained by considering
+three sets of constraints, i.e. drive/brake torque capacity, tire
+force capacity and actuators failure.
+is the maximum torque of the wheel that the powQdrive
+i
+is the maximum brake torque
+ertrain can deliver, while Qbrake
+i
+depending on the vehicle’s braking system on wheels of different
+is derived from a ‘tire ellipse model’ [35]. Given
+axles. Qtire
+i
+the estimated tire forces, i.e. fxi , fyi and fzi , the maximum
+‘available longitudinal force’ is achieved. One may note that the
+wheel slip prevention is not included in this paper. However, it
+can be tackled by off-the-shelf modules, i.e., ABS and TCS. Qfail
+i
+is the torque value when an actuator failure occurs. For example,
+a braking actuator locked in a faulty position. Control allocation
+has the ability to handle fault-tolerant control [34]. Thanks to
+updating constraints in real time, once a fault is detected, CA
+will systematically set the lower and upper boundaries to the
+locked value or zeros assuming a complete failure. There is no
+need to redesign the control laws as the system can allocate the
+remaining actuators automatically as to best meet the control
+tasks.
+V. APPLICATIONS
+A. Matrix-Size Reduction
+MPC needs larger computational load and memory caches
+than classical controls. There are challenges while implemented
+within auto-grade electronic control units (ECUs). In addition
+to selecting a fast and robust QP solver, another key issue is
+the dimension of the system matrices and the number of control
+inputs. While applying the proposed controller to a specific case,
+in practice, the configuration of the vehicle to be controlled
+is prior knowledge, like, axle/articulation configuration; drive
+mode and steering system; control objective; active control system. Therefore, it is necessary to adjust the matrix dimension for
+computation’s sake. The controller algorithm flowchart in Fig. 4
+suggests how it works while giving a vehicle for dynamics control. In offline mode, once the target vehicle is chosen, the vehicle
+configurations, stability objectives and physical constraints are
+surely acquired. Therefore, ‘Boolean Matrices,’ namely, Tε , Tc
+and Tw are defined. Dimensions of model matrices(Ad , Bd , Gd ,
+dd and Cd ), the mapping matrix (Bp ), and vectors (x, y, v and
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 02:39:42 UTC from IEEE Xplore. Restrictions apply.
+
+ZHANG et al.: UNIVERSAL AND RECONFIGURABLE STABILITY CONTROL METHODOLOGY
+
+3755
+
+TABLE II
+APPLICATIONS DESCRIPTION
+
+∗
+
+Articulated bus: has three axles (axle #1& 4 of unit 1, and axle #4 of unit 2), with 2nd axle drive powered by pure battery; with active trailer steering (−8◦ to 8◦ ), shown in Fig. 5.
+Articulated bus: has three axles (axle #1& 4 of unit 1, and axle #4 of unit 2), with 2nd axle drive powered by pure battery; with all wheels differential braking, shown in Fig. 7.
++
+Articulated truck: has four axles(axle #1,2& 4 of unit 1, and axle #3 &4 of unit 2), with tractor rear axles drive from an IC engine; with tractor differential braking,shown in Fig. 9.
+†
+
+Fig. 4.
+
+Controller algorithm flowchart.
+
+u) are simplified and determined. All matrices are configured to
+be the proper size before execution. In online mode, it follows
+the two-layer control framework as introduced above. There are
+three applications listed in Table II to demonstrate as well as
+verify the proposed framework.
+B. Controller Parameters and Tuning
+There are a great number of research can be found on MPC
+tuning methods and industrial applications, where an excellent
+review is elaborated in [36] and a detailed study is presented
+in [37]. Generally, there are three significant goals when tuning
+a MPC controller [38]: (1) achieving appropriate model predictions over the horizon; (2) a compromise between robustness
+and performance; (3) a feasible computational cost.
+Sample Time & Prediction Horizon: The controller sampling
+time Ts is for use in the discrete-time formulation to predict
+the future states.If Ts is too big, the model might lose accuracy,
+and when a disturbance comes in, the controller will not be
+able to react to disturbance fast enough. On the contrary, if the
+sample time is too small, the controller can react much faster and
+setpoint changes, but costs high computations. Therefore, there
+is a trade-off. In order to have accurate predictions, Ts should
+
+be small enough that allows 3-10 steps in the settling of a fastest
+dynamics [39]. Others recommend that the sampling time is
+between 10% to 25% of the system rise time [40]. By studying
+the open-loop response of the vehicle system, this research
+tentatively chose 0.015/0.02 s and calculated that Np = 10 for
+controller design.
+Control Horizon: The future control actions lead to the predicted future output, the number of control moves to time step Nc
+are called the control horizon. The smaller the control horizon,
+the fewer the computations. However, the minimum horizon will
+not give us the best control maneuvers. This leads to a trade-off.
+If the control horizon is increased, it results in a more robust but
+more aggressive controller as well as larger computational cost.
+On the contrary, decreasing the control horizon creates more the
+conservativeness and saves computations but with the price of
+reducing robustness [36]. It is ideal to set Nc large enough to
+cover all significant adjustments of the control sequence in order
+to cope with a set-point change. Georgiou et al. [41] chose the
+time that takes for the output response to reach 60% of steady
+state as control horizon. This research assumes the controller
+horizon is equal to prediction horizon for simplicity sake.
+Weights: There are weights on the outputs and weights on the
+control efforts for both high-level and lower-level controllers.
+Weights tuning depends on system requirements and control
+desires. For instance, if one emphasizes the tracking accuracy
+and wants a more aggressive control performance, more weights
+should be put on the tracking error side, i.e., weighting matrix
+Q. If robustness and smooth control performance and energy
+saving are important, one could increase the weighting matrix R
+to realize such goal. In this research, a normalized tuning method
+is used for weight tuning [42]. To achieve a robust and satisfying
+performance, Trial and error is necessary to see the changes and
+balance of the control responses. In addition, when it comes
+to production implementation, a fine tuning process is needed
+that considers all possible situations, such as, road slope, bank
+angle, uncertainties from road friction and side wind. Taking the
+Application II (articulated bus with DBS) as a example, Table III
+listed the parameters of the controller. One could follow the
+similar process to tune the controller for other applications.
+C. Application I: An Articulated Bus With ATS
+In this case, an articulated bus is built in TruckSim by modifying the templates of it. Trailer sway of tractor semi-trailer is
+a serious threat for vehicle safety. In this case, the controller
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 02:39:42 UTC from IEEE Xplore. Restrictions apply.
+
+3756
+
+IEEE TRANSACTIONS ON VEHICULAR TECHNOLOGY, VOL. 69, NO. 4, APRIL 2020
+
+TABLE III
+CONTROLLER PARAMETERS OF APP.II
+
+Fig. 5.
+
+A articulated bus with active trailer steering.
+Fig. 6.
+
+Results of yaw and sway control of App. I.
+
+Fig. 7.
+
+A articulated bus with differential braking.
+
+aims to tackle the problem. With the prior-knowledge of the
+configuration in Table II and Fig. 5, the ‘Articulation, Axle and
+Actuator Boolean Matrix’ can be written as,
+Tε = I10×10 ;
+Tct = diag(1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1);
+
+D. Application II: An Articulated Bus With DBS
+
+Tci = diag(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1);
+
+In this case, the same articulated bus in App.I but configured with differential braking is built in TruckSim. The main
+purpose of this application is to compare the performance of
+various differential brake systems, as well as demonstrate the
+reconfigurabitliy of the framework. With the prior-knowledge
+of the configuration in Table II and Fig. 7, the ‘Articulation and
+Axle Boolean Matrix’ are kept same as App. I, but ‘Actuator
+Boolean Matrix’ is modified as,
+
+Twt = diag(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+Twi = diag(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1).
+Since the vehicle configuration is given and control objectives
+are targeted, matrix dimensions of state space model (24) and
+(25) are specified: Ad ∈ R4×4 ; Bd ∈ R4×2 ; Gd ∈ R4×4 ; dd ∈
+R4×1 ; x = [vyt rt vyi ri ]T ; v = ΔMzi ; y = [vyt rt λ]T . Regarding the mapping equation (29) and control input, where
+Bp ∈ R1×2 ; u = [Δδ1 Δδ2 ]T and Δδ1 = Δδ2 .
+A sharp sine impulse steer, with the amplitude of 75 deg
+and period of 2 s, described in and top-left corner of Fig. 6 is
+performed for this simulation. A constant speed is hold for both
+OFF and ON modes for fair comparison purpose. In the control
+‘OFF’ mode, a severe trailer sway and tractor yaw oscillation
+are triggered. The articulation angle reached as big as 10 deg
+and and damped very slow. Note that, the maximum articulation
+angle is translated to be around 3 m of the arc length the rear end
+swept, which is very dangerous due to the violation to its driving
+lane. In addition, neither the leading unit(tractor) is stable in yaw
+motion. Through active trailer steering, the articulation angle
+is well tracked throughout the maneuver and the sway stopped
+after 5th second. As the secondary objective, the tractor yaw rate
+tracking shows similar evidence that the vehicle is stabilized.
+From the result of active steering angle, it is notable that small
+steering adjustments are only needed but the stabilization impact
+is huge.
+
+Twt = diag(1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0);
+Twi = diag(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0).
+Given the vehicle configuration and control objectives, matrix dimensions of state space model (24) and (25) are specified: Ad ∈ R4×4 ; Bd ∈ R4×2 ; Gd ∈ R4×4 ; dd ∈ R4×1 ; x =
+[vyt rt vyi ri ]T ; v = [ΔMzt ΔMzi ]T ; y = [vyt rt λ]T .
+For the mapping equation (29), there are three versions of the control strategies listed and named in
+Table IV. For ‘Controller A’ where Bp ∈ R1×4 ; u =
+[ΔQ1 ΔQ2 ΔQ3 ΔQ4 ]T ; ‘Controller B’ where Bp ∈ R1×2 ;
+u = [ΔQ5 ΔQ6 ]T ; ‘Controller C’ where Bp ∈ R2×6 ; u =
+[ΔQ1 ΔQ2 ΔQ3 ΔQ4 ΔQ5 ΔQ6 ]T ; Thanks to the reconfigurability of the proposed framework, we can easily design
+the different controllers and compare the performance.
+Similar to App. I, a sharp sine steer, with the amplitude of
+75 deg and period of 2 s ( Table II), is applied to the bus.
+In the control ‘OFF’ mode, the bus experienced severe trailer
+sway, the articulation angle reached as big as 10 deg, and the
+vehicle gets stable gradually. The tractor yaw rate oscillated
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 02:39:42 UTC from IEEE Xplore. Restrictions apply.
+
+ZHANG et al.: UNIVERSAL AND RECONFIGURABLE STABILITY CONTROL METHODOLOGY
+
+3757
+
+TABLE IV
+PERFORMANCE OF DIFFERENT CONTROLLER OF APP. II
+
+Fig. 9.
+
+A articulated truck configuration.
+
+Matrix’ can be written as,
+Tε = I10×10 ;
+Tct = diag(1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1);
+Tci = diag(0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1);
+Twt = diag(1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0);
+Twi = diag(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0).
+Fig. 8. Trailer sway control performance comparison using different active
+actuator systems of App. II.
+
+in the same way and time range. By engaging active control
+systems, namely, Controller A, B, C, the stabilization is achieved
+in a varying extent, described in Table IV. The trailer sway is
+effectively restrained in terms of maximum articulation angle
+and sway duration. Interestingly, the comparison finds that,
+Controller A is more effective on yaw rate tracking control
+while the Controller B is more effective on sway stabilization
+but with a delay. This makes sense intuitively, as Controller A
+uses the differential braking of the tractor while Controller B
+uses that of trailer. Besides, Controller C shows the very good
+comprehensive performance on both control objectives.
+
+E. Application III: A Commercial Truck
+Many tractor trailer combinations have the changeable trailer.
+However, the scope of this work assumes the trailer configuration, e.g. axles, is constant and its information is known,
+measured/estimated. In this case, a commercial truck with full
+payload is built in TruckSim. As mentioned, truck dynamics is
+complex and challenging for active controls. In this case, the
+controller aims to prevent the likelihood of trailer rollover and
+jackknifing, which are the most typical threat to highway safety
+of long trucks. With the prior knowledge of the configuration in
+Table II and Fig. 9, the ‘Articulation, Axle and Actuator Boolean
+
+Again, with the knowledge of the vehicle configuration and
+control objectives, matrix dimensions of state space model
+(24) and (25) are specified: Ad ∈ R8×8 ; Bd ∈ R8×1 ; Gd ∈
+R8×6 ; dd ∈ R8×1 ; x = [vyt rt φt φ̇t vyi ri φi φ̇i ]T ; v =
+ΔMzt ; y = [rt λ RI i ]T .
+For the mapping equation (29), where Bp ∈ R1×6 ; u =
+[ΔQ1 ΔQ2 ΔQ3 ΔQ4 ΔQ5 ΔQ6 ]T ; Note that, in this
+case, the high-level controller only generates the yaw moment
+of tractor and the lower-level controller computes the active
+brake commands, where, from left to right and front to back,
+are indicated by L1, R1 to L3, R3 in Figs. 9 and 10.
+In the maneuver of double lane change (DLC) in Fig. 10, a
+driver is in the loop using a path-following model of TruckSim.
+The driver performed a harsh DLC to avoid potential obstacles
+on a highway. The weights of Q are set to emphasize rollover
+prevention. The rollover threshold (RImax ) is set to be 0.5 (see
+the ‘gray dashed line’). If no active control engaged, the trailer
+rollover likelihood is seen at 5th-6th, and 7.5th second. When
+differential braking is introduced, the maximum load transfer
+ratio of the trailer is reduced by around 36.5% from −0.82 to
+−0.52. In addition, the lateral acceleration shows similar evidence on rollover prevention. Although the weights of yaw rate
+and articulation angle (in Q) are set very small, the tractor yaw
+rate and articulation are also reduced because of the corrective
+yaw moment and speed drop.
+In the second case, to trigger a jackknife, a step steer and a
+step brake of 15 MPa at 2nd second are applied. The tires are
+in a high slip or saturation scenarios at the low road friction
+coefficient condition. And the huge inertia of the trailer due
+to the full load contributes to the likelihood of jackknife. As
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 02:39:42 UTC from IEEE Xplore. Restrictions apply.
+
+3758
+
+IEEE TRANSACTIONS ON VEHICULAR TECHNOLOGY, VOL. 69, NO. 4, APRIL 2020
+
+over-actuation, fault tolerance problems. Two levels are formulated as optimization-based control problems wphen potential
+constraints are considered. In the light of three diverse applications presented, it is shown that the proposed system is universal
+and reconfigurable as well as effective on the vehicles’ stability
+control.
+In future work, actuators prioritization will be interesting to
+investigate. Suppose the vehicle has more than two active actuation system, e.g., differential braking system and active steering
+control. Building certain rules on actuators prioritization and
+tuning the controller weighting matrices in realtime is a potential
+to achieve so. In addition, it is planned to implement the control
+system in the experimental tractor-trailer, so as to validate the
+effectiveness and reconfigurability.
+ACKNOWLEDGMENT
+
+Fig. 10.
+
+Results of rollover prevention of App. III.
+
+The authors would like to acknowledge the financial support
+of the Ontario Research Fund (OTF) and Natural Sciences and
+Engineering Research Council (NSERC) of Canada in this work.
+REFERENCES
+
+Fig. 11.
+
+Results of anti-jackknifing of App. III.
+
+shown in Fig. 11, in Control OFF Mode, the articulation angle
+kept increasing and diverged to around 90◦ at the 8th second.
+Besides, the trailer RI stayed in the high value during the turn.
+However, the engagement of differential braking prevented the
+truck from jackknife successfully, where the articulation angle
+is reduced to 10◦ and RI is dropped to a relatively safe area in
+practice.
+VI. CONCLUSION
+Knowing that articulated/multi-axle vehicles come with significantly various configurations, this paper presented a universal and reconfigurable control methodology that applies to any
+vehicles dynamics control. The integrated control formulation
+covers longitudinal, yaw, lateral and roll stability objectives and
+one can control any combinations of them depending on the
+vehicle’s configurations and needs. Moving from one vehicle
+to another does not require re-designing the control system,
+and major re-tuning is also avoided. We first introduced a
+reconfigurable modeling and extended to articulated vehicles,
+and then a two-layer control system is designed to cover the
+diversity of vehicle configurations, multi-input multi-output,
+
+[1] D. Williams, “Multi-axle vehicle dynamics,” SAE Int., No. SP-2337, 2012,
+[Online]. Available: https://www.sae.org/publications/technical-papers/
+content/SP-2337/
+[2] P. Fancher and C. Winkler, “Directional performance issues in evaluation
+and design of articulated heavy vehicles,” Vehicle Syst. Dyn., vol. 45,
+no. 7/8, pp. 607–647, 2007.
+[3] H. A. Dang and J. Kovanda, “Determination of trajectory of articulated
+bus turning along curved line,” Vehicle Syst. Dyn., vol. 7, no. 1, pp. 35–44,
+2014.
+[4] NHTSA. 2017 fatal motor vehicle crashes: Overview. Accessed: 16 Oct.
+2018. [Online]. Available: https://crashstats.nhtsa.dot.gov/Api/Public/
+ViewPublication/812603
+[5] U.S. Department of Transportation. Large trucks and buses crash
+facts 2016. Accessed: 16 Oct. 2018. [Online]. Available: https://www.
+fmcsa.dot.gov/sites/fmcsa.dot.gov/files/docs/safety/data-an d-statistics/
+398686/ltbcf-2016-final-508c-may-2018.pdf
+[6] A. S. Trigell, M. RothhÃmel, J. Pauwelussen, and K. Kural, “Advanced
+vehicle dynamics of heavy trucks with the perspective of road safety,”
+Vehicle Syst. Dyn., vol. 55, no. 10, pp. 1572–1617, 2017.
+[7] D. Kasinathan, A. Kasaiezadeh, A. Wong, A. Khajepour, S. Chen, and B.
+Litkouhi, “An optimal torque vectoring control for vehicle applications via
+real-time constraints,” IEEE Trans. Veh. Technol., vol. 65, no. 6, pp. 4368–
+4378, Jun. 2016.
+[8] J. Tjonnas and T. Johansen, “Stabilization of automotive vehicles using
+active steering and adaptive brake control allocation,” IEEE Trans. Control
+Syst. Technol., vol. 18, no. 3, pp. 545–558, May 2010.
+[9] H. Ohara and T. Murakami, “A stability control by active angle control
+of front-wheel in a vehicle system,” IEEE Trans. Ind. Electron., vol. 55,
+no. 3, pp. 1277–1285, Mar. 2008.
+[10] R. Wang, H. Zhang, and J. Wang, “Linear parameter-varying controller
+design for four-wheel independently actuated electric ground vehicles with
+active steering systems,” IEEE Trans. Control Syst. Technol., vol. 22, no. 4,
+pp. 1281–1296, Jul. 2014.
+[11] H. Zhang and J. Wang, “Vehicle lateral dynamics control through afs/dyc
+and robust gain-scheduling approach,” IEEE Trans. Veh. Technol., vol. 65,
+no. 1, pp. 489–494, Jan. 2016.
+[12] E. Stone and D. Cebon, “Control of semi-active anti-roll systems on heavy
+vehicles,” Vehicle Syst. Dyn., vol. 48, no. 9, pp. 1239–1253, 2010.
+[13] B. Gysen, J. Paulides, J. Janssen, and E. Lomonova, “Active electromagnetic suspension system for improved vehicle dynamics,” IEEE Trans. Veh.
+Technol., vol. 59, no. 3, pp. 1156–1163, Mar. 2010.
+[14] H. Qi, B. Zhang, N. Zhang, M. Zheng, and Y. Chen, “Enhanced lateral
+and roll stability study for a two-axle bus via hydraulically interconnected
+suspension tuning,” SAE Int. J. Vehicle Dyn., Stability, NVH, vol. 3, no. 1,
+2018.
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 02:39:42 UTC from IEEE Xplore. Restrictions apply.
+
+ZHANG et al.: UNIVERSAL AND RECONFIGURABLE STABILITY CONTROL METHODOLOGY
+
+[15] M. Kissai, B. Monsuez, and A. Tapus, “Review of integrated vehicle
+dynamics control architectures,” in Proc. IEEE Mobile Robots (ECMR),
+Eur. Conf., Sep. 2018, pp. 1–8.
+[16] W. Cho, J. Choi, C. Kim, S. Choi, and K. Yi, “Unified chassis control for
+the improvement of agility, maneuverability, and lateral stability,” IEEE
+Trans. Veh. Technol., vol. 61, no. 3, pp. 1008–1020, Mar. 2012.
+[17] J. Wang and R. G. Longoria, “Coordinated and reconfigurable vehicle
+dynamics control,” IEEE Trans. Control Syst. Technol., vol. 17, no. 3,
+pp. 723–732, May 2009.
+[18] S.-K. Chen, W. Deng, Y. A. Ghoneim, N. K. Moshohum, J. R. F. Nardi, and
+K. A. Odea, “Architecture and methodology for holistic vehicle control,”
+US Patents, no. 8417417B2, 2013.
+[19] M. Ataei, A. Khajepour, and S. Jeon, “A novel reconfigurable integrated
+vehicle stability control with omni actuation systems,” IEEE Trans. Veh.
+Technol., vol. 67, no. 4, pp. 2945–2957, Apr. 2018.
+[20] Y. Zhang, A. Khajepour, and Y. Huang, “Multi-axle/articulated bus dynamics modeling: A reconfigurable approach,” Vehicle Syst. Dyn., vol. 56,
+no. 2, pp. 1–29, 2018.
+[21] Y. Zhang, A. Khajepour, and M. Ataei, “Universal model-based stability
+control for ground vehicles with any axle and actuation configuration,”
+Vehicle Syst. Dyn., pp. Under Review, 2019.
+[22] E. Fiala, “Lateral forces on rolling pneumatic tires,” Zeitschrift V.D.I.,
+vol. 96, no. 29, pp. 973–979, 1954.
+[23] C. E. Beal and J. C. Gerdes, “Model predictive control for vehicle stabilization at the limits of handling,” IEEE Trans. Control Syst. Technol.,
+vol. 21, no. 4, pp. 1258–1269, Jul. 2013.
+[24] R. Rajamani, Vehicle Dynamics and Control. Berlin, Germany: Springer,
+2011.
+[25] M. Ataei, A. Khajepour, and S. Jeon, “A general rollover index for
+tripped and un-tripped rollovers on flat and sloped roads,” in Proc.
+Inst. Mech. Eng., D: J. Autom. Eng., vol. 233, no. 2, pp. 304–316, doi:
+10.1177/0954407017743345.
+[26] S. Lapapong, A. Brown, K. Swanson, and S. N. Brennan, “Zero-moment
+point determination of worst-case manoeuvres leading to vehicle wheel
+lift,” Vehicle Syst. Dyn., vol. 50, no. sup1, pp. 191–214, 2012.
+[27] P. G. Stankiewicz, A. A. Brown, and S. N. Brennan, “Preview horizon
+analysis for vehicle rollover prevention using the zero-moment point,”
+J. Dyn. Syst., Meas., Control, vol. 137, no. 9, 2015, Art. no. 091002.
+[28] J. Kang, J. Yoo, and K. Yi, “Driving control algorithm for maneuverability,
+lateral stability, and rollover prevention of 4WD electric vehicles with
+independently driven front and rear wheels,” IEEE Trans. Veh. Technol.,
+vol. 60, no. 7, pp. 2987–3001, Sep. 2011.
+[29] J. Y. Wong, Theory of Ground Vehicles, 4th ed. Hoboken, NJ, USA: Wiley,
+2008.
+[30] F. Borrelli, A. Bemporad, and M. Morari, Predictive Control for Linear
+and Hybrid Systems. Cambridge, U.K.: Cambridge Univ. Press, 2017.
+[31] S. Chang and T. J. Gordon, “Model-based predictive control of vehicle
+dynamics,” Int. J. Vehicle Auton. Syst., vol. 5, no. 1-2, pp. 3–27, 2007.
+[32] P. Falcone, F. Borrelli, H. Tseng, J. Asgari, and D. Hrovat, “Linear
+time-varying model predictive control and its application to active steering
+systems: Stability analysis and experimental validation,” Int. J. Robust
+Nonlinear Control, vol. 18, no. 8, pp. 862–875, 2008.
+[33] H. Ferreau, C. Kirches, A. Potschka, H. Bock, and M. Diehl, “qpOASES:
+A parametric active-set algorithm for quadratic programming,” Math.
+Program. Comput., vol. 6, no. 4, pp. 327–363, 2014.
+[34] T. A. Johansen and T. I. Fossen, “Control allocation: A survey,” Automatica, vol. 49, no. 5, pp. 1087–1103, 2013.
+[35] H. Pacejka, Tire and Vehicle Dynamics. New York, NY, USA: Elsevier
+Science, 2012.
+[36] J. L. Garriga and M. Soroush, “Model predictive control tuning methods:
+A review,” Ind. Eng. Chemistry Res., vol. 49, no. 8, pp. 3505–3515, 2010.
+[37] Y. Zhang, “Multi-axle vehicle modeling and stability control: A reconfigurable approach, Chapter 4,” Ph.D. dissertation, Dept. Mech. Mechatron.
+Eng., Univ. Waterloo, Waterloo, ON, Canada, 2019.
+[38] S. J. Qin and T. A. Badgwell, “A survey of industrial model predictive
+control technology,” Control Eng. Pract., vol. 11, no. 7, pp. 733–764,
+2003.
+[39] S. D. Cairano and I. V. Kolmanovsky, “Real-time optimization and model
+predictive control for aerospace and automotive applications,” pp. 2392–
+2409, 2018.
+
+3759
+
+[40] A. Bemporad, M. Morari, and N. L. Ricker, Model Predictive Control
+Toolbox User’s Guide. Massachusetts, MA, USA: The Mathworks, Inc.,
+2010.
+[41] A. Georgiou, C. Georgakis, and W. L. Luyben, “Nonlinear dynamic matrix
+control for high-purity distillation columns,” AIChE J., vol. 34, no. 8,
+pp. 1287–1298, 1988.
+[42] R. M. Murray, “Optimization-based control,” California Inst. Technol.,
+California, CA, USA, pp. 111–128, 2009.
+
+Yubiao Zhang received the B.Sc. and M.Sc. degrees in mechanical engineering, specializing in vehicle mechatronics, from Hunan University, Changsha,
+China, in 2012 and 2015, respectively, and the Ph.D.
+degree in mechanical engineering from the University
+of Waterloo, Waterloo, ON, Canada, in 2019. From
+2015 to 2016, he was a System Engineer with Sandy
+Tech Company, Ltd., China. He is currently a Researcher with General Motors, Global R&D in USA.
+His research interests include vehicle dynamics, reconfigurable control and optimization, and automated
+driving.
+
+Amir Khajepour is currently a Professor of mechanical and mechatronics engineering with the University
+of Waterloo, Waterloo, ON, Canada. He holds the Tier
+1 Canada Research Chair in Mechatronic Vehicle Systems, and a Senior NSERC/General Motors Industrial
+Research Chair in Holistic Vehicle Control. He has
+developed an extensive research program that applies
+his expertise in several key multidisciplinary areas
+including system modeling and control of dynamic
+systems. His research has resulted in many patents
+and technology transfers. He is a Fellow of the Engineering Institute of Canada, the American Society of Mechanical Engineers,
+and the Canadian Society of Mechanical Engineering.
+
+Mansour Ataei received the Ph.D. degree in mechanical and mechatronics engineering from the University of Waterloo, Waterloo, ON, Canada, in 2017,
+and the B.S. and M.S. degrees in mechanical engineering from the University of Tehran, Tehran, Iran,
+in 2007 and 2010, respectively. He is currently a
+Control System Engineer with the Active Safety;
+Autonomous Systems Department, General Motors
+of Canada Company, Markham, ON, Canada. His
+research interests include modeling and control of
+dynamic systems, vehicle dynamics control, and autonomous vehicles. He has worked on integrated vehicle stability systems,
+rollover detection and prevention systems, and control of small and narrow
+vehicles.
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 02:39:42 UTC from IEEE Xplore. Restrictions apply.
+
+

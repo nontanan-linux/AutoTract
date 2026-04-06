@@ -1,0 +1,826 @@
+    3238                              IEEE/ASME TRANSACTIONS ON MECHATRONICS, VOL. 28, NO. 6, DECEMBER 2023
+
+
+
+
+      Reliable Estimation of Automotive States Based
+        on Optimized Neural Networks and Moving
+                    Horizon Estimator
+                               Rui Song , Member, IEEE, Yongchun Fang , Senior Member, IEEE,
+                                            and Haoqian Huang , Member, IEEE
+
+
+       Abstract—Accurate estimation of vehicle sideslip angle                         highly dependent on the accurate knowledge of vehicle states,
+    and attitude angles are essential for the safety control and                      such as the lateral vehicle speed and sideslip angle, for which,
+    lateral behaviour of driving performance. In this article,                        direct measurement is unfortunately difficult due to either tech-
+    the variation of wheels cornering stiffness is considered
+    for sideslip estimation and addressed by introducing a re-                        nical or economic reasons. Hence, different approaches have
+    cursive least squares approach. Based on the nonlinear                            been widely considered to estimate vehicle states [2], [3], [4].
+    vehicle dynamic model and the investigated coupling ef-                           However, the estimation accuracy still needs to be further im-
+    fect between lateral and longitudinal velocity, an optimized                      proved, especially for vehicles operated under a wide operation
+    moving horizon estimator is proposed to obtain the vehicle                        range.
+    sideslip angle, in which an iteration decent algorithm is
+    integrated. Furthermore, a framework, consisting of inertial                         The sideslip angle directly affects the vehicle dynamics,
+    navigation system measurements, a dual neural network                             whose estimation has attracted considerable research efforts [5].
+    and a square-root cubature Kalman filter, is designed, such                       For the current approaches, dynamic models with different as-
+    that the influence of sensor noise and varied maneuvers                           sumptions are usually established and corresponding observers
+    are alleviated when estimating the system states. Finally,                        are then designed accordingly, which are unfortunately depen-
+    extensive simulation and field experiments are carried out
+    on different driving scenarios to verify the effectiveness of                     dent on the accurate information of vehicle parameters and
+    the developed method. The obtained results clearly indicate                       tire-road conditions. To adapt to various road conditions during
+    the satisfactory estimation accuracy of the designed strat-                       actual moving, the states of tire–road friction, road bank angle,
+    egy, superior to the existing estimation methods, such as                         and vehicle roll angle are also investigated [6]. A Takagi–Sugeno
+    sole neural networks methods and Kalman-based filters.
+                                                                                      (T-S) fuzzy observer is designed to estimate both the steering
+      Index Terms—Automotive system, cornering stiffness,                             angle and the sideslip angle, which demonstrates good robust-
+    moving horizon estimator (MHE), neural network, sideslip                          ness against parametric uncertainties and unknown inputs by
+    angle, state estimation.                                                          solving linear matrix inequalities [7]. Besides, some nonlinear
+                                                                                      tire models, such as Dugoff and Pacejka’s magic formula [8],
+                                I. INTRODUCTION                                       are employed to approximately describe the lateral force within
+                                                                                      the system.
+         CTIVE safety systems, such as anti-lock brake system and
+    A    electronic stability control (ESC), have been developed in
+    modern automobiles and can effectively prevent a large portion
+                                                                                         Other methods based on the kinematic model calculate the
+                                                                                      states of the system by fusing sensor information, such as the
+                                                                                      measurements for the yaw rate, lateral acceleration, and so on.
+    of road accidents [1]. However, the system performance is                         Unfortunately, these methods are often vulnerable to sensors bias
+                                                                                      and measurement errors caused by severely driving conditions.
+       Manuscript received 13 August 2022; revised 15 November 2022 and               Especially, the velocity estimated by additional sensors, such
+    6 February 2023; accepted 23 March 2023. Date of publication 10 April             as global positioning system (GPS), is difficult to obtain when
+    2023; date of current version 15 December 2023. Recommended by
+    Technical Editor W. Wang and Senior Editor X. Chen. This work was                 the studied vehicle is braking on low friction surfaces [9], [10].
+    supported by the National Natural Science Foundation of China under               Besides, a hybrid approach, consisting of recurrent neural net-
+    Grants 61903202 and 62233011. (Corresponding author: Yongchun                     works (RNNs) and a kinematic vehicle model, was presented
+    Fang.)
+       Rui Song and Yongchun Fang are with the Tianjin Key Laboratory of              in [11] to estimate the sideslip angle with the aid of a physical
+    Intelligent Robotics, College of Artificial Intelligence, Institute of Robotics   model under different situations. Boada et al. [12] adopted the
+    and Automatic Information System, Nankai University, Tianjin 300350,              pseudoside slip angle obtained from one-layer fully connected
+    China (e-mail: rsong@nankai.edu.cn; fangyc@nankai.edu.cn).
+       Haoqian Huang is with the College of Energy and Electrical Engi-               neural network and Kalman filter (KF) to predict the sideslip
+    neering, Hohai University, Nanjing 210098, China (e-mail: qhbhhq@                 angle. Though the aforementioned approaches are effective in
+    163.com).                                                                         some situations, they face the same difficulty of applying to
+       Color versions of one or more figures in this article are available at
+    https://doi.org/10.1109/TMECH.2023.3262365.                                       practical vehicles with more complex dynamics, due to the
+       Digital Object Identifier 10.1109/TMECH.2023.3262365                           limitation of the network architecture.
+
+                        1083-4435 © 2023 IEEE. Personal use is permitted, but republication/redistribution requires IEEE permission.
+                                      See https://www.ieee.org/publications/rights/index.html for more information.
+
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 04:15:40 UTC from IEEE Xplore. Restrictions apply.
+   SONG et al.: RELIABLE ESTIMATION OF AUTOMOTIVE STATES BASED ON OPTIMIZED NEURAL NETWORKS                                                                   3239
+
+
+
+      Due to the reason that the lateral force and slip properties                   of kernel importance to solve the constrained problem. Different
+   are considered in dynamic model-based techniques, these meth-                     descent algorithms, based on gradient, conjugate gradient, and
+   ods are usually more appropriate for high-speed and high-slip                     Newton methods, respectively, have been proposed in [28]. It is
+   driving conditions. On the contrary, the kinematic model-based                    proved that the computational cost can be reduced by implement-
+   methods perform better when the slip angle is sufficiently small                  ing a feed-forward neural network [29], and the conditions are
+   under low speed maneuvers [13]. Based on these facts, new ap-                     established to ensure the stability of the estimation technique.
+   proaches based on the combination of the aforementioned meth-                     Nevertheless, how to make the tradeoff between computation
+   ods are also developed to bring together their advantages [14], so                effort and performance indices is still a challenging and open
+   that the proposed approaches achieve satisfactory performance                     problem. It has been verified that a prediction value can be
+   for various scenarios. The longitudinal dynamic model includes                    provided by MHE to bridge the gap, especially for a multirate
+   many uncertainties, such as the road slope and other forces [15],                 system with no measurement [30], [31], [32].
+   meanwhile, the variation of driving speed also largely affects                       More recently, some optimization strategies are designed
+   the lateral dynamics. An accurate vehicle velocity estimation                     based on maximum likelihood analysis [33] and learning-based
+   strategy was proposed in [1] for the braking process, whose gains                 methods [34]. It has been proved that a long short-term memory
+   change accordingly so as to accommodate different high-slip                       (LSTM) neural network presents the ability of overcoming
+   cases. So far, few papers focus on the study of the relationship                  vanishing and exploding problems existed in traditional RNN,
+   and the coupling effect between the lateral and the longitudinal                  and a real-time multivariate LSTM-RNN model was constructed
+   velocity during different maneuvers. In addition, uncertainties                   in [35]. Due to this reason, the LSTM is used to establish the
+   within the system, especially those associated with the variation                 relationship between KF gains and the observations. In addition,
+   of the sideslip angle and the longitudinal dynamics, need to be                   the LSTM has a capability of capturing the dependence among
+   carefully considered when designing an estimator for the system                   vehicle states and integrating with nonlinear filters to deal with
+   states.                                                                           the uncertainty in the estimation [36].
+      The cornering stiffness varies with the road surface condition                    Motivated to provide satisfactory estimation for automotive
+   and tire–road friction coefficient, for which an estimator was de-                states, and inspired by the previous methods, this article inves-
+   signed in [16] by exploiting the understeering characteristics of                 tigates the application of different iteration decent algorithms,
+   vehicles. To adapt to different road conditions, some recursive-                  and then designs a reliable estimation strategy for automotive
+   based algorithms are proposed to estimate the cornering stiffness                 sideslip angle and other states, which consists of optimized
+   efficiently [17]. After some careful investigation, it is believed                neural networks and MHE, for which, some practical rules are
+   that the estimation for the vehicle sideslip angle, especially under              established to alleviate the influence caused by the sideslip and
+   the scenarios with various road surfaces and different tire–road                  INS noise. Compared with other results accounting for various
+   friction coefficient, plays an essential role to implement efficient              driving conditions, the designed algorithm yields more efficient
+   and safe driving, and needs to be further studied.                                and effective estimation for vehicle states. Specifically, the main
+      For the aforementioned estimation problem, the currently                       contribution of this article lies in the design and improvement
+   available techniques can be summarized as KF-based meth-                          of a nonlinear estimator for vehicle states, specifically in the
+   ods [18], nonlinear observers [19], parameters optimization                       following aspects, which distinguish it from currently available
+   strategies [20], fusion estimation approaches [21], and so on.                    results.
+   Specifically, based on modeling techniques, different filters are                     1) A multilayer estimation framework is proposed by inte-
+   introduced to construct estimators for vehicles states, whose                             grating the MHE algorithm into vehicle dynamic model
+   performance highly relies on the accuracy of the established                              layer, with an optimized neural network in sensors layer
+   model. Although the extended Kalman filter (EKF) and un-                                  and a square-root cubature Kalman filter (SCKF) in the
+   scented Kalman filter (UKF) have shown promising results, the                             layer of parameters optimization. In addition, the varia-
+   accuracy of Kalman-based filters is limited directly by the prior                         tion of cornering stiffness and different driving maneuvers
+   knowledge of the process and measurement noise. In order to                               are also carefully considered when designing the estima-
+   guarantee satisfactory performance for state estimation, espe-                            tor.
+   cially in the presence of various uncertainties and disturbance,                      2) With regard to the different characteristics of lateral and
+   such as accumulate error in inertial navigation system (INS), a                           longitudinal motion, the LSTM neural networks (a dual-
+   finite-memory estimator is proposed with recent finite measure-                           LSTM) are developed separately to establish the relation-
+   ments [22].                                                                               ship and the networks structure are designed according
+      On the other hand, different from one-step recursion in EKF                            to the different system models. Therefore, our strategies
+   and UKF, a window covering the most recent measurements                                   enable to learn the error properties of lateral velocity
+   is utilized to optimize state estimation in moving horizon es-                            and sideslip angle with less data and lower cost GPS
+   timator (MHE). MHE has been employed to obtain reliable                                   measurement, so as to guarantee the estimation accuracy
+   estimation for system states and parameters, and to some extent                           for the vehicle states.
+   attenuates the effect of system unmodeled disturbance [23],                           3) The proposed novel estimation method is thoroughly
+   [24], [25]. For nonlinear systems with unknown noise statis-                              tested by both simulation and experiments under various
+   tics, an expectation–maximization based MHE has been intro-                               driving conditions similar to practical scenarios. The ad-
+   duced [26], [27], for which, a suitable optimization algorithm is                         vantage of the proposed method is clearly verified through
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 04:15:40 UTC from IEEE Xplore. Restrictions apply.
+    3240                                                                      IEEE/ASME TRANSACTIONS ON MECHATRONICS, VOL. 28, NO. 6, DECEMBER 2023
+
+
+
+
+                                                                                         mv̇y = Fxf sin δ + Fyf cos δ + Fyr − mωz · vx − mg sin φ
+                                                                                                                                              (2)
+                                                                                      Iz · ω̇z = a[Fxf sin δ + Fyf cos δ] − bFyr                                (3)
+
+                                                                                      where vx is the longitudinal velocity at the center of gravity
+                                                                                      (COG) and vy is the lateral velocity. ωz represents the yaw rate
+                                                                                      around COG, with the roll angle φ defined accordingly. m is the
+                                                                                      total mass and Iz is the inertial yaw moment. a and b are the
+                                                                                      distance from COG to the front and the rear axle, respectively.
+                                                                                      δ denotes the steering angle. B is the track width.
+
+                                                                                      B. Tire Model and Cornering Stiffness Estimation
+                                                                                         To describe the relationship among tire’s lateral force, tire
+                                                                                      sideslip angle and road friction, different tire models have been
+                                                                                      set up in the previous research [37]. The Dugoff tire model is
+                                                                                      employed to represent the nonlinear forces related to different
+                                                                                      maneuvers. Assuming pure lateral slip, the tire lateral force is
+                                                                                      given by
+
+    Fig. 1.    Vehicle dynamic model.                                                                     Fyi = − Ci tan αi f (λi )                             (4)
+                                                                                                                 
+                                                                                                                  λi (2 − λi ), if λi < 1
+                                                                                                       f (λi ) =                                                (5)
+                                                                                                                  1,            if λi ≥ 1
+           some comparative experimental data with current Elman
+           neural network and Kalman-based filters.                                                               μFzi [1 − |tan αi |]
+                                                                                                           λi =                                                 (6)
+       The rest of this article is organized as follows. In Section II, the                                         2Ci |tan αi |
+    vehicle dynamic model and the developed strategy are described
+                                                                                      where Cf and Cr are the front and rear tire cornering stiffness,
+    in detail. Then, for the vehicle states, a nonlinear estimator is
+                                                                                      with the subscripts i = f, r. The parameter μ is the friction
+    proposed in Section III. In Section IV, both simulation and
+                                                                                      coefficient and it is related to the cornering stiffness. The normal
+    experimental results are presented and analyzed to show the su-
+                                                                                      force Fzj for the jth wheel can be presented as follows:
+    perior performance of the designed estimation method. Finally,
+    Section V concludes the article.                                                               m(gb − hCG ax ) mhCG ay (gb − hCG ax )
+                                                                                           Fz1 =                  −
+                                                                                                      2(a + b)         (a + b)Bg
+              II. VEHICLE MODEL AND PROBLEM FORMULATION
+                                                                                                   m(gb − hCG ax ) mhCG ay (gb − hCG ax )
+       To facilitate the subsequent estimation algorithm design for                       Fz2 =                   +
+                                                                                                      2(a + b)         (a + b)Bg
+    the vehicle states, the system dynamic model, including the
+    vehicle motion dynamics, the tire model, and so on, is intro-                                  m(ga + hCG ax ) mhCG ay (ga + hCG ax )
+                                                                                           Fz3 =                  −
+    duced and analyzed in detail. It is demonstrated that the wheel                                   2(a + b)         (a + b)Bg
+    angular velocity measurements and traction or braking torque                                   m(gli + hCG ax ) mhCG ay (gb + hCG ax )
+    can be used to estimate the vehicle longitudinal velocity. Yet, the                   Fz4 =                    +                                            (7)
+                                                                                                      2(a + b)          (a + b)Bg
+    assumption of no longitudinal or lateral slips is needed, which
+    is actually not very practicable for real applications, especially                where j is 1, 2, 3, and 4, and represents the front left, front
+    when the vehicle is sliding or locking on some low friction                       right, rear left, and rear right wheels, respectively. hCG denotes
+    road surfaces. In general, the model-based methods are supe-                      the height of COG, and ax is the longitudinal acceleration.
+    rior in computational efficiency but vulnerable to parameters                     Recursive least squares (RLS) algorithm is adopted to identify
+    variations [37].                                                                  the correct description of the vehicle on various roads with
+                                                                                      different conditions, especially when the lateral acceleration
+    A. Vehicle Dynamic Model                                                          reaches a certain value. The front and the rear tire slip angles,
+                                                                                      denoted as αf and αr , can be calculated as follows:
+       The illustration for the vehicle dynamic model is depicted in
+    Fig. 1, where the average tire forces in the front and rear axle                           αf = (vy + aωz )/vx − δ, αr = (vy − bωz )/vx .                   (8)
+    are considered. The related coordinate systems are defined as
+    East–North–UP (n frame) and vehicle body frame (b frame).                            When the tire sideslip angle and the steering angle are suffi-
+    The dynamic equations of vehicle longitudinal, lateral, and yaw                   ciently small, by integrating (2), (4)–(6), the lateral fores at the
+    motion are as follows:                                                            front and rear are represented as follows:
+
+       mv̇x = Fxf cos δ − Fyf sin δ + Fxr + mωz · vy                           (1)             Fyf = −Cf Mf (αf )αf , Fyr = −Cr Mr (αr )αr                      (9)
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 04:15:40 UTC from IEEE Xplore. Restrictions apply.
+   SONG et al.: RELIABLE ESTIMATION OF AUTOMOTIVE STATES BASED ON OPTIMIZED NEURAL NETWORKS                                                                   3241
+
+
+
+
+   where Mi (αi ) = tan ααiif (λi ) . When the Mi (αi ) is replaced by                 When the time window length is N , the cost function can be
+   Mi for simplicity, (2) can be further expressed as follows:                       deduced as follows:
+                                                                                                     N                              2
+               may = mv̇y + ωz · vx                                                             Jr =     λN
+                                                                                                          m
+                                                                                                            −i
+                                                                                                                Ym (k) − GT (k)Φ̂(k)          (16)
+                                                                                                        k=1
+                                       aωz
+                   = C f Mf δ f − β −
+                                        vx                                           where λm is the forgetting factor. Φ̂(k) is estimated as follows:
+                                                                                                                 
+                                    aωz                                                Φ̂(k) = Φ̂(k − 1) + K(k) Ym (k) − GT (k)Φ̂(k − 1)
+                     − C r Mr β −          − mg sin φ.                      (10)
+                                     vx
+                                                                                                                                                            −1
+                                                                                        K(k) = P (k − 1)G(k) λm I + GT (k)P (k − 1)G(k)
+      When Cf Mf + Cr Mr = Ξ, the sideslip angle is calculated
+   as follows:                                                                          P (k) = λm −1 P (k − 1) − K(k)GT (k)P (k − 1)                        (17)
+            1                                                                        where I is the identity matrix, and K(k) and P (k) are the
+      β=
+            Ξ                                                                        gain matrix and the covariance matrix. We can see that the
+                                                      
+                     aωz            bωz                                              estimation of the cornering stiffness by RLS does not require
+        C f Mf δ f −       + C r Mr     − mg sin φ − may
+                      vx             vx                                              the information of the vehicle sideslip and lateral forces.
+                                                         (11)                           Furthermore, the rotation model of the wheels is added to
+                                                                                     describe the vehicle motion, which is specifically presented as
+   where ay represents the lateral acceleration.
+     Based on the above discussion, (3) can be written as follows:                                    Iω ω̇ = Re Fx + Td − Tb − Re Frr                       (18)
+                                                                                   where Iω is the wheel inertial moment, ω denotes the wheel
+                                                       aωz
+       Iz · ω̇z = aFyf − bFyr = Cf Mf a δf − β −                                     angular velocity, Re is the radius of wheel, Fx is the longitudinal
+                                                        vx                           force. Td and Tb represent the traction torques and brake torques,
+                                       
+                                    aωz                                              respectively. Frr is the rolling resistance and it is sufficiently
+                  + C r Mr b β −           .                  (12)
+                                     vx                                              small to be neglected. The tire longitudinal slip ratio is defined
+                                                                                     as σ = (Re ω − vω )/vω , where vω is the velocity on the rolling
+      By integrating (10)–(12), we obtain                                            direction.
+                                    C f Mf
+    mbay + Iz ω̇z = m(a + b)ay                                                       C. Kinematic Model and Measurement Equations
+                                       Ξ
+                              aCf Mf − bCr Mr                                          The installed inertial measurement unit (IMU) consists of
+                         + mg                     sin φ                              accelerometers and gyroscopes along three different axes, based
+                                        Ξ
+                                                                                   on which the accelerations and the angle rates of the vehicle can
+                                          ωz (a + b) Cf Mf Cr Mr
+                         + (a + b) δf −                          ·                   be measured by the configuration. The vehicle movement in the
+                                              vx         Ξ                           longitudinal direction is obtained in the form of kinematic model
+                                                              (13)
+                                                                                                     v̇x = am
+                                                                                                            x + ψ̇vy + g sin φ − bx − rx                     (19)
+      In order to facilitate the modeling process of the cornering
+   stiffness and the measured output, we make a reasonable as-                       where am
+                                                                                            x stands for the measured longitudinal acceleration, ψ
+
+   sumption that Cr = kc Cf and kc ∈ R+ is a ratio constant [17].                    is the yaw angle and equals to the angle between the vehicle’s
+   (13) can be converted into                                                        x-axis and the north direction. bx and rx represent the bias
+                                                                                     and uncorrelated noise of sensors. The gravitational acceleration
+            kc bMr − aMf                   aMf − bMr                                 term g sin φ is related to the vehicle roll angle. The bias of the
+         may                + Iz ω̇z − mg               sin φ
+              Mf +kc Mr                    Mf +kc Mr                                 inertial sensors can be compensated by the error modeling with
+                                                                                   LSTM neural networks, then the GPS measurement is exploited
+           kc Mf Mr (a + b)         ωz (a + b)
+         =                    δf −               · Cf .       (14)                   to calculate the system states. Specifically, instead of using the
+              Mf +kc Mr                 vx                                           wheel speeds, the more accurate horizontal velocity of GPS is
+   When the output and input data are acquired at sample instant                     adopted since it is independent of the wheel slip. The course
+   k, the cornering stiffness in (13) can be formulated by RLS                       angle γ is as follows:
+   algorithm                                                                                                               veg
+                                                                                                              γ = arctan                           (20)
+                                                                                                                           vng
+                        Ym (k) = GT (k)Φ(k) + e(k)                          (15)
+                                                                                     where veg and vng are the east and north velocity of GPS
+   where Φ(k) is the identified parameter of Cf and it is repre-                     in the navigation frame. The GPS ground velocity is VGPS =
+   sented as Ĉf . GT (k) is the input regression. Ym (k) denotes the                   veg
+                                                                                         2 + v 2 . Denote the measurement noise of the course angle
+                                                                                                ng
+                                                        kbM −aM
+   measured output and expressed as Ym (k) = may Mf r+kMrf +                         as vG , then it can also be represented as follows:
+                 aM −bM
+   Iz ω̇z − mg Mff+kMrr sin φ.                                                                   γ = β+ψ+vG = arctan (vy /vx ) +ψ + vG                       (21)
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 04:15:40 UTC from IEEE Xplore. Restrictions apply.
+    3242                                                                      IEEE/ASME TRANSACTIONS ON MECHATRONICS, VOL. 28, NO. 6, DECEMBER 2023
+
+
+
+                                                                                          3) an optimized MHE;
+                                                                                          4) a vehicle sates estimator.
+                                                                                         From the figure, we can see that the specific force f and the
+                                                                                      angular velocity ωz are obtained from the output of gyroscopes
+                                                                                      and accelerometers. Then, the bias in inertial sensors can be
+                                                                                      addressed by the error compensation stage based on LSTM1.
+                                                                                      The input of the designed network consists of the longitudinal
+                                                                                      velocity from INS, as well as the lateral velocity error between
+                                                                                      GPS and IMU of the previous instant. The position and velocity
+                                                                                      computed from SINS can be expressed as Pi and Vi . Similarly,
+                                                                                      Pg and Vg are the position and velocity obtained from the GNSS
+    Fig. 2.   Structure of the proposed states estimation approach.                   block.
+                                                                                         Besides, the lateral velocity is computed from the network
+                                                                                      output, and the coupling effect between lateral and longitudinal
+    where β is the sideslip angle and can be estimated from the three                 motions can be revealed. Furthermore, the LSTM2 is utilized
+    degrees of freedom vehicle dynamic model.                                         to optimize the parameters of square-root CKF, Dt (p), and
+       Besides, the equations that correspond to the longitudinal and                 Dt (v) stand for the differences between the position and velocity
+    lateral accelerations are expressed as follows:                                   calculated from INS and GNSS. Meanwhile, the SCKF gains
+             1                                                                        also serve as the inputs of LSTM2 to obtain a final estimation.
+        ax =    (Fxf cos δf − Fyf sin δf + Fxr )                                      Finally, we can obtain the estimation of the sideslip angle and
+             m
+                                                                                      attitude angles (roll, pitch, and yaw angle).
+             1
+      ay =      (Fxf sin δf +Fyf cos δf + Fyr − mg sin φ) (22)                           The detail of SCKF-based method is described in Algo-
+             m                                                                        rithm 1. The measurement vector of the extended SCKF is z
+    On the basis of the above models, a composite nonlinear system                    and expressed as z = [ y T β D(p) D(v) ]T . The LSTM2
+    model can be derived after combining different parts together.                    is intended to learn and predict the internal filter parameters.
+    Define the composite state vector x as follows:
+                                                       T                              A. Moving Horizon Estimator (MHE)
+                             x=        v x v y ωz                            (23)
+    and based on the analysis for the system, choosing the acceler-                      MHE has been widely used to cope with nonlinear estimation
+    ation as the output variable, while the measured accelerations                    problems with constraints. MHE is composed of a deterministic
+    and steering angle as the input variables, then the input vector                  and a stochastic one. In the first part, the weighting factor
+    u and the observation vector y are defined as follows:                            depends on the reliability of the measurements. To facilitate
+                                                                                      description, for the time window of N sampling periods, denote
+                                                       T
+                            u=         δ am
+                                          x am
+                                             y                             (24a)      the measurements as y kk−N = [yk−N , . . . , yk ]T , the control in-
+                                                       T                                      k−N = [uk−N , . . . , uk−1 ] , and the estimation of xk−N
+                                                                                      put as uk−1                         T
+                            y=         ax ay ωz            .               (24b)      at current instant k as x̂k−N |k . Based on the analysis of the
+      Selecting the sampling time as Ts , then after some mathe-                      system, the cost function Jk is selected as
+    matical manipulation, the discrete-time system can be finally
+                                                                                                                                           
+                                                                                                                                           k−1
+    obtained by the forward Euler method as follows:                                         Jk = ρ xk−N |k − x̄k−N P −1 +
+                                                                                                                               2
+                                                                                                                                                 wi 2Q−1
+                                                                                                                                   k−N
+                           xk+1 = f (xk , uk ) + wk                                                                                      i=k−N
+
+                              y k = h(xk , uk ) + v k                        (25)                         
+                                                                                                          k
+                                                                                                     +           y i − h(xi , ui )2R−1                       (26)
+    where xk ∈  , uk ∈  , wk ∈  is the disturbance vector
+                      n            m             n                                                       i=k−N
+    affecting the system dynamics. y k ∈ s , and v k ∈ s is the
+                                                                                      where xk and wi represent the state variable and the process
+    measurement noise vector. The estimation results include the
+                                                                                      noise, respectively, Q and R stand for the covariances of the
+    sideslip angle, which is closely related with different road sur-
+                                                                                      process noise and the measurement noise, respectively. The
+    face and tire–road interaction coefficient.
+                                                                                      symbol  ·  represents the Euclidean norm of the vector in
+                                                                                      n . The scalar ρ ∈ [0, 1], namely the weight for the arrival cost
+                        III. STATE ESTIMATOR DESIGN
+                                                                                      term, is introduced to enhance the flexibility of the algorithm in
+       In this section, a nonlinear approach is proposed to achieve                   practical applications. The expression
+    accurate estimation for the vehicle states. The structure of the
+    technique is illustrated in Fig. 2, which consists of four different                   x̄k−N = x̂k−N |k−1
+    modules as follows:                                                                            = f (x̂k−N −1|k−1 , uk−N −1 ) + ŵk−N −1|k−1                (27)
+        1) vehicle sensors and global navigation satellite system
+           (GNSS) measurement;                                                        is called a prior state estimate, and the error covariance of
+        2) an error compensation by information fusion;                               xk−N − x̄k−N at time k − N is represented as P (k − N ).
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 04:15:40 UTC from IEEE Xplore. Restrictions apply.
+   SONG et al.: RELIABLE ESTIMATION OF AUTOMOTIVE STATES BASED ON OPTIMIZED NEURAL NETWORKS                                                                   3243
+
+
+
+   The well-known MH estimator is formulated as the opti-
+                                                     +1                               Algorithm 1: Extended Square-root cubature Kalman filter.
+   mization problem with a given set {x̄k−N , y N       , uN
+                                                           k }, then
+                                                   k
+                                                                                       1: Input x̂k−1|k−1 , S k−1|k−1 , z k ;
+   {x̂k−N |k , ŵk−N |k } = argminJk . The variables are subject to
+                 k−1
+                                                                                       2: Initialize sigma-points error matrix;
+   the constraint
+                                                                                       3: for i = 1, . . ., N do
+      x̂i+1|k = f (x̂i|k , ui ) + wi|k , i = k − N, . . . , k − 1.          (28)       4: Compute the cubature points:
+                                                                                       5: χi,k−1|k−1 = S k−1|k−1 ξi + x̂k−1|k−1 ;
+      It can be seen that the cost function reflects the estimation
+                                                                                       6: The points propagated by system function:
+   errors defined in a sliding time horizon. In the process, only N +1
+                                                                                       7: χ∗ i,k|k−1 = f (χi,k−1|k−1 ) + wi,k|k−1 ;
+   measurements are considered to update the arrival cost term. A
+                                                                                       8: State prediction: m ∗
+   truncated horizon is selected at the initialization of MHE, then
+                                                                                       9: x̂k|k−1 = m     1
+                                                                                                               i=1 χ i,k|k−1 ;
+   the number of measurements increase with an increasing horizon
+                                                                                      10: State error covariance prediction: Pk|k−1 =
+   length when t ≤ N . Therefore, the MHE is less affected by the                              m ∗                 ∗T
+                                                                                                  i=1 χ i,k|k−1 χ i,k|k−1 − x̂k|k−1 x̂k|k−1 + Qk−1
+                                                                                            1                                               T
+   inaccurate prior guess when compared with other methods.                           11: m
+                                                                                      12: The weighted, centered matrix:
+   B. Optimization Procedure                                                          13: χ∗ k|k−1 = √1m [χ∗ 1,k|k−1 − x̂k|k−1 χ∗ 2,k|k−1 −
+                                                                                           x̂k|k−1 . . .χ∗ m,k|k−1 − x̂k|k−1 ];
+      It has been stated in the former research that the accuracy
+                                                                                      14: The square-root of Qk−1 is S Q,k−1 ;
+   of the MHE does not enhance apparently with the increase
+                                                                                      15: S k|k−1 = T ria([χ∗ k|k−1 S Q,k−1 ]);
+   of the horizon length [8]. Nevertheless, the computational cost
+                                                                                      16: Measurement Update:
+   associates with the horizon window length, more effort should
+                                                                                      17: χi,k|k−1 = S k|k−1 ξi + x̂k|k−1 Z i,k|k−1 = h(χi,k|k−1 )
+   be devoted to reconciling these two objectives. Therefore, some
+                                                                                      18: Measurementprediction:
+   optimization techniques have been developed to improve the                                                  m
+                                                                                      19: ẑ k|k−1 = m    1
+                                                                                                               i=1 Z i,k|k−1 ;
+   computational efficiency and applied to handle the equality con-
+                                                                                      20: The weighted, centered matrix:
+   straints in the equations. In order to deal with the larger nonlinear
+                                                                                      21: χk|k−1 = √1m [χ1,k|k−1 − x̂k|k−1 χ2,k|k−1 −
+   programming brought by the direct multiple shooting, some
+   tools like IPOPT can be exploited in the implementation [38].                           x̂k|k−1 . . .χm,k|k−1 − x̂k|k−1 ];
+      In addition to EKF and UKF-based algorithms, some filtering                     22: Z k|k−1 = √1m [Z 1,k|k−1 − ẑ k|k−1 Z 2,k|k−1 −
+   strategies are employed to update the arrival cost in (26). The                         ẑ k|k−1 . . .Z m,k|k−1 − ẑ k|k−1 ];
+   MHE procedure can be summarized as optimization, propa-                            23: The square-root of Rk is S R,k ;
+   gation and prediction. The optimized Newton moving horizon                         24: S zz,k|k−1 = T ria([Z k|k−1 S R,k ]);
+   estimator (OMHE) with multiple iterations is discussed and used                    25: The cross-covariance matrix:
+   to estimate the vehicle states.                                                    26: Pxz,k|k−1 = χk|k−1 Z T k|k−1 ;
+      In some cases, the model parameters can be optimized by a                       27: The Kalman gain:
+   one-hidden layer feedforward neural network. The inputs are                        28: Wk = (Pxz,k|k−1 /Szz,k|k−1T
+                                                                                                                              )/Szz,k|k−1 ;
+   formed by the prediction x̄k−N and the information vector It =                     29: Updated state:
+   col(y k−N , . . . , y k , uk−N , . . . , uk−1 ). The output is the neural          30: x̂k|k = x̂k|k−1 + Wk (z k − ẑ k|k−1 );
+   network estimate x̃k−N |k . When the estimate is obtained from                     31: The square-root of the corresponding error covariance
+   the propagation by the descent steps [39], the function pX (x) is                  32: S k|k = T ria([χk|k−1 − Wk Z k|k−1 Wk S R,k ]);
+   utilized to calculate the projection on a convex compact set X.                    33: end for
+   Let xk ∈ X ⊂ n , uk ∈ U ⊂ s , and H : X × U n+1 → q                             34: return x̂k|k ;
+   be defined as follows:
+                                  
+              H xk−N , ukk−N
+                   ⎛ u                                           ⎞                      When the gradient ∇Jk (x̃k−N |k ) is obtained from the above
+                        h k ◦ f uk−1 ◦ f uk−2 ◦ · · · ◦ f uk−N                       discussion, the computation of cost function at time k = N, N +
+                   ⎜         huk−1 ◦ f uk−2 ◦ · · · ◦ f uk−N     ⎟                   1, . . . is deduced as follows:
+                   ⎜                                             ⎟
+                   ⎜                         .                   ⎟
+              := ⎜                           ..                  ⎟      (29)
+                   ⎜                                             ⎟                    x̂k−N |k = x̄k−N |k − (∇2 Jk (x̃k−N |k ))−1 ∇Jk (x̃k−N |k ). (31)
+                   ⎝              huk−N −1 ◦ f uk−N              ⎠
+                                          huk−N
+   where q equals to (N + 1)m and ◦ denotes function compo-                          C. Observability and Stability Analysis
+                        Δ
+   sition. f uk−N (xi ) = f (xi , ui ) + wi . Hence, the cost function                  It has been proved that the observability of a time-variant sys-
+   (26) can be rewritten as follows:                                                 tem can be derived from the observability Gramian. Therefore,
+                                                                                     the nonlinear system (25) is locally observable at the operating
+                                                        
+                                                        k−1
+          Jk = ρ xk−N |k − x̄k−N P −1 +
+                                            2
+                                                                wi 2Q−1            point (x0 , u0 ) if the observability matrix Γ has the same rank as
+                                                k−N
+                                                      i=k−N
+                                                                                     the dimension of state vector n. Γ is defined as follows:
+                                                            2
+                                                                                                          0       1             n−1   T
+                  + y kk−N − H(xxk−N |k , ukk−N ) R−1 .                     (30)               Γ = ∂Lf h ∂Lf h · · · ∂Lf h
+                                                                                                          ∂x      ∂x            ∂x       (x ,u )  0   0
+
+
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 04:15:40 UTC from IEEE Xplore. Restrictions apply.
+    3244                                                                      IEEE/ASME TRANSACTIONS ON MECHATRONICS, VOL. 28, NO. 6, DECEMBER 2023
+
+
+
+                      
+                          JL0f h JL1f h · · ·    JLn−1 h
+                                                            T
+                                                                                                      it = sigmoid(Wi ht−1 + Ui xt + bi )                      (40)
+                 :=                                 f
+                                                                             (32)
+                                                                (x0 ,u0 )
+                                                                                                      c̃t = tanh(Wc ht−1 + Uc xt + bc )                        (41)
+    where Lif h denotes the ith order Lie derivative, and JLif h is the
+                                                                                                      ct = ft ◦ ct−1 + it ◦ c̃t                                (42)
+    corresponding Jacobian matrix.
+      When (1)–(25) are combined, the first two elements in Γ are                                     ot = sigmoid(Wo ht−1 + Uo xt + bo )                      (43)
+    computed as follows:
+                                                                                                     ht = ot ◦ tanh(ct )                                       (44)
+                            ⎡                       ⎤
+                                J0,11 J0,12 J0,13
+                   JL0f h = ⎣ J0,21 J0,22 J0,23 ⎦                 (33)                where xt is the input at time step t, bf , bc , bi , bo are the bias
+                                 0      0       1                                     vectors. Wf , Wc , Wi , Wo are the weight matrices. ◦ means
+                            ⎡                       ⎤                                 element-wise multiplication and sigmoid(·) denotes the element-
+                                J1,11 J1,12 J1,13                                     wise sigmoid function. In the first step, the input gate it and the
+                   JL1f h = ⎣ J1,21 J1,22 J1,23 ⎦                 (34)                estimated states c̃t of memory cells at time t are obtained by (40)
+                                J1,31 J1,32 J1,33                                     and (41). In the second step, ft is computed by sigmoid function
+                                                                                      and then, the state ct is updated by integrating it , c̃t , ft in (39). At
+    where J0,ij and J1,ij represent the elements of the Jacobian
+                                                                                      last, the output gate value ht is derived with the updated states.
+    matrices. It can be inferred from (32) that the maximum rank
+                                                                                         From the illustration of the proposed approach in Fig. 2,
+    of JL0f h is 3. Since the state vector dimension in (25) is 3, the
+                                                                                      the LSTM1 is designed to model the INS error and LSTM2
+    system is validated to be locally observable.                                     can optimize the parameters of ESCKF. The detailed input and
+       In order to analyze the stability of the estimation methods,                   output of the networks are described in (42). In LSTM2, the
+    some assumptions are briefly introduced. Especially, when the                     differences between the position and velocity calculated from
+    functions f (·) and h(·) in (25) are assumed as class C 2 , and f (·)             INS and GNSS are represented as Dt (p) and Dt (v). Meanwhile,
+    satisfies the Lipschitz condition, we have                                        the SCKF gains also serve as the inputs of LSTM2 to obtain a
+           |f u (x ) − f u (x )| ≤ kf |x − x | ∀x, x ∈ X.                    (35)     final estimation. Therefore, we can obtain the estimation of the
+                                                                                      sideslip angle and attitudes.
+    Then, the Hessian matrix of the cost function (30) is represented                    It has been proved that the LSTM can be used to learn and
+    as ∇2 Jk (x̂). From the above discussion, it can be concluded that                predict the filter parameters, so that the results achieved by
+    there exists kJ > 0 such that the Lipschitz inequality (36) holds                 ESCKF is robust for different scenarios. The number of layers
+    for all time instant.                                                             and nodes in LSTM1 and LSTM2 are the same. The number of
+         2                    
+        ∇ J(x ) − ∇2 J(x ) ≤ kJ |x − x | ∀x, x ∈ X. (36)                            hidden layers is 20 and the initial learning rate is 0.1. A decay
+                                                                                      is set at 0.03 after the second patch, and the weight penalty is
+     Based on the theory of iterative Newton, the update for the                      0.01. The initial number of neurons is 150 and the threshold of
+    MHE estimate at time k + 1 is as follows:                                         the target error is 0.02.
+        x̂k−N +1|k+1 = x̄k−N +1|k+1 − (∇2 Jk+1 (x̃k−N +1|k+1 ))−1
+                                                                                               IV. SIMULATION AND EXPERIMENTAL RESULTS
+                             × ∇Jk+1 (x̃k−N +1|k+1 ).                        (37)
+                                                                                         In this section, the effectiveness of OMHE and the proposed
+    Then, the estimation error ek−N +1 is obtained and (38) can be                    methods described in the previous sections are validated by
+    established by using a Taylor expansion centered in xk−N +1 and                   Carsim-MATLAB simulation and field tests. In the simulation,
+    related assumptions                                                               different driving manoeuvres are designed and the vehicle state
+                          (kf kJ |ek−N | + 2ρ) kf                                     measurements generated from the trajectories are taken as the
+        |ek−N +1 | ≤                              |ek−N |                             system input. Besides, the results obtained from Kalman-based,
+                                    2ρ
+                                                                                      MHE, and OMHE methods are analyzed accordingly. In the
+                      = αk−N +1 |ek−N | ≤ α0 k−N +2 |x0 − x̄0 | .            (38)     field test, a comprehensive comparison of the estimation of the
+       Therefore, the estimation error for vehicle states given by (31)               vehicle sideslip angle and states are preformed.
+                      (k k |x −x̄ |+2ρ)kf
+    is stable if α0 = f J 0 2ρ 0          < 1.
+                                                                                      A. Simulation Results
+    D. LSTM Neural Networks                                                              Two different simulation scenarios are designed, including a
+                                                                                      modified double lane change (DLC) and a sine wave steering
+       The LSTM neural network is introduced to solve the gradient
+                                                                                      condition. In the Carsim software, a hatch-back vehicle model
+    problems in traditional RNNs. In the designed neural network,
+                                                                                      is employed and the vehicle parameters are set as follows:
+    a memory cell is added in the hidden layer and four elements
+                                                                                      m = 1270 kg, Iz = 1343 kg · m2 , a = 1.02 m, and b = 1.56 m. In
+    are included: An input gate (it ), a neuron with a self-recurrent
+                                                                                      the modified DLC simulation, the steering angle changes with
+    connection, a forget gate (ft ), and an output gate (ot ). The
+                                                                                      the vehicle trajectory and the speed is 30 km/h. The sideslip
+    (39)–(44) are derived to describe how the information flow is
+                                                                                      angle and estimation errors computed by Kalman, MHE, and
+    updated at every time step
+                                                                                      OMHE are given in Fig. 3. It can be seen that OMHE achieves
+                    ft = sigmoid(Wf ht−1 + Uf xt + bf )                      (39)     higher accuracy than that of Kalman and MHE, especially when
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 04:15:40 UTC from IEEE Xplore. Restrictions apply.
+   SONG et al.: RELIABLE ESTIMATION OF AUTOMOTIVE STATES BASED ON OPTIMIZED NEURAL NETWORKS                                                                   3245
+
+
+
+
+   Fig. 3.   Sideslip angle and estimation errors in DLC simulation.
+                                                                                     Fig. 5.   Sideslip angle estimation in sine wave simulation.
+
+                                TABLE I
+        VEHICLE SIDESLIP ANGLE ESTIMATIONS BY DIFFERENT METHODS
+
+
+
+
+                                                                                     Fig. 6. Cornering stiffness estimation based on RLS in sine wave
+                                                                                     simulation.
+
+
+
+
+                                                                                     that the variations in the estimated front and rear cornering
+                                                                                     stiffness are affected by the sideslip angle, but they are almost
+                                                                                     similar during different driving conditions. The proportional
+                                                                                     assumption about the parameters are reasonable and can be used
+   Fig. 4.   Cornering stiffness estimation based on RLS in DLC simula-              to facilitate the modeling process. Furthermore, the stability and
+   tion.                                                                             accuracy of the OMHE approach is enhanced by introducing the
+                                                                                     iteration decent algorithm, whereas the performance of KF and
+                                                                                     MHE rely heavily on parameters.
+   the steering angle changes at 10 s and 17 s. The root mean square
+   errors (RMSE) of the results are listed in Table I, which suggest                 B. Field Tests and Discussion
+   that RMSE of MHE is decreased by 20%, compared with that
+                                                                                        In the field test, a class sedan installed with a differential GPS
+   of OMHE. In the sine wave simulation, the steering angle varies
+                                                                                     is utilized to measure the sideslip angle. The reference value can
+   with the vehicle trajectory and the range of speed is 0–30 km/h.
+                                                                                     be computed as follows:
+   The friction coefficient is assumed as a constant and set as 0.85 in
+   the simulation test.                                                                                       2+(−1)j
+      Similarly, the sideslip angle and estimation errors obtained                                      β=            π + (−1)i ϕ − γ                        (45)
+                                                                                                                 2
+   by Kalman, MHE, and OMHE are shown in Fig. 5. The RMSE
+   of the different approaches are summarized in Table I; it can be                  where i denotes the order of quadrant number. j = 1 when
+   seen that the error of MHE is reduced by 36.15%. In addition,                     i = 1, 2, and j = 2 when i = 3, 4. γ is the angle between the
+   the cornering stiffness parameters during the simulation are                      longitudinal speed and the north direction. ϕ is the vehicle
+   obtained by RLS and depicted in Figs. 4 and 6. It is worth noting                 heading direction.
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 04:15:40 UTC from IEEE Xplore. Restrictions apply.
+    3246                                                                      IEEE/ASME TRANSACTIONS ON MECHATRONICS, VOL. 28, NO. 6, DECEMBER 2023
+
+
+
+
+    Fig. 7.   Experimental setup of integrated navigation system.
+
+
+                                    TABLE II
+               SPECIFICATIONS FOR INTEGRATED NAVIGATION SYSTEM
+                                                                                      Fig. 9.   Longitude, latitude and yaw angle of the vehicle in the field test.
+
+
+
+
+                                                                                      Fig. 10. Longitudinal and lateral velocity estimated by IMU, GPS, mod-
+                                                                                      ified ENN, LSTM, and spatial FOG.
+
+    Fig. 8.   Test vehicle trajectory.
+                                                                                      areas) and slalom maneuvers (green areas). Besides, the vehicle
+                                                                                      linear motion is related to the approximate constant yaw angle.
+       To verify the performance of the proposed method in esti-                      The stability of the estimation method can be verified under
+    mating the sideslip angle and vehicle states under real driving                   different scenarios in real applications.
+    conditions, a GPS/IMU integrated navigation system is installed                      The longitudinal and lateral velocities estimated by different
+    on the vehicle and the experimental setup is shown in Fig. 7. The                 methods are illustrated in Fig. 10. From the longitudinal velocity
+    advanced navigation Spatial fiber optic gyroscope (FOG) system                    figure, we can see that the highest speed exceeds 50 km/h, and the
+    consists of KVH 1750 IMU and Trimble BD920 GPS with sam-                          velocity changes more dramatically than that of the simulation.
+    pling rates of 200 Hz and 20 Hz, respectively. The specifications                 In addition, the comparison of different lateral velocities by the
+    about the integrated navigation system are described in Table II.                 inertial sensors, the modified ENN (MElman), and the proposed
+    A synchronization strategy is employed to deal with the different                 dual-LSTM method are also clearly illustrated in the figure. The
+    sampling rates problem [40]. The vehicle trajectory is designed                   results show that the proposed dual-LSTM method has a better
+    as Fig. 8 and lasts for 283 s.                                                    ability to model the relationship of the longitudinal velocities
+       It can be seen that several straight lines, DLC and similar                    computed by IMU and the low cost GPS.
+    slalom maneuvers under different conditions are included during                      In the network structure design, the longitudinal velocity error
+    the movement. The longitude and latitude of the vehicle recorded                  and lateral velocity error at previous instant are taken as the input
+    by spatial FOG and GPS are given in Fig. 9(a). The yaw angle                      of the neural network, then the prediction at current instant can
+    is depicted in Fig. 9(b) and changes dramatically at about 60 s                   be obtained from the network output. The initial learning rate is
+    and 150 s, which can be considered as the lane change (blue                       set as 0.1 with a decay of 0.02 from the fifth epoch. The number
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 04:15:40 UTC from IEEE Xplore. Restrictions apply.
+   SONG et al.: RELIABLE ESTIMATION OF AUTOMOTIVE STATES BASED ON OPTIMIZED NEURAL NETWORKS                                                                   3247
+
+
+
+
+                                                                                     Fig. 13.   Roll and pitch angle errors estimated by KF, SCKF, and ES-
+   Fig. 11. Sideslip angle estimated by IMU, GPS, Modified ENN, LSTM,                CKF.
+   and spatial FOG.
+
+                                                                                                                  TABLE III
+                                                                                                COMPARISON OF VEHICLE STATES ESTIMATION ERROR
+
+
+
+
+                                                                                     rises quickly and stabilizes around 40 km/h from 200 to 250 s,
+                                                                                     as shown in Fig. 10. Therefore, it implies that the developed
+                                                                                     method is more robust and reliable to the velocity variation.
+                                                                                     The reason is that the filter parameters are optimized by the
+   Fig. 12.   Roll and pitch angles estimated by KF, SCKF, ESCKF, and
+   Spatial.
+                                                                                     LSTM structure and the weights in the self-loop can be changed
+                                                                                     dynamically. This allows the method to learn and predict the
+                                                                                     internal filter parameters and enhances its ability to estimate the
+   of hidden layer is 50 and the maximum iterations are set as                       attitude angles under different scenarios.
+   600. Therefore, the estimation accuracy of lateral velocity and                      The RMSE of estimation errors are listed in Table III. It can
+   sideslip angle of the vehicle can be improved by eliminating the                  be summarized that RMSE of the roll angle and pitch angle by
+   measurement errors. Finally, the sideslip angles are obtained                     ESCKF decreases by 46.7% and 25.6%, respectively. Therefore,
+   by different methods and the estimation errors of MElman                          the experimental results indicate that the proposed dual-LSTM
+   and dual-LSTM are depicted in Fig. 11. It can be concluded                        and ESCKF are effective in improving estimation accuracy of
+   that the dual-LSTM has better ability to estimate the sideslip                    the vehicle sideslip angle and states.
+   angle under different driving scenarios. Optimal performance
+   is obtained by the designed structure since the memory cell is                                                V. CONCLUSION
+   incorporated to determine the input information and the INS                          This article provides a novel framework based on OMHE,
+   errors are compensated by LSTM1, which thus improves the                          optimized neural networks, and ESCKF to estimate the automo-
+   estimation accuracy when compared with other methods.                             tive sideslip angle and states. In particular, the INS is used to
+      The estimation outputs from spatial are taken as the reference                 measure the lateral and longitudinal information, and their cou-
+   values to validate the results obtained by different methods. The                 pling effects are revealed accordingly by introducing a LSTM
+   roll and pitch angles measured by Spatial during the experi-                      with powerful modeling and prediction abilities. Furthermore,
+   mental test are depicted in Fig. 12. Furthermore, the roll and                    the OMHE is designed to deal with the time-varying steering
+   pitch angle estimation errors by INS, KF, SCKF, and extended                      angle under various driving scenarios, and the sideslip angle
+   SCKF (ESCKF) are plotted in Fig. 13, we can see that the angle                    can be estimated precisely. Besides, the other LSTM is adopted
+   errors of ESCKF are remarkably reduced from 160 s. The vehicle                    to learn and predict the internal filter parameters of ESCKF, and
+   longitudinal velocity drops rapidly to 0 at about 190 s, then                     the vehicle states can be obtained. Finally, the simulation and
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 04:15:40 UTC from IEEE Xplore. Restrictions apply.
+    3248                                                                         IEEE/ASME TRANSACTIONS ON MECHATRONICS, VOL. 28, NO. 6, DECEMBER 2023
+
+
+
+    field tests are implemented to validate the effectiveness of the                     [15] Y. Wang, K. Geng, L. Xu, Y. Ren, H. Dong, and G. Yin, “Estimation
+    proposed method. The results show that the designed approach                              of sideslip angle and tire cornering stiffness using fuzzy adaptive robust
+                                                                                              cubature Kalman filter,” IEEE Trans. Syst., Man, Cybern. Syst., vol. 52,
+    has a better estimation accuracy with respect to the existing                             no. 3, pp. 1451-1462, Mar. 2022.
+    methods, especially when executing different maneuvers includ-                       [16] K. Han, M. Choi, and S. B. Choi, “Estimation of the tire cornering
+    ing a straight driving, a lane change, and so on.                                         stiffness as a road surface classification indicator using understeering
+                                                                                              characteristics,” IEEE Trans. Veh. Technol., vol. 67, no. 8, pp. 6851–6860,
+       In the future, in order to deal with different road conditions and                     Aug. 2018.
+    GPS denied environment [41], [42], we need to investigate the                        [17] X. Li, C. -Y. Chan, and Y. Wang, “A reliable fusion methodology for
+    approach to enhance the stability and navigation accuracy. Some                           simultaneous estimation of vehicle sideslip and yaw angles,” IEEE Trans.
+                                                                                              Veh. Technol., vol. 65, no. 6, pp. 4440–4458, Jun. 2016.
+    adaption strategies and diagnosis modules will be considered to                      [18] S. Zhou, H. Zhao, W. Chen, Z. Liu, H. Wang, and Y.-H. Liu, “Dynamic state
+    detect the availability of GPS signal and improve the robustness                          estimation and control of a heavy tractor—trailers vehicle,” IEEE/ASME
+    of the system. Besides, the generalization of LSTM should also                            Trans. Mechatron., vol. 26, no. 3, pp. 1467–1478, Jun. 2021.
+                                                                                         [19] W. Youn, N. Y. Ko, S. A. Gadsden, and H. Myung, “A novel multiple-model
+    be studied in some complex driving conditions. Furthermore,                               adaptive Kalman filter for an unknown measurement loss probability,”
+    the states estimation approach can be extended to the research                            IEEE Trans. Instrum. Meas., vol. 70, 2021, Art. no. 8500511.
+    of autonomous navigation of mobile robots, as well as related                        [20] B. L. Boada, M. J. L. Boada, L. Vargas-Melendez, and V. Diaz, “A robust
+                                                                                              observer based on H∞ filtering with parameter uncertainties combined
+    areas [43].                                                                               with neural networks for estimation of vehicle roll angle,” Mech. Syst.
+                                                                                              Signal Process., vol. 99, pp. 611–623, 2018.
+                                                                                         [21] C. Shen et al., “Seamless GPS/inertial navigation system based on self-
+                                   REFERENCES                                                 learning square-root cubature Kalman filter,” IEEE Trans. Ind. Electron.,
+     [1] K. Han, E. Lee, M. Choi, and S. B. Choi, “Adaptive scheme for the                    vol. 68, no. 1, pp. 499–508, Jan. 2021.
+         real-time estimation of tire-road friction coefficient and vehicle velocity,”   [22] H. B. Jeong, C. K. Ahn, S. H. You, and K. M. Sohn, “Finite-memory esti-
+         IEEE/ASME Trans. Mechatron., vol. 22, no. 4, pp. 1508–1518, Aug. 2017.               mation for vehicle roll and road bank angles,” IEEE Trans. Ind. Electron.,
+     [2] Y. Wang, L. Xu, F. Zhang, H. Dong, Y. Liu, and G. Yin, “An adaptive                  vol. 66, no. 7, pp. 5423–5432, Jul. 2019.
+         fault-tolerant EKF for vehicle state estimation with partial missing mea-       [23] A. A. Al-Matouq and T. L. Vincent, “Multiple window moving horizon
+         surements,” IEEE/ASME Trans. Mechatron., vol. 26, no. 3, pp. 1318–1327,              estimation,” Automatica, vol. 53, pp. 264–274, 2015.
+         Jun. 2021.                                                                      [24] H. Kong and S. Sukkarieh, “Suboptimal receding horizon estimation via
+     [3] A. Katriniok and D. Abel, “Adaptive EKF-based vehicle state estimation               noise blocking,” Automatica, vol. 98, pp. 66–75, 2018.
+         with online assessment of local observability,” IEEE Trans. Control Syst.       [25] L. Zou, Z. Wang, J. Hu, and Q.-L. Han, “Moving horizon estimation
+         Technol., vol. 24, no. 4, pp. 1368–1381, Jul. 2016.                                  meets multi-sensor information fusion: Development, opportunities and
+     [4] S. Cheng, L. Li, B. Yan, C. Liu, X. Wang, and J. Fang, “Simultaneous                 challenges,” Inf. Fusion, vol. 60, pp. 1–10, 2020.
+         estimation of tire side-slip angle and lateral tire force for vehicle lateral   [26] C. V. Rao and J. Rawlings, “Constrained process monitoring moving-
+         stability control,” Mech. Syst. Signal Process., vol. 132, pp. 168–182, 2019.        horizon approach,” Aiche J., vol. 48, pp. 97–109, 2002.
+     [5] C. Sun, C. Wang, Z. Deng, and D. Cao, “Dimensionless model-based sys-           [27] M. Ge and E. C. Kerrigan, “Noise covariance identification for nonlinear
+         tem tracking via augmented Kalman filter for multiscale unmanned ground              systems using expectation maximization and moving horizon estimation,”
+         vehicles,” IEEE/ASME Trans. Mechatron., vol. 26, no. 2, pp. 600–610,                 Automatica, vol. 77, pp. 336–343, 2017.
+         Apr. 2021.                                                                      [28] A. Alessandri and M. Gaggero, “Fast moving horizon state estima-
+     [6] B. L. Boada, M. J. L. Boada, and H. Zhang, “Sensor fusion based on a dual            tion for discrete-time systems using single and multi iteration descent
+         Kalman filter for estimation of road irregularities and vehicle mass under           methods,” IEEE Trans. Autom. Control, vol. 62, no. 9, pp. 4499–4511,
+         static and dynamic conditions,” IEEE/ASME Trans. Mechatron., vol. 24,                Sep. 2017.
+         no. 3, pp. 1075–1086, Jun. 2019.                                                [29] M. K. Al-Sharman, Y. Zweiri, M. A. K. Jaradat, R. Al-Husari, D. Gan, and
+     [7] W. Jeon, A. Chakrabarty, A. Zemouche, and R. Rajamani, “Simultaneous                 L. D. Seneviratne, “Deep-learning-based neural network training for state
+         state estimation and tire model learning for autonomous vehicle appli-               estimation enhancement: Application to attitude estimation,” IEEE Trans.
+         cations,” IEEE/ASME Trans. Mechatron., vol. 26, no. 4, pp. 1941–1950,                Instrum. Meas., vol. 69, no. 1, pp. 24–34, Jan. 2020.
+         Aug. 2021.                                                                      [30] G. He, X. Yuan, Y. Zhuang, and H. Hu, “An integrated GNSS/LiDAR-
+     [8] W. Zhang, Z. Wang, C. Zou, L. Drugge, and M. Nybacka, “Advanced vehi-                SLAM pose estimation framework for large-scale map building in partially
+         cle state monitoring: Evaluating moving horizon estimators and unscented             GNSS-denied environments,” IEEE Trans. Instrum. Meas., vol. 70, 2021,
+         Kalman filter,” IEEE Trans. Veh. Technol., vol. 68, no. 6, pp. 5430–5442,            Art. no. 7500709.
+         Jun. 2019.                                                                      [31] G. Sanchez, M. Murillo, and L. Giovanini, “Adaptive arrival cost update for
+     [9] R. Song and Y. Fang, “Vehicle state estimation for ins/gps aided by sensors          improving moving horizon estimation performance,” ISA Trans, vol. 68,
+         fusion and sckf-based algorithm,” Mech. Syst. Signal Process., vol. 150,             pp. 54–62, 2017.
+         2021, Art. no. 107315.                                                          [32] B. Gao, S. Gao, G. Hu, Y. Zhong, and C. Gu, “Maximum likelihood
+    [10] X. Xia, L. Xiong, Y. Lu, L. Gao, and Z. Yu, “Vehicle sideslip angle                  principle and moving horizon estimation based adaptive unscented Kalman
+         estimation by fusing inertial measurement unit and global navigation                 filter,” Aerosp. Sci. Technol., vol. 73, pp. 184–196, 2018.
+         satellite system with heading alignment,” Mech. Syst. Signal Process.,          [33] A. Liu, W.-A. Zhang, M. Z. Q. Chen, and L. Yu, “Moving horizon
+         vol. 150, 2021, Art. no. 107290.                                                     estimation for mobile robots with multirate sampling,” IEEE Trans. Ind.
+    [11] T. Gräber, S. Lupberger, M. Unterreiner, and D. Schramm, “A hybrid                   Electron., vol. 64, no. 2, pp. 1457–1467, Feb. 2017.
+         approach to side-slip angle estimation with recurrent neural networks           [34] N. A. Spielberg, M. Brown, N. R. Kapania, J. C. Kegelman, and J. C.
+         and kinematic vehicle models,” IEEE Trans. Intell. Veh., vol. 4, no. 1,              Gerdes, “Neural network vehicle models for high-performance automated
+         pp. 39–47, Mar. 2019.                                                                driving,” Sci. Robot., vol. 4, pp. 1–13, 2019.
+    [12] B. L. Boada, M. J. L. Boada, and V. Diaz, “Vehicle sideslip angle mea-          [35] Y. Xing and C. Lv, “Dynamic state estimation for the advanced brake
+         surement based on sensor data fusion using an integrated anfis and an un-            system of electric vehicles by using deep recurrent neural networks,” IEEE
+         scented Kalman filter algorithm,” Mech. Syst. Signal Process., vol. 72/73,           Trans. Ind. Electron., vol. 67, no. 11, pp. 9536–9547, Nov. 2020.
+         pp. 832–845, 2016.                                                              [36] D. Kim, K. Min, H. Kim, and K. Huh, “Vehicle sideslip angle estimation
+    [13] A.-T. Nguyen, T. Q. Dinh, T.-M. Guerra, and J. Pan, “Takagi—                         using deep ensemble-based adaptive Kalman filter,” Mech. Syst. Signal
+         sugeno fuzzy unknown input observers to estimate nonlinear dynam-                    Process., vol. 144, 2020, Art. no. 106862.
+         ics of autonomous ground vehicles: Theory and real-time verifica-               [37] B. Zhang, H. Du, J. Lam, N. Zhang, and W. Li, “A novel observer design
+         tion,” IEEE/ASME Trans. Mechatron., vol. 26, no. 3, pp. 1328–1338,                   for simultaneous estimation of vehicle steering angle and sideslip angle,”
+         Jun. 2021.                                                                           IEEE Trans. Ind. Electron., vol. 63, no. 7, pp. 4357–4366, Jul. 2016.
+    [14] E. Joa, K. Yi, and Y. Hyun, “Estimation of the tire slip angle under            [38] H. Guo, Z. Yin, D. Cao, H. Chen, and C. Lv, “A review of estimation
+         various road conditions without tire—road information for vehicle stability          for vehicle tire-road interactions toward automated driving,” IEEE Trans.
+         control,” Control Eng. Pract., vol. 86, pp. 129–143, 2019.                           Syst., Man, Cybern. Syst., vol. 49, no. 1, pp. 14–30, Jan. 2019.
+
+
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 04:15:40 UTC from IEEE Xplore. Restrictions apply.
+   SONG et al.: RELIABLE ESTIMATION OF AUTOMOTIVE STATES BASED ON OPTIMIZED NEURAL NETWORKS                                                                   3249
+
+
+
+   [39] D. Mori and Y. Hattori, “Simultaneous estimation of vehicle position and                               Yongchun Fang (Senior Member, IEEE) re-
+        data delays using gaussian process based moving horizon estimation,”                                   ceived the B.S. and M.S. degrees in control the-
+        Proc. IEEE/RSJ Int. Conf. Intell. Robots Syst., 2020, pp. 2303–2308.                                   ory and applications from Zhejiang University,
+   [40] H. Huang, J. Tang, R. Song, and X. Tang, “A novel matrix block algorithm                               Hangzhou, China, in 1996 and 1999, respec-
+        based on cubature transformation fusing variational bayesian scheme for                                tively, and the Ph.D. degree in electrical engi-
+        position estimation applied to MEMS navigation system,” Mech. Syst.                                    neering from Clemson University, Clemson, SC,
+        Signal Process., vol. 166, 2022, Art. no. 108486.                                                      USA, in 2002.
+   [41] Y.-W. Liao and F. Borrelli, “An adaptive approach to real-time estimation                                 From 2002 to 2003, he was a Postdoctoral
+        of vehicle sideslip, road bank angles, and sensor bias,” IEEE Trans. Veh.                              Fellow with the Sibley School of Mechanical
+        Technol., vol. 68, no. 8, pp. 7443–7454, Aug. 2019.                                                    and Aerospace Engineering, Cornell University,
+   [42] X. Ding, Z. Wang, and L. Zhang, “Event-triggered vehicle sideslip angle                                Ithaca, NY, USA. He is currently a Full Profes-
+        estimation based on low-cost sensors,” IEEE Trans. Ind. Informat., vol. 18,   sor with the Institute of Robotics and Automatic Information Systems,
+        no. 7, pp. 4466–4476, Jul. 2022.                                              Nankai University, Tianjin, China. His research interests include non-
+   [43] R. Zeng, Y. Kang, J. Yang, B. Qin, S. Chen, and D. Cao, “An integrated        linear control, visual servoing, control of underactuated systems, and
+        terrain identification framework for mobile robots: System development,       nanosystems.
+        analysis, and verification,” IEEE/ASME Trans. Mechatron., vol. 26, no. 3,        Dr. Fang was an Associate Editor for the ASME Journal of Dynamic
+        pp. 1581–1590, Jun. 2021.                                                     Systems, Measurement, and Control. He was a recipient of the National
+                                                                                      Science Fund for Distinguished Young Scholars of China.
+
+
+
+
+                                                                                                              Haoqian Huang (Member, IEEE) received the
+                             Rui Song (Member, IEEE) received the B.S.                                        B.S. degree in automation from the China
+                             degree in automation from Anhui Polytechnic                                      University of Mining and Technology, Xuzhou,
+                             University, Wuhu, China, in 2012, and the Ph.D.                                  China, the M.S. degree in agricultural mecha-
+                             degree in instrument science and technology                                      nization engineering from Nanjing Agricultural
+                             from Southeast University, Nanjing, China, in                                    University, Nanjing China, and the Ph.D. de-
+                             2018.                                                                            gree in instrument science and technology from
+                                He is currently an Assistant Research Fel-                                    Southeast University, Nanjing, China, in 2007,
+                             low with the Institute of Robotics and Auto-                                     2010, and 2015, respectively.
+                             matic Information System, Nankai University,                                       He is currently an Associate Professor with
+                             Tianjin, China. His research interests include in-                               the College of Energy and Electrical Engineer-
+                             ertial navigation, state estimation, and robotics        ing, Hohai University, Nanjing, China. His main research interests in-
+                             navigation.                                              clude navigation technology, inertial navigation, and filtering methods.
+
+
+
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 04:15:40 UTC from IEEE Xplore. Restrictions apply.
+

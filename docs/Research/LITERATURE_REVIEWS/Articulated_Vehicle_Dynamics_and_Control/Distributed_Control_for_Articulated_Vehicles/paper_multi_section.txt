@@ -1,0 +1,995 @@
+2025 IEEE Vehicle Power and Propulsion Conference (VPPC) | 979-8-3315-9846-4/25/$31.00 ©2025 IEEE | DOI: 10.1109/VPPC66000.2025.11393021
+
+Distributed Cooperative Steering Control for ThreeSection Six-Axis Articulated Vehicles
+1stSun Ye
+CRSC Research and Design Institute
+Group Co., Ltd
+Beijing, China
+E-mail: sy@crscd.com.cn
+
+2nd Zhang Chen
+CRSC Research and Design Institute
+Group Co., Ltd
+Beijing, China
+E-mai1:zhangchen@crscd.com.cn
+
+3rd Longqiang Wen
+HangZhou DianZi University
+Hangzhou China
+E-mail: 2655667339@qq.com
+
+4th Li Jie Chen
+Zhejiang University of Technology
+Hangzhou China
+E-mail：1838824481@qq.com
+
+5th Huipeng Chen
+HangZhou DianZi University
+Hangzhou China
+E-mail：hpchen@hdu.edu.cn
+
+6th Shaopeng Zhu
+Zhejiang University
+Hangzhou China
+Email：spzhu@zju.edu.cn
+
+Abstract—This paper proposes a distributed cooperative
+control strategy to address the accuracy of trajectory following
+control of six-axle articulated vehicles with three-section
+formation. Leveraging a kinematic-derived dynamic model, the
+strategy employs combined Extended Ackermann feedforward
+and Fuzzy PID control for the 4th and 6th axles, mitigating large
+lateral deviations via dynamic PID parameter optimization.
+Standard Fuzzy PID controls the 2nd, 3rd, and 5th axles. Cosimulation results using TruckSim and Simulink demonstrate
+significant reductions in critical axle lateral deviations compared
+to conventional PID, alongside effective management of other
+axles under typical road conditions. The proposed approach
+exhibits high precision and robustness, offering an effective
+solution.
+Keywords—Articulated vehicle, Fuzzy PID control, Trajectory
+tracking, Multi-axle cooperative control
+
+I. INTRODUCTION
+With the acceleration of urbanization and the increasing
+demand
+for
+public
+transportation,
+efficient
+and
+environmentally friendly means of transportation has become
+an important support for sustainable urban development [1-2].
+As a useful supplement to the main urban public transportation
+system such as ordinary buses, subways and streetcars, six-axle
+articulated vehicles have gradually become an important part
+of the urban public transportation system by virtue of their
+large capacity, low energy consumption and flexible turning
+performance. This type of vehicle consists of multiple
+compartments connected by articulated devices, with multiple
+axial degrees of freedom of movement, and is capable of
+realizing efficient transportation in complex urban road
+environments. However, their unique structural design and
+multi-axis motion characteristics also bring unprecedented
+challenges to the development of control systems. Especially
+in realizing high-precision trajectory following control,
+traditional control methods are often difficult to meet its high
+requirements for stability and accuracy. Therefore, the study of
+multi-axis cooperative control strategies for six-axis articulated
+vehicles to realize accurate trajectory following control not
+only has important theoretical significance, but also shows a
+※Corresponding author: Shaopeng Zhu Email：spzhu@zju.edu.cn.
+
+※
+
+broad application prospect.
+Trajectory following control is one of the core technologies
+in automatic driving and intelligent transportation systems, and
+its goal is to enable the vehicle to follow a predetermined path
+while maintaining a stable attitude and speed. For a six-axis
+articulated bus vehicle, due to its multi-axis articulated
+structure, the coordinated motion between the axes is
+especially critical in the driving process. Traditional trajectory
+following control methods are mostly designed for single-axis
+vehicles or simplified models, which are difficult to be directly
+applied to the control requirements of such complex systems.
+In recent years, with the rapid development of control theory
+and computational technology, advanced control strategies
+based on model predictive control, sliding mode control, fuzzy
+control and other advanced control strategies are increasingly
+widely used in vehicle trajectory following control, which
+provide new theoretical support and technical paths for the
+control system design of six-axis articulated bus vehicles.Dasol
+Jeong [3] et al. designed a pipelined robust model predictive
+control, which is effectively applied to the control system of
+six-axis articulated bus vehicles through pipeline analysis and
+constraint tightening techniques to effectively deal with
+modeling errors and uncertainties, and to achieve highprecision trajectory following control of a 3-axis articulated
+vehicle.Mateusz Szumilas [4] et al. focused on the joint control
+of articulated buses, and adjusted the damping of the joints
+through the use of MEMS sensors and electro-hydraulic servo
+systems to ensure the stability and maneuverability of the
+vehicle at different speeds.Rui Li [5] et al. proposed a trajectory
+following algorithm based on adaptive sliding mode control for
+articulated vehicle control. By verifying in a hardware-in-theloop simulation environment, the ASMC method is able to
+effectively control the lateral position deviation, heading angle
+deviation and curvature deviation, and it reduces the errors and
+oscillations and improves the following performance compared
+with the traditional method. Peng Jing [6] et al. proposed an
+autonomous guidance and trajectory following control system,
+which realizes the path following of the Smart Tram by using
+the method of sectional control. Li Si Xu [7] et al. proposed a
+multi-point pre-scanning path following method for articulated
+vehicles based on predictive control of dynamics model, which
+
+979-8-3315-9846-4/25/$31.00
+IEEE
+Authorized
+licensed use limited to: King©2025
+Mongkut's
+University of Technology Thonburi. Downloaded on March 17,2026 at 03:03:12 UTC from IEEE Xplore. Restrictions apply.
+
+realizes high-precision path following control of articulated
+vehicles by constructing a dynamics model and adopting the
+control objective of multi-point pre-scanning error. Meanwhile,
+the significant improvement of sensor technology (e.g., LIDAR,
+vision system) and real-time computing capability makes the
+vehicle able to perceive the complex environment in real time
+and make decisions quickly, which further promotes the
+research and practice of high-precision trajectory following
+control.
+Although the research on trajectory following control of
+six-axis articulated bus vehicles has made progress, it still faces
+challenges. Its multi-axis articulated structure leads to highly
+nonlinear kinematics and dynamics model, which increases the
+complexity of control system design. In addition, uncertainties
+such as road surface unevenness, side winds, and dynamic
+traffic place higher demands on the robustness of the control
+system. Therefore, the development of efficient and reliable
+multi-axis cooperative control strategies to realize highprecision trajectory following control is a key problem to be
+solved nowadays.
+
+center of mass of the trailing trailer to the front and rear axles
+are denoted by
+=4150mm and
+=4150mm. =4800mm
+=5500mm are used to indicate the length from the
+and
+center of mass of the tractor to the head and tail of the carriage,
+respectively, and similarly the lengths from the centers of mass
+of the last two trailers to the head and tail of the carriage are
+indicated by
+=4700mm,
+=5500mm and
+=4700mm,
+=4800mm, respectively.
+
+Fig. 1.
+
+In this paper, a novel distributed hybrid control architecture
+is proposed for a three-section six-axis vehicle. This
+architecture judiciously assigns a Combined Fuzzy PID
+(CFPID) controller to the critical 4th and 6th axles and a
+standard Fuzzy PID (FPID) controller to the 2nd, 3rd, and 5th
+axles, balancing control performance and computational
+efficiency.Based on the real vehicle data provided by the
+project of CRSC Corporation, a co-simulation environment
+integrating TruckSim and Simulink is established to validate
+the control scheme under realistic urban road conditions. The
+proposed control architecture significantly outperforms the
+conventional PID method in terms of lateral deviation
+minimization, especially on critical axles.
+
+(a)
+
+Specifically, this study will first establish a dynamic model
+of a six-axis articulated vehicle and analyze its motion behavior
+under different working conditions, and then design a
+distributed multi-axis cooperative control strategy to achieve
+smooth driving and accurate trajectory following through
+coordinated allocation of the cornering control of each axle,
+and finally, verify the validity and robustness of the proposed
+method through simulation experiments.
+II. VEHICLE DYNAMICS MODELING
+The experimental simulation vehicle is a threecompartment, six-axle articulated bus with power centralized
+drive, the front axle is the drive axle, and all axles can be
+steered. The structure diagram of the articulated vehicle is
+denotes the axle number,
+shown in Fig. 1, where （i=1,2…6）
+(i=1,2...6) denotes the angle of rotation of each axle during
+the driving process, and 0 (i=1,2,3) denotes the center-of-mass
+point of each compartment.The mass of the trailer
+=9000kg,
+the mass of the intermediate trailer
+=6000kg, and the mass
+of the trailing trailer
+=9000kg. The distances from the center
+of mass of the trailer to the front axle and to the rear axle are
+denoted by
+=2550mm and =4150mm, respectively, and
+similarly the distances from the center of mass of the
+intermediate trailer to the front and rear axles are denoted by
+=3350mm and
+=3350mm, while the distances from the
+
+Articulated Vehicle Structure
+
+(b)
+Fig. 2.
+
+Trucksim Vehicle And Tire Model
+
+To describe the vehicle behavior with sufficient fidelity, the
+dynamic model is established using the TruckSim platform.
+The articulated structure is modeled as a multi-body system
+consisting of a tractor and two trailer units, connected via rotary
+joints. Each axle is represented with suspension and steering
+parameters mapped from the actual vehicle configuration. The
+front body is modeled as a 2-axle bus with power input and
+steering capabilities. The trailers are configured as 2-axle
+passive units. The current model utilizes TruckSim's built-in
+dynamics solver, and its structure corresponds to a simplified
+9-DOF transverse model involving transverse displacement,
+yaw angle, and articulation angle. An example simplified order
+dynamic model is described below:
+∑
+
+∑
+
+where the lateral tire forces and yaw moments. These are
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 03:03:12 UTC from IEEE Xplore. Restrictions apply.
+
+handled indirectly by TruckSim's in-house multi-body
+simulation and have been validated in previous studies. A
+vehicle dynamics model and tire model data is shown Fig. 2
+can be constructed in TruckSim software . The TruckSim
+vehicle model has been parameterized according to a real threesection articulated bus configuration provided by CRSC Group.
+Although full-scale physical testing was not conducted, the
+TruckSim-based multi-body model has been validated in
+previous literature [8,10] and widely adopted in commercial
+vehicle control research. Future work will include hardware-inthe-loop (HIL) testing for further verification.
+III. VEHICLE CONTROLLER DESIGN
+Wheel angle calculation based on extended Ackermann
+steering
+The first axle steering of the vehicle is controlled by the
+driver during traveling, the first axle wheel steering angle
+is known. In order to achieve high maneuverability and
+following performance, Wagner [9] et al. designed an
+Ackermann steering angle based calculation method, which
+can calculate the feedforward steering angles of
+and
+axes from the known
+axle steering angle. The method
+ensures that the rear axes (
+and ) move along the same
+circle described by the front axis ( ) by basing on the classical
+Ackermann steering principle, which allows the instantaneous
+center of rotation
+, to be obtained from the steering angle of
+the front axis ( ). Specifically, the steering angles of the rear
+axes are deduced from geometrical relations such that the
+centroids of all axes always lie on the same circle.
+
+A.
+
+calculate the size of the final
+B
+
+arccos C
+
+axis control angle
+'
+
+sin , D
+
+6!
+
+The radius of motion of the second hinge through the corner
+can be calculated by the following equation:
+@
+F'
+* 2"'
+cos G * B H
+'
+2
+7!
+F'
+* 2"'
+sin B
+
+Similarly, the magnitude of the angle of rotation
+can be computed
+axis
+" *
+'
+,
+arccos 1
+2
+2 ' "
+B
+
+of
+
+where"
+the tail
+
+car
+
+arccos C
+
+'
+
+sin , D
+
+of the
+8!
+9!
+
+denotes the distance from the rear axle
+to the second articulation point.
+
+As shown in Fig. 3, the radius of rotation of the
+axis is
+. Assuming that the radius of rotation of the
+and
+axes are equal to that of the
+axis, there is a qualification:
+
+The radius of rotation of the
+geometric relationship:
+
+1!
+
+"
+tan
+
+Where "
+vehicle.
+
+2!
+
+indicates the wheelbase of the first
+
+The length from the first articulation point to the center of
+rotation is:
+'
+
+"'
+
+.
+
+3!
+
+In the triangle
+* * + of Fig. 2, the magnitude of the
+angle , can be calculated from the knowledge of
+trigonometry:
+" *
+'
+,
+arccos 1
+2
+4!
+2 ' "
+where "
+indicates the distance from the
+first articulation point to the
+axis.
+
+@
+5!
+2
+As well as the math of congruent triangles, one can
+
+by the equation：
+
+?
+
+Fig. 3.
+
+axis is obtained from the
+
+Schematic Of The Kinematic Model With A Single Center Of
+Rotation
+
+Assuming a shared rotation center, steering angles for the
+and
+axles can be calculated using a geometric method
+to provide feedforward control for vehicle trajectory following.
+This approach offers computational simplicity but is primarily
+applicable to steady-state turning conditions due to its
+underlying geometric assumptions. Critically, this method
+lacks a feedback mechanism for correcting path following
+errors. Consequently, this feedforward strategy necessitates
+further optimization to effectively handle dynamic conditions
+and enhance accuracy.
+Design of control strategy based on fuzzy PID
+Traditional regulators—whether PID, LQR, or slidingmode schemes—tend to falter when confronted with the
+pronounced nonlinearities inherent to multi-unit vehicles; their
+fidelity hinges on precise plant models or they become fragile
+in the face of sensor noise. Fuzzy inference, by comparison,
+translates linguistic rules into control actions, thereby
+accommodating uncertain parameters and strong nonlinear
+couplings without recourse to an exact mathematical
+description. A hybrid fuzzy-PID architecture is consequently
+adopted to exploit this resilience, allowing gains to be reshaped
+on-line as road friction, load distribution, or articulation angles
+B.
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 03:03:12 UTC from IEEE Xplore. Restrictions apply.
+
+vary. This design yields higher robustness, faster transients, and
+no need for exact models; the fuzzy layer retunes PID gains on
+the fly to keep lateral error low through sharp bends or uneven
+terrain.
+In this section, a wheel cornering controller based on a
+fuzzy PID control strategy is proposed. This controller reduces
+the trajectory following deviation between the actual and
+desired paths of the vehicle by real-time adjustment of the
+vehicle's remaining axle turning angles except for the
+axle.
+The specific control process is shown in the control flow
+diagram in Fig. 4.
+
+1) Design of the lateral deviation calculation module
+The trajectory of the
+axis is the expected trajectory
+while the trajectory of the rear axle needs to be as close as
+possible to the first axle's trajectory, which requires that the
+current trajectory data of the rear axle is obtained and the
+expected trajectory is calculated. Before calculating the
+trajectory deviation of the rear axle, it is necessary to discretize
+the driving trajectories of each axis into a point cloud and store
+it in the memory. There is a delay time between the current
+trajectory and the expected trajectory, which can be calculated
+by the delay module in Simulink [10]. The time size of the
+delay is:
+M
+1
+L
+dV 1
+10!
+MNOMPQ R! ΔTU V!
+
+It can also be used in practical engineering applications by
+"U
+ΔTWU T!
+11!
+
+to abbreviate the calculation, where "U denotes the wheelbase
+from the first axis to the U axis and
+denotes the vehicle
+speed.
+Fig. 4.
+
+Fuzzy PID Control Flow Chart
+
+(a)
+
+Lateral deviation and deviation change rate affiliation function
+
+(b) Joint control surfaces
+Fig. 5.
+
+Affinity Function And Joint Control Surface Map
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 03:03:12 UTC from IEEE Xplore. Restrictions apply.
+
+TABLE I.
+
+ΔKp、Δki AND ΔKd RULE SHEET
+
+e /ec
+
+NB
+
+NM
+
+NS
+
+ZO
+
+PS
+
+PM
+
+PB
+
+NB
+
+PB/NB/PS
+
+PB/NB/NS
+
+PM/NM/NB
+
+PM/NMNB
+
+PS/NSNB
+
+ZO/ZO/NM
+
+ZO/ZO/PS
+
+NM
+
+PB/NB/PS
+
+PB/NM/NS
+
+PM/NS/NB
+
+PS/ZO/NB
+
+ZO/PS/NS
+
+NS/PS/NM
+
+NM/PS/ZO
+
+NS
+
+PM/NM/ZO
+
+PM/NM/ZO
+
+PS/NS/NS
+
+ZO/ZO/NS
+
+NS/PS/NS
+
+NM/PM/NS
+
+NM/PM/ZO
+
+ZO
+
+PM/NM/ZO
+
+PS/NS/ZO
+
+ZO/ZO/PS
+
+ZO/ZO/PS
+
+ZO/ZO/PS
+
+NS/ZO/PS
+
+NM/PM/ZO
+
+PS
+
+PS/NM/ZO
+
+PS/NM/ZO
+
+ZO/NS/ZO
+
+NS/ZO/PS
+
+NM/PM/PS
+
+NM/PM/PS
+
+NB/PB/ZO
+
+PM
+
+PS/NS/ZO
+
+ZO/NS/ZO
+
+NS/ZO/ZO
+
+NM/PS/PS
+
+NM/PM/PM
+
+NB/PB/PS
+
+NB/PB/ZO
+
+PB
+
+ZO/ZO/ZO
+
+ZO/ZO/PM
+
+NM/PS/PB
+
+NM/PM/PB
+
+NB/PB/PB
+
+NB/PB/PS
+
+NB/PB/PS
+
+The coordinates of the posterior axis XU YU T!, [U T!!
+(n=2,3,4,5,6) can be obtained from this delay, where
+YU T!, [U T!are:
+\
+
+YU T!
+
+Y]T * ^TWU T!_
+
+[U T!
+
+[]T * ^TWU T!_
+
+(12)
+
+[ * [U !
+
+14!
+
+After obtaining the coordinates of the rear axes, the
+trajectory deviation of the rear axes and the rate of change of
+the deviation can be calculated.
+Y
+Y * YU !
+13!
+`
+
+[
+
+a
+
+`
+
+Y!
+
+d`
+dT
+
+[!
+
+The fuzzy PID controller designed in this paper has two
+inputs-lateral deviation `e` and and its rate `ec` -and three
+outputs- Δbc 、 Δb and ΔbW The domains of the input
+variables are [-0.6 0.6] and [-0.3 0.4], and the domains of the
+output variables are [-1.6 1.6], [-1.4 1.4], and [-0.6 0.6],
+respectively. The fuzzy sets of all the input and output variables
+are set to {NB NM NS ZO PS PM PB}. The output variables
+Δbc 、Δb and ΔbW , and the specific rules are shown in Tables
+2 to 4.The improved PID parameters by fuzzy reasoning are:
+be
+dbg
+bh
+
+15!
+16!
+
+Fuzzy rules and affiliation function design
+The procedure for defining fuzzy control rules follows a
+structured expert-based approach. Initially, extensive vehicle
+simulation data were analyzed to determine the typical patterns
+of lateral deviation and its rate of change during trajectory
+following. Based on these observations, the fuzzy rules were
+formulated by domain experts to reflect intuitive corrective
+behaviors under different driving scenarios. For example, large
+negative deviation combined with an increasing error rate
+requires aggressive corrective steering, which is encoded as
+high gain increases in the fuzzy PID controller.
+2)
+
+nonlinear characteristics while remaining generalizable to a
+wide range of road conditions.
+
+The membership functions were selected as symmetric
+triangular functions to ensure real-time computation efficiency
+and simplicity of tuning and the joint control surface and
+affiliation function [11] are shown in Fig. 5. Their ranges were
+calibrated based on statistical bounds observed in simulation
+results and matched to control variable domains used in prior
+fuzzy control studies [12]. This hybrid method—combining
+expert knowledge with empirical data fitting—ensures that the
+fuzzy controller is well-tuned to the articulated vehicle’s
+
+bef ^be
+bgf ^bg
+bhf ^bh
+
+(17)
+
+Where be 、bg 、bh and bef 、bgf 、bhf are the final and
+initial values of the PID coefficients.
+Control Policy Assignment
+Vehicles are susceptible to a variety of disturbing factors
+during turn-by-turn driving, which may exacerbate the
+trajectory deviation of vehicles. In order to enhance the
+robustness of three-knuckle six-axle intelligent rail train in
+trajectory following deviation control, this paper proposes an
+optimized control strategy allocation scheme (distributed
+cooperative control). In this study, a distributed cooperative
+control strategy is proposed to enhance the trajectory tracking
+accuracy of six-axle articulated vehicles. Unlike centralized
+steering control, where a central controller governs all axle
+angles, the distributed control framework adopts a modular
+approach. Each axle or axle group is equipped with an
+independent local controller that receives coordination signals
+from a supervisory controller. These local controllers execute
+control tasks (e.g., fuzzy PID adjustment or feedforward
+compensation) based on their respective lateral deviation
+inputs.The key advantage of this framework lies in its fault
+
+C.
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 03:03:12 UTC from IEEE Xplore. Restrictions apply.
+
+tolerance, scalability, and robustness against localized
+disturbances.A schematic diagram of the distributed
+framework is shown in Fig.6, illustrating the hierarchical
+structure of coordination.
+In the previous analysis, this paper identifies that the most
+significant deviation of trajectory deviation in the threeknuckle intelligent rail train is the
+and
+axes, so for the
+control of these two axes, this paper adopts the feed-forward
+control superimposed on fuzzy PID with extended
+Ackermann's turn angle (abbreviated as CFPID) [10]. The
+specific control process is as follows: firstly, the feedforward
+controller calculates the feedforward angles B and B of
+and
+axes through the vehicle parameters and the angle
+of
+axes, and then calculates the trajectory deviation and the
+deviation change rate of
+and
+axes through real-time
+detection during driving, and passes these parameters into the
+fuzzy controller. The fuzzy controller dynamically adjusts the
+gain parameters of the PID controller based on the fuzzy
+inference rules so as to optimize the PID parameters in real time,
+thus obtaining the regulated wheel steering angles i and
+and
+. The final wheel steering angles
+i for the axes
+for the two axes are:
+j
+
+B
+B
+
+i
+i
+
+it with Simulink. In the simulation environment designed in
+this paper, the road model includes three straight lines with
+lengths of 10m, 40m and 30m respectively and two 90^0 curves
+with radii of 25m and 15m respectively, and the specific layout
+is shown in Figure 7. In addition, considering the influence of
+the road friction coefficient on the dynamic behavior of the
+vehicle, this paper sets it to the dry asphalt road adhesion
+coefficient l 0.85 [13]. At the same time, considering that
+too fast turning speed may cause risks such as vehicle rollover,
+the simulation speed is set to 10km/h.
+
+18!
+
+For the control of
+,
+and k axes, this paper
+directly adopts the fuzzy PID controller to calculate their wheel
+turning angles. Specifically, by detecting the trajectory
+deviation of each axis and its change rate in real time, the fuzzy
+PID controller dynamically adjusts the PID parameters based
+on the fuzzy inference rules, and finally outputs the
+corresponding wheel turning angles, which are noted as i ,
+i , and
+ki , respectively, and these values are the final
+wheel turning angles- , , k .
+
+In this distributed control architecture, axles 4 and 6 use a
+hybrid feedforward + fuzzy PID controller, while axles 2, 3,
+and 5 apply standard fuzzy PID. All controllers operate
+independently, coordinated by a supervisory layer
+
+Fig. 7.
+
+Simulation results analysis
+According to the control strategy and simulation
+environment designed in the previous section, the simulation
+results of the lateral deviation of vehicle
+~
+axes are
+obtained through the joint simulation of Simulink and
+Trucksim, as shown in Fig. 8. The 'original' curve represents
+the uncontrolled case, where only the first axle is steered
+according to the path and no corrective steering control is
+applied to the subsequent axles (2 through 6). This serves as a
+baseline to demonstrate the magnitude of the inherent
+trajectory deviation.
+
+B.
+
+(a)
+Fig. 6.
+
+Simulation Roadmap
+
+axis transverse deviation
+
+Distributed Collaborative Control Flowchart
+
+IV. SIMULATION EXPERIMENT ANALYSIS
+Simulation Experiment
+In order to verify the performance of the designed controller,
+this study builds a vehicle model in Trucksim and co-simulates
+
+A.
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 03:03:12 UTC from IEEE Xplore. Restrictions apply.
+
+(b)
+
+axis transverse deviation
+
+Fig. 9.
+
+(c)
+
+axis transverse deviation
+
+Fig. 10.
+
+(d)
+
+k
+
+(e)
+Fig. 8.
+
+Axis Trajectory Tracking Result
+
+axis transverse deviation
+
+axis transverse deviation
+
+~
+
+Axis Lateral Deviation Simulation Results
+
+Axis Steering angle
+
+The simulation experiments show that the maximum values
+of the lateral deviation results of
+and
+axes in the
+uncontrolled state are 0.84m and 2.4m, respectively, and the
+lateral deviations of the two axes are reduced to within 0.37m
+and 0.32m, respectively, under the effect of the compensating
+fuzzy PID control; the maximum values of the lateral
+deviations of the three axes in the uncontrolled state are 0.24m,
+1.32m and 1.38m for the three axes in the uncontrolled state,
+and the maximum values are 0.058m, 0.22m and 0.33m for the
+three axes after the application of the fuzzy PID control, 1.32m
+and 1.38m, respectively, and the lateral deviations of the three
+axes are reduced to within 0.058m, 0.22m and 0.33m,
+respectively, after applying the fuzzy PID control.
+In order to reflect the control performance of this control
+strategy, this paper also carries out the PID control test on
+and
+axes, and the simulation results show that the
+maximum lateral deviation of the two axes under PID control
+is 0.57m and 0.51m respectively, which further verifies that the
+control strategy designed herein is superior to the performance
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 03:03:12 UTC from IEEE Xplore. Restrictions apply.
+
+of traditional PID. After applying the proposed control, the
+maximum lateral deviations for all controlled axles are
+significantly reduced, with values ranging from 0.096m (for A2)
+to 0.37m (for A4), as detailed in Table II.
+Figure 9 shows the trajectory tracking results for the 6th
+axle under both a standard PID controller and the proposed
+CFPID controller. The reference path is a double lane change
+maneuver. Both controllers successfully guide the vehicle
+along the path, but a clear performance difference is evident.
+The PID controller's trajectory (solid black line) shows a
+visible deviation from the reference path, particularly as it
+enters and exits the S-curve. In comparison, the path of the
+proposed CFPID controller (dashed red line) maintains a much
+closer alignment with the reference path, demonstrating
+significantly higher accuracy.
+This enhanced tracking performance corresponds to the
+improved control action shown in Figure 10.
+TABLE II. Simulation results
+
+axles
+
+k
+
+Control methods
+
+Maximum lateral
+deviation (m)
+
+FPID
+
+0.096
+
+FPID
+
+0.28
+
+CFPID
+
+0.37
+
+FPID
+
+0.35
+
+CFPID
+
+0.32
+
+REFERENCES
+[1]
+
+ZHOU Ming,YU Zhuoping,ZHAO Zhiguo. Development of power
+steering technology[J]. Automotive Research and Development, 2004,
+(10): 9-12.
+[2] Zhang Heng. Analysis of design points of urban intelligent rail express
+transportation system_Zhang H[J]. Intelligent City, 2018, 4(04): 106-107.
+[3] Jeong Dasol,Choi Seibum-B.. Tube-Based Robust Model Predictive
+Control for Tracking Control of Autonomous Articulated Vehicles[J].
+IEEE Transactions on Intelligent Vehicles, 2024, 9: 2184-2196.
+[4] Szumilas Mateusz,Łuczak Sergiusz,Bodnicki Maciej,et al. Method of
+controlling innovative articulation for articulated vehicle[J]. MATEC
+Web of Conferences, 2018, 157: 04005.
+[5] Rui Li,Lin Li,Tiezhu Zhang, et al. Optimization Study of Trajectory
+Tracking Algorithm for Articulated Vehicles Based on Adaptive Sliding
+Mode Control[J]. World Electric Vehicle Journal, 2025, 16: 114.
+[6] PENG Jing,FENG Jianghua,XIAO Lei,et al. Research on autonomous
+guidance and trajectory following technology of smart tram_Peng Jing[J].
+Control and Information Technology, 2020, (01): 27-31.
+[7] LI S Xu, XU Biao, HU Manjiang, et al. Multi-point pre-scanning path
+tracking method for articulated vehicles based on predictive control of
+dynamics model[J]. Automotive Engineering, 2021, 43(08): 1187-1194.
+[8] YAN Yongjun,WANG Jinxiang,HU Yunqing,et al. Research on
+predictive control of lateral motion of smart tram_Yan Yongjun[J].
+Control and Information Technology, 2020, (02): 25-30.
+[9] Wagner Sebastian,Nitzsche Gunter. Advanced steer-by-wire system for
+worlds longest busses[C]//2016 IEEE 19th International Conference on
+Intelligent Transportation Systems (ITSC): IEEE, 2016: 1932-1938.
+[10] LI Qianming,YANG Caijin,LI Yan,et al. Study on trajectory following
+control of articulated vehicles based on cooperative steering_Li
+Qianming[J]. Journal of Dynamics and Control, 2023, 21(02): 87-95.
+[11] Cui Da,Wang Guoqiang,Zhao Huanyu,et al. Research on a Path-Tracking
+Control System for Articulated Tracked Vehicles[J]. Strojniški vestnik
+– Journal of Mechanical Engineering, 2020, 66: 311-324.
+[12] LI Guoyong,YANG Lijuan. Neuro-fuzzy-predictive control and its
+matlab implementation[M]. Beijing: Electronic Industry Press, 2018.
+[13] Yu, C.S.. Theory of automobile [M]. Beijing: Machinery Industry
+Press, 2009.
+
+V. Conclusions
+In this paper, a distributed cooperative control strategy is
+successfully designed and validated for the control difficulties
+faced by three-unit six-axis articulated vehicles in complex
+trajectory following. The core innovation of the strategy is that
+the extended Ackermann feed-forward control is integrated to
+predict the ideal corner for the 4th and 6th axes, which have
+significant lateral deviations, and combined with a fuzzy PID
+controller for dynamic error compensation; at the same time,
+the standard fuzzy PID control is applied to the 2nd, 3rd, and
+5th axes. The key research results are confirmed by the joint
+simulation of TruckSim and Simulink: compared with the
+traditional PID control, the proposed synergistic strategy
+significantly improves the trajectory following accuracy of the
+key articulated axes, effectively suppresses the lateral deviation,
+and takes into account the stability of each part of the vehicle.
+This study not only verifies the feasibility and superiority of
+the distributed hybrid control architecture, but also provides a
+validated control scheme with good robustness and application
+prospects for solving the high-precision path navigation
+problem of similar long, multi-unit articulated vehicles.
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 03:03:12 UTC from IEEE Xplore. Restrictions apply.
+
+

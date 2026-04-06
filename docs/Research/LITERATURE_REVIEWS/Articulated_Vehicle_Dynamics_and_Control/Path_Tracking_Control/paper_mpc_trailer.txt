@@ -1,0 +1,652 @@
+                                               Proceedings of the Canadian Society for Mechanical Engineering International Congress 2021
+                                                                                                                              CSME Congress 2021
+                                                                                                        June 27-30, 2021, Charlottetown, PE, Canada
+
+
+
+           Research on Path-Tracking Control of Articulated Vehicle with a trailer
+                  Based on Advanced Model Prediction Control Strategy
+
+                                                    Leilei Liu1, Baohua Wang1*, Yuping He2
+     School of Vehicle Engineering, Hubei University of Automotive Technology, Shiyan,China, *Email:wbhbenz@126.com
+       1
+   2
+    Department of Automotive and Mechatronics Engineering, University of Ontario Institute of Technology, Oshawa, Canada
+
+
+Abstract—To improve the path-tracking ability and road                            passenger car closed-loop dynamic simulation [5]. Attempts
+adaptability for articulated vehicle with a trailer, this paper                   have also been made to design driver models for AHVs [6][7].
+proposes an advanced path-tracking strategy, which is                                 Paolo Falcome et al. generated a four-wheel vehicle model
+designed using the model predictive control method and an                         and its simplified bicycle model, using model predictive
+optimal curvature preview control technique. Firstly, a linear                    controller (MPC) while braking or steering [8], so the path-
+vehicle model was generated and its fidelity was verified.                        tracking ability was greatly improved for the four-wheel
+Then the model predictive controller was designed and used to                     passenger car. However, the control model cannot be directly
+reduce the lateral tracking error in curved path negotiations,                    applied to AHVs because of their inherent vehicle structures
+and the optimal curvature preview control strategy was                            of single-unit vehicles. Hode et al designed a linear quadratic
+designed to improve the driving stability in straight road                        regulator (LQR) for the path-tracking of robot, but the lateral
+                                                                                  error was too large at the intersection of the straight line
+operation. Finally, a co-simulation platform based on
+                                                                                  segment and the curve segments [9]. Salmon et al designed a
+Trucksim and Simulink software was built, and                 co-                 nonlinear MPC controller for the agricultural vehicle, but the
+simulations were carried out under the double lane change and                     tracking error is still big at the road small curvature section [10].
+the single lane change maneuvers at different vehicle speeds.                     Wu et al proposed a MPC controller based on lateral
+Simulation results show that the proposed path-tracking                           displacement error, aiming to address the path-tracking
+controller exhibits better performance than the optimal                           problem of AHVs [11], simulation results showed that the path-
+preview controller. The path-tracking ability and the driving                     tracking ability is better, but there still existed a certain
+stability are also excellent in the whole driving process for the                 tracking error during the transition from a straight line
+single-trailer articulated vehicle.                                               segment to the curve segment. The kinematics model does not
+                                                                                  consider the dynamic constraints of AHV, so it can only be
+Keywords: articulated heavy vehicle; model prediction control;                    applied to the low speed driving cycle. In the middle or high-
+optimal curvature preview control; track-following performance.                   speed operations, the dynamics model must be built and
+                                                                                  applied for the AHVs.
+                        I. INTRODUCTION                                              To enhance the road adaptability of AHVs, this paper
+                                                                                  generates a single track yaw-plane model to represent an
+    Intelligent driving technology has gradually become a                         articulated vehicle with a trailer, and designs a path-tracking
+research hotspot in recent years, and the path-tracking control                   controller combining the MPC for curved path negotiation and
+is one of key technologies for intelligent driving vehicle [1][2].                the optimal curvature preview controller (OCPC) for straight
+At present, studies on intelligent driving technology about                       road operation. The aim of MPC is to minimize the lateral
+passenger cars has been relatively mature, but for the                            tracking error in the curve segment, so that the tracking effect
+articulated heavy vehicles (AHVs), due to its large sizes and                     of AHVs is the best, and the control variable is constrained to
+big masses, the path-tracking control strategy for the                            avoid the folding phenomenon; the OCPC in the straight
+traditional heavy vehicle is not suitable for the AHVs, and                       segment is to make the AHVs have a better lateral stability.
+will lead to worse effects. Because of the great significance on                  Through the coordination of the two control strategies, the
+the path-tracking ability and stability of AHVs, so, this                         path-tracking ability and the driving stability are significantly
+research focuses on driver model design for AHV path-                             improved for the AHVs under varied path geometric
+tracking control strategies.                                                      conditions.
+    MacAdam has proposed an optimal preview driver model
+[3][4]. The driver model calculated the required steering wheel                              II. VEHICLE MODEL AND VALIDATION
+angle according on the weighted square error between the
+target lateral position and the output lateral position of the                    A. AHV Vehicle Modelling
+continuous linear system, which can accurately track the
+target trajectory. But there is no control over the yaw angle of                    As shown in Fig.1, the simplified vehicle model is mainly
+the vehicle. On this basis, Ungorn et al established a driver                     used to design the MPC controller as an ideal predictive
+model considering the yaw angle, which has been used for                          model of AHVs. The model considers three degrees of
+  Fund Program： Natural Science Foundation of China（52072116）；Key R&D Project of Hubei Province（2020BAB141）;
+  About the author: Leilei Liu (1996-),male, from Jincheng, Shanxi, graduate student, engaged in research on driver model of articulated heavy vehicles. E-
+  mail: 861415886@qq.com
+  Corresponding author: Baohua Wang, male, Professor, Ph.D., Research direction: Vehicle Dynamics and Control. E-mail:wbhbenz@126.com
+freedom: the lateral movement of the tractor, the yaw                                                         y  a 
+movement of the tractor, and the yaw movement of the trailer.                                       f  1 1 1  f
+                                                                                                                  x1
+The simplified model satisfies the following assumptions
+[12][13]
+        :                                                                                                    y  b 
+                                                                                                   r  1 1 1
+    (1) Driving on a flat road, ignoring vertical movement;                                                      x1
+    (2) Ignoring the influence of aerodynamics;                                                                                                           (6)
+                                                                                                            y  b         y  c1  (a2  b2 )2
+    (3) Ignoring the effects of suspension movements;                                              t  2 2 2  1                                      
+                                                                                                                 x2                     x2
+    (4) Linearizing lateral tire dynamics;
+    (5) Only the front wheel of the tractor being steerable;                                        y1  y1  x11
+    (6) Forward speed being constant.                                                               y2  y1  x11  c1  a12
+                                                                                         where φ1, and φ2 are yaw angle of tractor and trailer, θ is
+                                                                                         articulation angle between tractor and trailer, αf is slip angle
+                                                                                         of the front axle of the tractor, αr is slip angle of the rear axle
+                                                                                         of the tractor, αt is slip angle of the trailer axle, δf tractor
+                                                                                         front-wheel steering wheel.
+                                                                                         Considering the relationship between the body coordinate
+                                                                                         system and the vehicle coordinate system, we can get:
+                                                                                                                    X1  x1 cos1  y1 sin1
+                                                                                                                                                          (7)
+                                                                                                                   Y1  x1 sin1  y1 cos1
+                                                                                         where, x1, y1, x2, y2 are longitudinal and lateral position in the
+                                                                                         vehicle coordinate system of tractor and trailer, X1, Y1 are
+                                                                                         longitudinal and lateral position in the inertial coordinate
+        Fig 1. The simplified model for AHV Vehicle                                      system of tractor.
+                                                                                         Convert the above differential equation into a state space
+The lateral dynamics equation of tractor is                                              expression:
+               m1y1  k f  f cos f  krr  Fyh                            (1)                            A  Bu
+                                                                                                                                                                         (8)
+The lateral dynamics equation of trailer is                                                                                   dyn  C
+                   m2 y2  ktt  Fyh cos                                   (2)       The variable and matrices A, B and C are as follows:
+                                                                                            y1 1  2  1 Y1 T u   f  dyn  1 Y1 T
+                                                                                                                                             ,
+The yaw dynamics equation of tractor is                                                                                                                   ,
+                                                                                         E  kf          a1k f              T
+                                                                                                                    0 0 ，B  P E，A  P 1 F  1
+            I z11  a1k f  f cos f b1krr  cFyh                         (3)
+                                                                                           m1  m2                     m2 c               m2 a 2           0 0 0
+The yaw movement equation of trailer is                                                     m c                 I z1  m2 c     2
+                                                                                                                                           m2 a 2 c           0 0 0
+                                                                                                2
+                 I z22  a2Fyh cos b2ktt                                 (4)           m2 a 2               m2 a 2 c           I z 2  m2 a 2 2       0 0 0
+                                                                                         P                                                                         
+and the following constraints are met for the tractor and the                               0                           0                       0            1 0 0
+trailer,                                                                                    0                           0                       0            0 1 0
+                                                                                                                                                                    
+                  1 2 , x1  x2 , Fyh  Fyh'                            (5)          0                          0                       0            0 0 1 
+where, Fyh is lateral force at the articulated point. The tire slip
+angle and the lateral acceleration are described as,
+
+
+                         k f  k r  kt                 a1 k f  b1 k r  ck t  m                 k t ( a 2  b2 )                                         
+                                                                                                                                     kt              0   0
+                                  vx                                      vx                               vx                                               
+                                                               2           2
+                         k f a1  k r b1  k t c     k f a1        k r b1  k t c 2  m 2 c       k t c ( a 2  b2 )                                       
+                                                                                                                                  kt c              0   0
+                                  vx                                   vx                                   vx                                              
+                    F    k t ( a 2  b2 )              k t c ( a 2  b2 )  m 2 a 2              k t ( a 2  b2 ) 2                                       
+                                                                                                                          k t ( a 2  b2 )          0   0
+                                  vx                                   vx                                   vx                                              
+                                   0                                   1                                    1                       0               0   0
+                                                                                                                                                            
+                                   0                                      1                                0                         0               0   0
+                                  1                                      0                                0                         0              vx   0 
+                       0          0    0     0       0   0                                           linear  nonlinear
+                       0                                                          coincidence  1                                   (9)
+                                  0    0     0       0   0                                              nonlinear
+                       0          0    0     0       0   0
+                     C                                                  a. Fishhook test
+                       0          0    0     0       0   0
+                       0          0    0     0       1   0                  Simulation conditions are specified as follows: steering
+                                                                         wheel angle input is shown in Fig 2(a), and the amplitude is
+                       0         0    0     0       0   1              300deg. The simulation results of transient yaw rate and
+                                                                           lateral acceleration are shown in Fig 2(b)-Fig 2(c).
+Table 1 lists the basic parameters of the AHVs.
+
+         TABLE 1: The Vehicle Basic Parameters and Values
+
+   Symbol                         Description                     value
+
+     m1       Whole mass of tractor (kg)                          8450
+
+    mload     Whole mass of trailer (kg)                         30000
+
+     m2       Whole payload (kg)                                 37255
+
+     a1       Longitudinal distance between the front axle and    1.385
+
+              the sprung mass CG of the tractor (m)
+
+     b1       Longitudinal distance between the sprung mass       4.25                        (a) Input of Fishhook Test
+              CG of the tractor and the rear axle (m)
+
+     a2       Longitudinal distance between the articulated        5.5
+
+              point and the sprung mass CG of the trailer (m)
+
+     b2       Longitudinal distance from the sprung mass CG       4.72
+
+              of the trailer to the trailer axle (m)
+
+     c        Longitudinal distance from the sprung mass CG       4.25
+
+              of the tractor to the articulated point (m)
+
+     kf       Combined cornering stiffness of the tires of the   -135010
+
+              front axle on the tractor (N/rad)
+
+     kr       Combined cornering stiffness of the tires of the   -477620
+                                                                                         (b) Response of transient yaw rate
+              rear axle on the tractor (N/rad)
+
+     kt       Combined cornering stiffness of the tires of the   -550360
+
+              axle on the trailer (N/rad)
+
+     Iz1      Yaw moment of inertia of the tractor,measured      20610
+
+              about its whole mass CG (kgm )      2
+
+
+     Iz2      Yaw moment of inertia of the trailer,measured      700502
+
+              about its whole mass CG (kgm2)
+
+
+B. Model validation
+
+    To ensure the consistent response between the generated
+linear model and the nonlinear Trucksim model, the
+fishhook test and the step input test are carried out under the                      (c) Response of transient lateral acceleration
+condition of 40km/h and the ground adhesion coefficient                    Fig 2. Transient response characteristics of the two vehicle
+0.85. The coincidence is defined to describe the accuracy of                              models under fishhook test
+the linear model relative to the nonlinear Trucksim model in
+the steady state. The definition is as follows:                              It can be seen from Fig 2 that the response characteristic
+                                                                           curves of the two models are close. The coincidence of the
+yaw rate is above 95%, and the coincidence of lateral          value. However, the linear vehicle model ignores factors
+acceleration is above 90% for the two vehicle models.          such as suspensions etc., it is relatively small for the
+                                                               fluctuation of response characteristic curves. The
+b. Step Input Test                                             coincidences between the yaw rate and the lateral
+                                                               acceleration are above 95% for the two vehicle models.
+  Simulation conditions are set as follows: steering wheel     To sum up, it can be seen that the response characteristics of
+angle input is shown in Fig 3(a), and the amplitude is         the two vehicle models have reached more than 90%, so the
+180deg. The response characteristics of yaw rate and lateral   established linear vehicle model is accurate and meets the
+acceleration are shown in Fig 3(b)-Fig 3 (c).                  research requirements.
+
+                                                                                 III. CONTROLLER DESIGN
+
+                                                                  MPC uses a linear dynamic model as a predictive model.
+                                                               The lateral movement control of AHVs on the reference
+                                                               path is regarded as a constrained optimal control problem,
+                                                               and the optimal solution can be obtained. As shown in Fig 4,
+                                                               a new path-tracking controller, which combines the merits
+                                                               of MPC and OCPC, is designed in this paper [14].
+
+
+
+
+           (a) Angular Step Input of steering wheel
+
+
+
+                                                                  Fig 4. The new road-following controller for the AHVs
+
+                                                                 When the AHV tracks curve roads, the MPC is selected
+                                                               and applied to the vehicle, and the real-time optimization is
+                                                               used to reduce the lateral tracking error. While the AHV
+                                                               enters the straight road, the OCPC is selected, and the
+                                                               preview time can be adjusted by the driving speed.
+
+                                                               A. Design of model predictive controller on curve road
+
+                                                                  When the AHV enters a curve from a straight, it is
+                                                               necessary to reduce path-tracking error as soon as possible.
+              (b) Response of transient yaw rate
+                                                               The MPC predicts the output according to the current state,
+                                                               and continuously updates the control commands to
+                                                               eliminate path-tracking errors. The model predictive control
+                                                               strategy is designed as follows [15].
+
+                                                               a. Establishment of prediction equation
+
+                                                                  To design the model predictive controller, equation (8) is
+                                                               discretized by using the forward Euler method as:
+                                                                              (k  1)   (k )
+                                                                    (k )                      A(k )  (k )  B(k )u (k ) (10)
+                                                                                     T
+                                                                         (k  1)  ( I  TA(k ))  (k )  TB (k )u (k )       (11)
+                                                               where, I is the 6-order unit matrix, and T is the sampling
+          (c) Response of transient lateral acceleration       time.
+Fig 3. Transient response characteristics under step Input
+condition                                                      Furthermore, the equation (11) is transformed into:
+                                                                                        ~                  ~
+                                                                        (k  1 | t )  Ak |t  (k | t )  Bk |t u (k | t )   (12)
+   As seen in Fig 3, when the steering wheel is suddenly
+turned from 0 to 180 deg at 2th second, the nonlinear model                                      ~
+                                                                                    ( k | t )  C k ,t  ( k | t )            (13)
+immediately responses and fluctuates at the steady state
+where, ξ Is the current state vector, Δ u is the current                                      The AHVs can follow the target road quickly and
+control increment, Im is the m-order unit matrix, m is the                                  accurately under the MPC control strategy. The MPC are
+number of state variables, n is the number of control                                       subject to the following constraint conditions [18]:
+variables.                                                                                                    u min  u  u max
+               (k | t )    ~        A(k | t ) B(k | t )                                                 u min  u  u max
+ (k | t )                  Ak ,t  
+                            
+             u (k  1 | t )          0 mn       I m                                                    min     max
+                                                                                                                                                      (16)
+                                    ,                                                  ,
+~        B(k | t ) ~                                                                                      Ymin  Y  Ymax
+Bk ,t              Ck ,t  C (k | t ) 0 .                                              where, umin and umax are the limit values of the control input,
+         Im  ,                                                                            Δ umin and Δ umax are the limit values of the control
+At this time, the prediction equation [16] is expressed as:                                 increment, φmin and φmax are the limit values of the yaw
+           Y ( k | t )   k , t  ( k | t )   k , t u ( k | t ) (14)                    angle, and Ymin and Ymax are the limit values of the lateral
+                                                                                            position.
+where, Np is the prediction horizon, Nc is the control
+horizon.                                                                                    B. Design of optimal curvature preview control on straight
+               (k  1 | t )                                        C~k ,t A
+                                                                              ~1 
+                                                                                k ,t
+                                                                                            road
+                                                                    ~ ~2 
+                 ( k     2 | t )                                   C      A
+                                                                      k ,t k ,t              When entering a straight line from a curve, the controller
+Y (k | t )    (k  3 | t )                              k ,t   C~k ,t A~3 
+                                                                                k ,t        must reduce the path-tracking error while ensuring the
+                        ...                                                             stability in a straight line. The control strategy must be
+                                                                         ...       
+                                                                     C~k ,t A~Np          optimized to solve this problem, and the OCPC control
+              ( k  N p | t ) 
+                                              ,                                k ,t 
+                                                                                        ,   strategy has a very good performance in the straight road
+                 ~     ~                                                                    driving. The OCPC preview time has an important effect on
+           C k , t Bk , t                       0               ...       0               tracking performance. The longer the preview time, the
+           ~ ~1 ~                        ~ ~                                        
+             C     A
+           k ,t k ,t k ,tB              C        B
+                                             k ,t k ,t           ...       0               longer the preview distance, the better the lateral stability of
+              ~ ~ ~                    ~ ~ ~                                                the vehicle. Thus, the lateral stability of the AHVs is
+ k ,t   C k ,t A k2,t Bk ,t         C k ,t A1k ,t Bk ,t       ...       0               improved, and the path-tracking performance is also
+                                                                                    
+                    ...                        ...              ...      ...              enhanced [19] [20]. The dynamics characteristics of the AHVs
+           ~ ~ N p 1 ~              ~ ~ N 2 ~                       ~ ~                 under the OCPC is shown in Fig 5.
+            C A              Bk ,t C k ,t A k ,t p Bk ,t ... C k ,t Bk ,t 
+           k ,t k ,t                                                         ,     
+                u ( k | t ) 
+                                  
+                u ( k  1 | t ) 
+u ( k | t )   u ( k  2 | t ) 
+                      ...         
+                                  
+               u (k  N c | t ) .
+
+b. Establishment of objective function
+
+   The goal of the controller is to eliminate the path-tacking
+errors of AHVs, and also to control the yaw angle. The
+objective function [17] is defined as:
+            J ( (t ), u (t  1), u (t ))                                                    Fig 5. The Optimal curvature preview model of AHVs
+                Np                                      2
+                                                                                            According to Ackerman steering principle, we have
+                  (k  i | t ) ref (k  i | t )         
+                                                                                                                                   L
+                i 1                                    Q                          (15)                             tan  f  1                       (17)
+                N c 1                  2                                                                                           R
+                                                                                            According to the kinematic equation of circumferential
+                  u(k  i | t )   2                                                    movement of AHVs, the lateral acceleration is:
+                 i 1                   R
+where, ƞ is the output vector, ƞr is the reference vector, Q is                                                               v2
+a positive definite weighting matrix on system output, R is                                                             y  x                       (18)
+                                                                                                                               R
+weighting parameter on the control input, ρ is the weight                                   The driver previews the target position yr(t+Tp). After the
+coefficient, and ɛ is the relaxation factor.                                                preview time Tp passes, the lateral displacement of current
+                                                                                            position of AHVs is as follows:
+c. Determination of constraints
+                                                                                                                                         1
+                                                                                                     y (t  T p )  y (t )  y (t )T p  y(t )T p2 (19)
+                                                                                                                                         2
+                                                                                            The preview distance at this point is:
+                       d p v xT p                                 (20)                  d y1                         d y2
+                                                                          Yref ( X )           (1  tanh( z1))             (1  tanh  z 2    (22)
+Assuming that the driver can control the tractor to reach the                             2                            2
+target position, from equations (17) to (20), the optimal                                                           1             1 .2
+wheel steering angle is:                                                          ref ( X )  arctan(d y1  (             )) 2 (      )
+                                                                                                                 cosh( z1)        d x1
+               2L                                                                                                                                  (23)
+         f  2 ( yr (t  T p )  y(t )  T p y (t ))   (21)                                    1          1 .2
+              dp                                                                  d y2  (            )2 (      ))
+                                                                                              cosh( z1) d x 2
+where, δ f is the wheel steering angle, L1 is the tractor axle
+distance, R is the steady-state turning radius, Tp is the                 where, dy1=4.05, dy2=5.7, dx1=25, dx2=21.95, Xs1=27.19,
+preview time, and y(t) is the current position of the tractor.            Xs2=56.46.
+                                                                                                  2 .4
+               IV. SIMULATION RESULTS                                                        z1       ( X  X s1 )  1.2
+                                                                                                  d x1
+   In order to compare and analyze the established path-                                          2 .4
+tracking controller and MacAdam's optimal preview control                                   z2        ( X  X s 2 )  1 .2
+                                                                                                  d x2
+(OPC), the Double Lane-Change Test by ISO 3888 [21] is
+used as the reference path, and the test speed is respectively               Conditions: The vehicle speed is 30 km/h, μ=0.85. The
+30km/h and 50km/h, and the Single Lane-Change Test by                     simulation results of OPC and MPC+OCPC control
+ISO 14791 [22][23] is used as the reference path, and the test            strategies are shown and compared in Fig 6, and the error
+speed is respectively 100km/h, to verify the road following               analysis is shown in Table 3.
+and lateral stability of AHVs. The evaluation index of the
+road tracking ability is the lateral tracking error, the smaller
+the error, the better the road tracking ability. The lateral
+stability for the AHVs is often evaluated using rearward
+amplification (RWA), it is a ratio of the trailer’s maximal
+yaw rate or lateral acceleration to the tractor’s maximal yaw
+rate or lateral acceleration. If the RWA is less than 1, the
+lateral stability is better for the AHVs. Table 2 lists the
+controller parameters and values.
+
+           Table 2: Controller parameters and values
+
+
+             Symbol    The value of   The value of   The value of
+
+                         30 km/h        50 km/h       100 km/h                     (a) Transient path-tracking trajectory for Tractor
+   OCPC       Tp(s)        0.2            0.5             1
+
+               Np           30            20             40
+
+               Nc           25             5             35
+
+                Q        [2000,0;      [2000,0;       [2000,0;
+
+                         0 10000]      0 10000]       0 10000]
+    MPC
+                R         50000         50000           50000
+
+              u(deg)     [-8,4.8]     [-8.8,2.62]     [-1.6,1.6]
+
+             Δu(deg)   [-1.15,1.15]   [-1.72,1.72]      [-1,1]
+
+             φ(deg)       [-14,9]       [-18,12]        [-3,5]
+                                                                                   (b) Transient path-tracking trajectory for Trailer
+              Y(m)        [-2,4]         [-3,5]         [-1,3]
+
+
+A. Characteristics analysis of different control strategies at
+low speed
+
+  In the model prediction controller, the reference lateral
+position and yaw angle of tractor under the Double Lane-
+Change are as follows:
+                                                                                        Table 3: Model comparison
+
+
+                                                                                               Max.          Max. yaw      Max. lateral
+
+                                                                                          trajectory error      rate       acceleration
+
+                                                                           OPC                17 cm          10.43 deg/s    1.47 m/s2
+
+                                                                       MPC+OCPC                3cm           11.35 deg/s    1.67 m/s2
+
+                                                                      The improvement
+
+                                                                      of MPC+OCPC             ↓14cm          ↑0.92deg/s     ↑0.2m/s2
+
+                                                                         over OPC
+
+                                                                     The simulation results in Fig. 6 show the path-tracking
+(c) Transient lateral errors relative to the desired trajectory   trajectories of the tractor and the trailer, the lateral tracking
+                                                                  error, the yaw rate and the lateral acceleration. Analysis
+                                                                  shows that the MPC+OCPC has the best road tracking
+                                                                  performance in curved and straight segment, which is
+                                                                  greatly improved compared with OPC. The maximum
+                                                                  lateral tracking error is reduced by 14cm compared to OPC.
+                                                                  It can be obtained from Fig 6(d) to Fig 6(e) that the ratio of
+                                                                  the absolute peak yaw rate and lateral acceleration of the
+                                                                  trailer to the tractor by the OPC and MPC+OCPC control
+                                                                  methods is less than 1. The maximum ω ratio of OPC is
+                                                                  0.73, and the ratio of ay is 0.81; the ω ratio of MPC+OCPC
+                                                                  is 0.72, and the ratio of ay is 0.8. As shown in Table 3, the
+                                                                  maximal yaw rate of the MPC+OCPC is only increased by
+                                                                  0.92 deg/s in comparison with the OPC, and the absolute
+                                                                  value of the lateral acceleration is only increased by 0.2m/s2
+                                                                  in comparison with the OPC, the overall performances of
+                   (d) Transient yaw rate
+                                                                  the AHVs are significantly improved by the MPC+OCPC
+                                                                  designed in this paper.
+
+                                                                  B. Characteristics analysis of different control strategies at
+                                                                  middle speed
+
+                                                                     Conditions: The vehicle speed sets to 50 km/h,
+                                                                  μ=0.85.The simulation results of OPC and MPC+OCPC
+                                                                  control strategies are shown and compared in Fig 7, and the
+                                                                  error analysis is shown in Table 4.
+
+
+
+
+             (e) Transient lateral acceleration
+Fig 6. The transient characteristics of AHVs under the
+   different control strategies and low speed condition
+
+
+
+
+                                                                           (a) Transient path-tracking trajectory of Tractor
+   (b) Transient path-tracking trajectory of Trailer                           (e) Transient lateral acceleration
+                                                                Fig 6. The transient characteristics of AHVs under the
+                                                                   different control strategies and middle speed condition
+
+                                                                                   Table 4: Model comparison
+
+
+                                                                                          Max.          Max. yaw      Max. lateral
+
+                                                                                     trajectory error      rate       acceleration
+
+                                                                      OPC                49 cm          17.16 deg/s    3.76m/s2
+
+                                                                  MPC+OCPC               13 cm          19.58deg/s     3.92 m/s2
+
+                                                                 The improvement
+
+                                                                 of MPC+OCPC             ↓36cm          ↑2.42deg/s    ↑0.16m/s2
+
+(c) Path-tracking error relative to the desired trajectory          over OPC
+
+                                                                As in Fig. 7, the simulation results show the trajectory of
+                                                             the tractor and the trailer, the lateral tracking error, the yaw
+                                                             rate and the lateral acceleration. MPC+OCPC aims to
+                                                             reduce the lateral error in the curve segment, and the road
+                                                             tracking effect is good, and the lateral tracking error of
+                                                             MPC+OCPC is greatly reduced compared with OPC; in the
+                                                             straight segment, stable driving is the goal, and the stability
+                                                             is also better. It can be obtained from Fig 7(d) to Fig 7 (e)
+                                                             that the ratio of the maximal yaw rate and the lateral
+                                                             acceleration of the trailer to the tractor is less than 1. The
+                                                             maximal ratio ω of the MPC+OCPC is 0.79, and the
+                                                             maximal ω of the OPC is 0.79, and the lateral stability is
+                                                             great. However, it can be seen from Fig 7(a) to Fig 7(c) that
+                 (d) Transient yaw rate
+                                                             the MPC+OCPC is closer to the target trajectory in the
+                                                             curve and straight segments than the OPC. And it can be
+                                                             obtained from Table 4 that the maximal lateral error of the
+                                                             MPC+OCPC is 36cm and smaller than the OPC, which
+                                                             greatly improves the path-tracking ability.
+
+                                                             C. Characteristics analysis of different control strategies at
+                                                             high speed
+
+                                                               In the model prediction controller, the reference lateral
+                                                             position and yaw angle of tractor under the Single Lane-
+                                                             Change are as follows:
+                                                                                       dy
+                                                                          Yref ( X )     (1  tanh( z ))          (24)
+                                                                                       2
+                                         1            1 .2
+       ref ( X )  arctan( d y  (             )) 2 ( ))        (25)
+                                      cosh( z )       dx
+
+where, dy=1.46, dx=25, Xs=30.5.
+                       2 .4
+                   z       ( X  X s )  1 .2
+                       dx
+   Conditions: The vehicle speed sets to 100 km/h, μ=0.85.
+The simulation results of OPC and MPC+OCPC control
+strategies are shown and compared in Fig 8, and the RWA
+analysis is shown in Table 5.
+
+
+
+                                                                                                 (d) Transient yaw rate
+
+
+
+
+        (a) Transient path-tracking trajectory for Tractor
+
+
+                                                                                            (e) Transient lateral acceleration
+                                                                            Fig 8. The transient characteristics of AHVs under the
+                                                                               different control strategies and high speed condition
+
+                                                                                              Table 5: RWA comparison
+
+
+                                                                                                         OPC              MPC+OCPC
+                                                                                  |ω1max|             3.42 deg/s            5 deg/s
+
+                                                                                  |ω2max|             3.63 deg/s          4.45 deg/s
+
+                                                                                  |ay1max|            0.12 m/s2            0.18 m/s2
+        (b) Transient path-tracking trajectory for Trailer
+                                                                                  |ay2max|            0.14 m/s2            0.15 m/s2
+
+                                                                                 ω RWA                   1.06                0.89
+
+                                                                                 ay RWA                  1.17                0.83
+
+
+                                                                           As in Fig. 8, the simulation results show the trajectory of
+                                                                        the tractor and the trailer, the lateral tracking error, the yaw
+                                                                        rate and the lateral acceleration. The MPC+OCPC turns in
+                                                                        advance at the beginning of Single Lane-Change, the path-
+                                                                        tracking effect is worse than OPC, the maximum tracking
+                                                                        error is 29cm, but the path-tracking is great at the ending of
+                                                                        Single Line Change. The OPC path-tracking cuve fluctuates
+                                                                        greatly at the ending of Single Line-Change, and the path-
+                                                                        tracking effect is poor. The maximum tracking error is 25cm,
+   (c) Transient lateral errors relative to the desired trajectory      and the AHVs become unstable. When AHVs are traveling
+                                                                        at high speed, the RWA as the main evaluation index. It can
+be obtained from Table 5 that the RWA of yaw rate and                                 Trailer Articulated Heavy-Vehicle Models. Proceedings of the Institution of
+                                                                                      Mechanical Engineers, Part D: Journal of Automobile Engineering, 2015,
+lateral acceleration of OPC is more than 1. The ω RWA of                              Vol.229, No. 9, pp.1200-1228.
+the OPC is 1.06 and the ay RWA of OPC is 1.17, and the
+                                                                                  [14] Xu T，Ji X，Liu Y , et al：Differential Drive Based Yaw Stabilization
+lateral stability is terrible. However, it can be seen that the                       Using MPC for Distributed-drive Articulated Heavy Vehicle[J]. IEEE
+RWA of          yaw rate and lateral acceleration of the
+                                                                                      Access，2020.
+MPC+OCPC is less than 1. The ω RWA of the
+                                                                                  [15] Lefèvre，Stéphanie，Carvalho A，Gao Y，et al：Driver Models for
+MPC+OCPC is 0.89, and the ay RWA of the MPC+OCPC                                      Personalised Driving Assistance[J]. Vehicle System Dynamics，2015:1705-
+is 0.83, which greatly improves the lateral stability. In                             1720.
+summary, the MPC+OCPC is superior to the MacAdam's                                [16] Yan Zhang，Miaohua Huang：Path following control of intelligent
+OPC in the road-followability and lateral stability of the                            driving vehicle based on model predictive control[J]. Journal of Digital
+AHVs.                                                                                 Manufacturing Science, 2019, 17(01):25-30.
+                                                                                  [17] Bai G，Meng Y，Liu L，et al. A New Path Tracking Method Based on
+                         V. CONCLUSIONS                                               Multilayer Model Predictive Control[J]. Applied Sciences, 2019, 9(13):2649.
+                                                                                  [18] Goorts K，Narasimhan S ：Model Predictive Control for Deployable,
+   Aiming at the path-following problem of the AHVs, a                                Autonomous Control Systems[C]. The 7th World Conference on Structural
+new path-tracking controller is proposed base on the MPC                              Control and Monitoring，2018.
+method and the OCPC technique. Based on the vehicle                               [19] Konghui Guo: Preview Optimal Curvature Model of Driver-Car Closed-
+                                                                                      loop System Maneuvering Movement[J]. Journal of Automotive
+dynamic model of AHVs, a combined path-tracking                                       Engineering，1984(03)：3
+controller is established. The controller inherits the                            [20] Xin Guan, Yongshang Chen, et al: Composite correction of preview
+advantage of the MPC in the curve segment and the benefit                             following driver model[J]. Journal of Automotive Engineering ， 2018 ，
+of the OCPC in the straight segment, and separately to                                040(003)：297-304.
+improve the path-tracking ability in curve segment by the                         [21] Yiqi Gao：Model Predictive Control for Autonomous and
+MPC control strategy and to enhance the driving stability in                           Semiautonomous Vehicles[D]. University of California，Berkeley，2014.
+straight line segment by the optimal curvature preview                            [22] Q. Wang, Y. He: A Study on Single Lane-Change Manoeuvres for
+                                                                                       Determining Rearward Amplification of Multi-Trailer Articulated Heavy
+controller of AHVs. The simulation results show that the                               Vehicles with Active Trailer Steering Systems. Vehicle System Dynamics,
+new path-tracking controller can effectively follow the                                2016, Vol. 54, No. 1, pp.102-123.
+target route in the comprehensive road segment and the                            [23] Z. Ni, S. Zhu, Y. He: A Comparison of Test Manoeuvres for Determining
+driving stability of AHVs has also improved significantly.                             Rearward Amplification of Articulated Heavy Vehicles. International
+                                                                                       Journal of Heavy Vehicle Systems, 2020, Vol. 27, No. 4, 405-421.
+
+                            REFERENCES
+[1] Jinghua Guo, Keqiang Li, et al: Review of Research on Intelligent Vehicle
+    Motion Control[J]. Journal of Automotive Safety and Energy，2016，7(2)：
+    151-159.
+[2] A. Amir, Y. He: A Review of Essential Technologies for Autonomous and S
+    emi-Autonomous Articulated Heavy Vehicles. Proceedings of the Canadian
+    Society for Mechanical Engineering International Congress 2020, June 21-2
+    4, 2020, Charlottetown, PE, Canada, 8 pages.
+[3] C.C.MacAdam：An Optimal Preview Control for Linear Systems[J]. Journa
+    l of Dynamic Systems Measurement & Control，1980，102(3)：188-190.
+[4] C.C.MacAdam：Application of an Optimal Preview Control for Simulation
+    of Closed-loop Automobile Driving[J]. IEEE Transactions on Systems，
+    Man and Cyberbetics，1981，11(6)：393-399.
+[5] A.Y.Ungoren and H.Peng：An adaptive lateral preview drive model[J]，Ve
+    hicle System Dynamic，2005，vol43，245-259.
+[6] X. Ding, Y. He: Numerical Simulation and Analysis of Closed-Loop Driver/
+    Articulated Vehicle Dynamic System. SAE Int. J. Commer. Veh. 2012, 5(1):
+    111-118, 2012, https://doi.org/10.4271/2012-01-0244.
+[7] S. Zhu, Y. He: A Unified Lateral Preview Driver Model for Road Vehicles.
+    IEEE Transactions on Intelligent Transportation Systems, 2020, Vol. 21, No.
+     11,
+    4858-4868.
+[8] Paolo Falcone，H.Eric Tseng and Francesco Borrelli：MPC-based Yaw
+    and Lateral Stabilisation via Active Front Steering and Braking[J]，Vehicle
+    System Dynamic，2008，vol46：611-628.
+[9] D.Hodo：Development of an Autonomous Mobile Robot-trailer System for
+    UXO detection. Master’s thesis，Auburn University，2007.
+[10] J.T.Salmon：Guidance of an Off-road Tractor-trailer System Using Model
+    Predictive Control.. Master’s thesis，Auburn University，2013.
+[11] Wu T and Hung J Y：Path Following for a Tractor-trailer System Using
+    Model Predictive Control[C]. IEEE，Southeastcon，2017.
+[12] Pan K，Zheng H and Wu J：Research on the Control Strategy of Trailer
+    Tracking Tractor for Articulated Heavy Vehicles. SAE Technical Paper，
+    2019.
+[13] M.M. Islam, Y. He, S. Zhu, Q. Wang: A Comparative Study of Multi-
+

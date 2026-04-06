@@ -1,0 +1,1564 @@
+Received May 3, 2020, accepted May 23, 2020, date of publication May 29, 2020, date of current version June 15, 2020.
+Digital Object Identifier 10.1109/ACCESS.2020.2998510
+
+Differential Drive Based Yaw Stabilization Using
+MPC for Distributed-Drive Articulated Heavy
+Vehicle
+TAO XU , (Member, IEEE), XUEWU JI, YULONG LIU , AND YAHUI LIU , (Member, IEEE)
+State Key Laboratory of Automotive Safety and Energy, Tsinghua University, Beijing 100084, China
+
+Corresponding author: Yahui Liu (liuyahui@tsinghua.edu.cn)
+This work was supported in part by the National Key Research and Development Program of China under Grant 2017YFB0103900, and in
+part by the National Natural Science Foundation of China under Grant 51875302.
+
+ABSTRACT This paper presents a differential drive approach for distributed-drive articulated heavy vehicles
+(DAHVs) with wheel-side motors. The objective is to keep the yaw stability for DAHVs with direct
+yaw moment in driving process when the external disturbance acts on one of the vehicle parts. Three
+contributions are made in this paper: 1) An disturbance observer based Extended Kalman Filter (EKF)
+strategy is implemented to deal with the unknown mismatched disturbances in strong nonlinear vehicle
+system for DAHVs; 2) The differential drive approach is developed with the guidance of model predictive
+controller (MPC) to cope with the vehicle instability with the decoupling dynamic analyses for DAHVs
+under the observed external disturbance and the specific drive limitation of wheel-side motor for the first
+time; 3) The novel verification techniques with co-simulation model combining with the ADAMS, Simulink,
+and AMESim software for DAHVs is employed to verify this vehicle stability controller, which is more
+reasonable than the traditional methods with simple virtual model. The results demonstrate that the proposed
+approaches can reduce the oscillation amplitude and period of vehicle yaw motion for about 40% and 80%,
+respectively. Moreover, the MPC strategy is more efficient comparing with the LQR strategy especially on
+boundaries issue treatment, which can improve the vehicle stability greatly.
+INDEX TERMS Distributed-drive articulated heavy vehicle, model predictive controller, differential drive,
+yaw stabilization.
+
+I. INTRODUCTION
+
+With the gradually changing of ‘‘Intelligent Mine’’ from
+concept to reality, the innovative development of engineering machinery arouse more and more attention [1], [2].
+As the new mechanical equipment in mining industry,
+the distributed-drive articulated heavy vehicles (DAHVs) and
+its good vehicle performance become particularly important. However, due to the special structure of two vehicle
+parts connected by two hydraulic struts and one articulation joint without locking mechanism [3]–[5], the front and
+rear vehicle parts can rotate relatively, which easily make
+DAHVs produce oscillatory yaw motion during moving process, especially with the external disturbance. Moreover,
+the hydraulic struts is inevitably entrained with gas and produce leaks, which can decrease the vehicle torsional stiffness
+The associate editor coordinating the review of this manuscript and
+approving it for publication was Francesco Tedesco
+104052
+
+.
+
+and increase the oscillatory yaw motion or even lead to
+instability for DAHVs [6], [7].
+The special vehicle structure including hydraulic steering
+system of DAHVs is indispensable in improving vehicle
+performance of manoeuvrability, although there are some
+problems in vehicle yaw stability [6]. Therefore, it is important to take some strategies to improve the vehicle performance with the existing condition, which can be grouped
+into two categories in now researches, including active and
+passive prevention methods. Some literatures make compensation of hydraulic oil for two struts to keep the torsional
+stiffness of DAHVs, which can reduce the influence of the
+leaks and entrained gas in hydraulic oil [8], [9]. Moreover,
+some literatures even increase the friction of articulation joint
+directly to make DAHVs more like traditional rigid cars
+and reduce the influence of small external disturbance on
+vehicle stability [7], [10]. These methods change the vehicle
+parameters actively and improve the vehicle performance but
+
+This work is licensed under a Creative Commons Attribution 4.0 License. For more information, see https://creativecommons.org/licenses/by/4.0/
+
+VOLUME 8, 2020
+
+T. Xu et al.: Differential Drive Based Yaw Stabilization Using MPC for DAHV
+
+produce energy waste and cannot be used widely. For the
+unavoidable oscillatory yaw motion of DAHVs, some positive methods, including active steering [11], and differential
+braking [12]–[15] can be taken to keep the vehicle stability.
+These methods use the direct yaw moment produced by the
+differential braking or driving methods to overcome the oscillatory yaw motion, which can be widely used in traditional
+articulated heavy vehicles. But for the DAHVs, the most
+significant feature is that each wheel of the vehicle can be
+controlled by the wheel-side motor independently [16]. And
+the direct yaw moment can be easily produced in front and
+rear vehicle parts. Consequently, it is possible for DAHVs
+to realize the more accurate control in keeping vehicle
+stability.
+Therefore, this paper takes full advantages of independent
+drive characteristics of DAHVs to establish a yaw stability controller with the application of MPC strategy. Firstly,
+the nonlinear vehicle dynamic mathematic model and a novel
+verification technique with co-simulation virtual model are
+developed combining with the previous studies. These models are also verified by field test. Secondly, the co-simulation
+virtual model is implemented to analyze the yaw stability
+by comparing the articulation angle of DAHVs with different vehicle parameters. In order to simulate the oscillatory
+yaw motion in the predictive model of the controller, EKF
+method is used to observe the external disturbance for the
+strong nonlinear vehicle system. With the linearization and
+discretization of the vehicle mathematic model, the differential drive controller based on MPC strategy is designed.
+Case study with special vehicle parameters and certain external disturbance is implemented to verify the controller in
+the end.
+The rest of this paper is organized as follows. The vehicle dynamic mathematic model, co-simulation virtual model,
+and field test for the models are described in Section II.
+In Section III, the influence of different parameters on the
+vehicle stability is analyzed by the co-simulation virtual
+model. The differential drive approach with EFK and MPC
+is proposed in Section IV. In Section V, simulations with cosimulation model platform are conducted. Followed is the
+conclusion in Section VI.
+
+II. THE MODEL OF DAHVs
+A. MATHEMATICAL MODEL OF DAHVs
+
+This section presents a mathematical model of vehicle
+dynamics and hydraulic steering system for DAHVs. The
+vehicle is driven by all wheels with independent wheel-side
+motors. Its steering motion is realized with the coupling effect
+of hydraulic struts and articulation joint, which have been
+introduced in literature [3], [17]. In terms of the traditional
+design of AHVs, there is no suspension in the chassis system.
+The vertical, roll and pitch motions of vehicle and their effects
+on steering systems can be neglected. A 6-DOF (degree of
+freedom) mathematical model with consideration of the yaw,
+longitudinal and lateral vehicle dynamics is adopted for the
+VOLUME 8, 2020
+
+FIGURE 1. Schematic of DAHVs dynamic model.
+
+control design as shown in Fig. 1. Its mathematical model
+can be described using the following (1).
+
+
+mf v̇xf + vyf ωf = Cxf + Fhxf + Fwxf
+
+
+
+
+
+
+mf v̇yf − vxf ωf = Cyf + Fhyf + Fwyf
+
+
+
+ I ω̇ = − (T + T ) + T
+zf f
+1
+Cyzf + Thzf + Twyzf + Twxzf
+ 2
+(1)
+
+mr v̇xr − vyr ωr = −Cxr + Fhxr + Fwxr
+
+
+
+
+
+
+m v̇ + ωr vxr = −Cyr + Fhyr + Fwyr
+
+ r yr
+
+−Izr ω̇r = T3 + T4 + TCyzr + Thzr + Twyzr + Twxzr
+where mf and mr represent the vehicle mass, while f and r
+represent the front and rear parts of the vehicle, respectively,
+which is same as the following analyses. vxf , vyf and ωf are
+the longitudinal velocity, lateral velocity, and yaw rate of
+front part of the vehicle, which are same as the meaning of vxr ,
+vyr and ωr for the rear part. Because of the special structure
+of vehicle model, the longitudinal and lateral velocity (vxr ,
+vyr ) of rear part can be derived by (2). Cxf , Cyf , Cxr and Cyr
+stand for the forces at articulation joint in front and rear parts
+of the vehicle, respectively. Fhx and Fhy denote the forces of
+hydraulic struts along the x-axis and y-axis of the coordinate
+system, respectively. Fwx and Fwy represent the wheel forces
+along the same direction as Fhx and Fhy , respectively. Iz is
+the mass moment of inertia. Twyz , Twxz , Thz , and TCyz are
+the moments around the zf -axis coordinate system, which
+are produced by the wheels, hydraulic struts, and articulation
+joint, respectively.
+
+
+
+ vxr = vxf cos (θ ) + vyf + ωf · a − Lf 0 sin (θ )
+(2)
+vyr = −vxf sin (θ ) + vyf + ωf · a − Lf 0 cos (θ )
+
+
+
+− . . . − ωr a − Lf 0
+where θ represents the articulation angle of the vehicle.
+Based on the analyses above, the vehicle dynamics of (1) can
+be modeled as
+RẊ = G0 (X ) + GP + H
+
+(3)
+
+where X = [vxf , vyf , ωf , ωr ]T represents the vehicle state,
+while G0 (X ) denotes the vector about X that can be expressed
+by (5). P = [Pin , Pout ]T represents the pressure in pistonside chamber of right strut or rod-side chamber of left strut,
+while Pout is the pressure in piston-side chamber of left
+strut or rod-side chamber of right strut of hydraulic struts. R,
+104053
+
+T. Xu et al.: Differential Drive Based Yaw Stabilization Using MPC for DAHV
+
+FIGURE 3. Experimental area of field test.
+FIGURE 2. The diagram of the co-simulation model.
+
+H , and G are the constant matrix, which can be expressed by
+Appendix (I-1), (I-2) and (4).
+
+T
+a11 a12 a13 a14 a15 a16
+G=
+(4)
+a21 a22 a23 a24 a25 a26
+
+T
+G0 (X ) = a31 a32 a33 a34 a35 a36
+(5)
+where a11 - a26 are the constant, while a31 − a36 denote the
+state function, which can be expressed by appendix (I-3).
+B. CO-SIMULATION MODEL OF DAHVs
+
+In current research works, there are no common simulation
+software, i.e., Carsim or Trucksim, which can be used to
+make verification for the study of DAHVs. Meanwhile, the
+limitation of experimental makes it necessary to study a new
+verification technique for DAHVs [18], [19]. ADAMS is
+the simulation software that concentrates on the mechanical dynamics analyses while AMESim contribute to the
+research of hydraulic system, which can be used to build
+a co-simulation model for the verification of the studies of
+DAHVs. In this co-simulation model, the vehicle model, tire
+model, and road are built in ADAMS while AMESim is used
+to build the model of steering unit, hydraulic structs, and
+accumulator. Moreover, MATLAB is implemented to control
+the vehicle body and translate the information between these
+two simulation models. Its diagram is shown in Fig. 2. In this
+virtual prototype, ϕ is steering wheel angle, which is used
+to control the steering unit of hydraulic steering system in
+AMESim. vref and vxf are the reference velocity and the real
+velocity from ADAMS, respectively. These two parameters
+determine the driving torque of each wheel Tpi with the PID
+controller. FhL and FhR are the forces of hydraulic struts
+calculated by AMESim, which provide the steering driving
+forces for the vehicle model in ADAMS. And the corresponding struts length YL and YR are obtained from ADAMS
+and output back to AMESim to achieve the movements of
+hydraulic struts in next step.
+C. FIELD TEST
+
+In order to verify the mathematical model and co-simulation
+model, field tests are performed with a loaded 35t DAHVs.
+104054
+
+FIGURE 4. Response comparison of simulations and measured data. (a)
+the vehicle velocity, (b) the length of hydraulic strut, (c) the articulation
+angle (d) yaw rate of the vehicle front part, (d) the pressure of right strut,
+(e) the pressure of right strut.
+
+The experimental area is shown in Fig. 3. The parameters
+of vehicle and hydraulic steering system can refer to the
+literature [3]. With these parameters, the mathematical model
+in MATLAB/Simulink and virtual co-simulation model are
+established. The comparisons of the simulation results with
+measure data are shown in Fig. 4.
+This field test was conducted on a cement road with a fully
+loaded articulated vehicle. The vehicle was turned to the left
+for about 1.5 s and kept in the steady steering state for about
+0.5 s. Then, the steering wheel was turned back to the right
+side. The vehicle speed was under 18 km/h in this filed test.
+The input of steering wheel angle and the vehicle velocity
+in this field test are shown in Fig. 9 in literature [3]. The
+comparison among the experimental data, simulations of the
+mathematical model and co-simulation model are illustrated
+in Fig. 4.
+Fig 4(a) is the comparison of vehicle velocity from the
+virtual model and experimental data during steering process.
+The maximum error is under 2%. Fig. 4(b) shows the changes
+in length of left-strut based on the inputs of the field test.
+It decreases and then increases during steering process. And
+the maximum errors between the mathematical model, cosimulation model, and measurement data are about 8 mm and
+10 mm, respectively, which accounting for 0.45% and 0.5%
+VOLUME 8, 2020
+
+T. Xu et al.: Differential Drive Based Yaw Stabilization Using MPC for DAHV
+
+of its length at 2.7 s. Fig. 4(c) shows the changes in the articulation angle of the vehicle. The maximum errors among the
+mathematical model, co-simulation model and experimental
+data are approximately 4% and 5%, respectively. Fig. 4(d)
+compares the simulations results and experimental data of
+yaw rate for the front part of the vehicle. Its value is the
+differential of the steering angle of the vehicle front part.
+Because of the possible measuring errors, there exist some
+disagreement between the simulations and experimental data.
+The maximum errors are about 8% and 6%, respectively.
+Fig. 4(e) and (f ) shows the pressure of the left strut. The
+initial pressure of the hydraulic steering system is 10MPa,
+which is the same as the parameters of the field test vehicle
+in literatures [3].
+According to the agreements of these simulation results
+and measured data in Fig. 4, the negligible error could validate that the mathematic and virtual co-simulation models
+described above are accurate compared to the real steering
+process of DAHVs. These models can be used to verify the
+studies for DAHVs, which are introduced in the following
+sections.
+
+FIGURE 5. Snaking mode of DAHVs under different conditions.
+
+III. STABILITY ANALYSES FOR DAHVs
+
+Compared with the traditional cars, DAHVs are equipped
+with two hydraulic struts and one articulated joint, which
+permit the front and rear vehicle parts to rotate relatively. This
+characteristic makes it good performance of manoeuvrability but decrease the vehicle torsional stiffness. For smaller
+disturbance, the resulting disturbed motion may be a snaking
+mode [12], [20] or even lead to instability during steady state
+straight moving. Some literatures have studied this vehicle
+behaviour with the influence of disturbance under different
+vehicle parameter. For instance, Gao et al. [9] studied the
+bulk modulus of hydraulic steering system under different
+air content of oil and analysed its influences on the vehicle
+snaking mode with the consideration of vehicle velocity.
+Azad et al. [10] analysed the effects of centre of the mass,
+and the moment of inertia on the snaking mode of DAHVs.
+Crolla and Horton [20] made the researches on the effective
+vehicle torsional stiffness and its influence on the snaking
+instabilities. And they pointed out that the entrapped air and
+flexible pipes in hydraulic system were the main factors that
+result in low stiffness for the DAHVs. In short, the special
+structural features of DAHVs make it more flexible but easily
+lead to stability problems. Therefore, combining with the
+analyses in previous studies and the co-simulation model
+in this manuscript, summary the characteristics of vehicle
+snaking mode with small disturbance under different parameters for DAHVs, which are shown in Fig. 5.
+Fig. 5 (a) shows the vehicle moving behaviour under fully
+loaded or unloaded conditions. It shows that with the increase
+of load, the influence of disturbance on vehicle moving process is decreased but the oscillation of the vehicle yaw motion
+is strengthen, which is more like a snaking mode. Fig. 5(b) is
+the vehicle moving behaviour with the influence of different
+air content in oil of hydraulic steering system. With the
+VOLUME 8, 2020
+
+FIGURE 6. Block diagram of the complete controller for DAHVs.
+
+comparison of oil, the air is easily compressed, which lead
+to the low torsional stiffness of vehicle body for DAHVs and
+make the vehicle instability during moving process. Moreover, based on the previous studies introduced above, it can be
+known that the vehicle velocity is the critical factor that influences the vehicle stability, which is same as the simulation
+in this manuscript shown in Fig. 5(c). The vehicle response
+is the obvious snaking mode when the velocity is 20km/h.
+However, the amplitude of the motion oscillation will grow
+with the increase of vehicle velocity, and when it reaches to
+60km/h or higher, the vehicle will show instability. But the
+maximum velocity of DAHVs is limited at 35km/h. So the
+vehicle always shows the snake mode with small disturbance.
+Fig. 5(d) presents the influence of hydraulic pressure in struts
+on the vehicle moving process. The lower pressure in struts
+can lead to the lower vehicle torsional stiffness, which is same
+as the influence of air content in oil.
+Whatever the reasons that lead to the vehicle instability,
+it all due to the yaw moment produced by external disturbance
+that generate the additional yaw motion. Therefore, the active
+yaw moment controlled by differential driving forces of
+wheels can be used to overcome its improper moving process,
+which is the main content of next sections.
+IV. YAW STABILITY CONTROL FOR DAHVs
+
+This section presents the yaw stability control methods and
+its verification technology for DAHVs. The block diagram
+104055
+
+T. Xu et al.: Differential Drive Based Yaw Stabilization Using MPC for DAHV
+
+to illustrate the procedure of this complete control strategy
+is shown in Fig. 6. In this figure, the co-simulation model
+introduced above is object that replaces the real test vehicle
+for the verification of the controller. In the control system,
+PID method is implemented to keep the target velocity of the
+vehicle. Meanwhile, the mathematic model introduced above
+is used to design the stability controller based on the MPC
+method. It is mainly used for the calculation of appropriate
+active yaw moment for the yaw stability of DAHVs, which is
+contrasted by the stability controller with LQR method. The
+EKF method is used to estimate the real external disturbance
+for the real-time control of the vehicle, which is the demand
+parameter of MPC controller. The specific research contents
+are shown as following.
+
+TABLE 1. The step of EKF algorithm.
+
+A. THE SUPERVISORY CONTROLLER BASED ON PID
+
+The supervisory controller is used to control the vehicle
+velocity with the comparison of the velocity of vehicle front
+part and the referent vehicle velocity. The output of this controller is demand drive torque Tdin of each wheel it is always
+limited by the drive ability of wheel-side motor whether the
+stability controller exist or not. The real drive torque used to
+keep the vehicle velocity is Td , which is the constraint of MPC
+controller.
+
+EKF.
+
+Xekf = vxf
+
+B. THE UPPER CONTROLLER DESIGN
+
+vyf
+
+ωf
+
+ωr
+
+Mf
+
+Mr
+
+
+
+(14)
+
+The upper controller is designed for the calculation of the
+direct yaw moment. It includes two parts: the disturbance
+observer based on EKF and the stability controller based on
+MPC.
+
+The vehicle dynamic model can be changed by
+
+ 
+
+Ẋ
+f X , Mf , Mr
+
+ = fekf Xekf
+0
+Ẋekf =  Ṁf  = 
+0
+Ṁr
+
+1) DISTURBANCE OBSERVER DESIGN BASED ON EKF
+
+Taking the capabilities of sensors into consideration,
+the yaw rate of front and rear vehicle parts is chosen as the
+measurement variables and define the measurement matrix
+z = [ωf , ωr ]T . With the discretization of vehicle dynamic
+model of (15), the vehicle state-space equation for the calculation of EFK can be expressed by
+(
+
+Ẋekf (k) = f Xefk(k−1) + wekf (k−1)
+(16)
+z(k) = Hekf X(k−1) + vekf (k−1)
+
+EKF, the common estimation technology, is implemented to
+estimate the equivalent additional yaw moment of different
+vehicle parts produced by external disturbance during moving
+process. EKF is an efficient recursive algorithm and appropriate for the nonlinear vehicle system [21]–[23], which is
+suitable for the design of disturbance observer for DAHVs.
+When the external disturbance act on the vehicle, the vehicle dynamic model (equation(3)) can be rewritten by
+RẊ = G0 (X ) + GP + H + M
+
+(6)
+
+where M = [0, 0, 1Mf , 0, 0, 1Mr]T represents the equivalent
+external disturbance torque, and 1Mf is for the front vehicle
+part while 1Mr is for the vehicle rear part.
+By solving (6), the vehicle dynamic model with external
+disturbance can be rewritten by
+
+
+Ẋ = f (X ) = KD + K 0 G0 (X ) + GP + M
+(13)
+where K , D, and K 0 are shown in Appendix (I-4), (I-8) and
+(I-9), respectively.
+Assume that the external disturbance acted on the vehicle
+is constant at each step time. And the state variables can be
+presented by (14) with the consideration of requirement of
+104056
+
+(15)
+
+where wekf and vekf are the white noise of the system. The
+means of these two sets of white noise are 0 and the covariance are Qekf and Rekf , respectively. Hekf is the coefficient
+matrix, which can be expressed by (17).
+
+
+0 0 1 0 0 0
+Hekf =
+(17)
+0 0 0 1 0 0
+With the reference of literature [23], the step of EKF
+algorithm is presented in Table 1.
+2) STABILITY CONTROLLER DESIGN BASED ON MPC
+
+This section studies the yaw stability controller for DAHVs
+by differential control of right- and left- side of wheels.
+This controller is used to calculate the appropriate direct
+VOLUME 8, 2020
+
+T. Xu et al.: Differential Drive Based Yaw Stabilization Using MPC for DAHV
+
+yaw moment based on MPC for the front and rear vehicle
+parts to decrease the influence of external disturbance and
+keep the vehicle stability. With the effect of this direct yaw
+moment, the vehicle dynamic model can be rewritten by (18)
+combining with the (3) and (6).
+RẊ = G0 (X ) + GP + H + EU
+
+the solve of (24) and (25), the matrix A and B can be derived
+by Appendix (I-10) and (I-11).
+
+
+Ampc = KD + K 0 
+
+(18)
+
+where U = [1Mf + Mf , 1Mr + Mr]T , and the Mf and
+Mr represent the direct yaw moment for the front and rear
+vehicle parts, respectively. E is constant matrix, which can
+be expressed by:
+
+T
+0 0 0 0 0 1
+E=
+(19)
+0 0 1 0 0 0
+Equation (18) shows the coupling effect between the force
+of hydraulic struts and direct yaw moment on the vehicle
+moving process. With the decoupling analysis, it can be
+rewritten by:
+
+
+(20)
+Ẋ = KD + K 0 G0 (X ) + GP + EU
+a: MODEL OF THE WHOLE SYSTEM
+
+In the normal moving process, the longitudinal velocity of
+DAHVs can be kept constant by the driver, which has been
+introduced above. The yaw stability of the vehicle is related
+with its lateral velocity and yaw rate of the vehicle. Define
+y1 = vyf , y2 = ωf , and Y = [vyf , ωf ], the system dynamics
+model of DAHVs can be expressed by (21) combining with
+the decoupling analyses above.
+(
+
+
+Ẋ = KD + K 0 G0 (X ) + GP + EU
+(21)
+Y = CX
+
+
+
+∂ G0 (X )
+
+
+
+
+X = X0 
+∂X X =[vxf ,vyf ,ωf ,ωr ]
+U = U0
+(24)
+
+
+
+ 
+Bmpc = KD + K 0 E 
+
+∂ (U )
+
+
+X = X0 
+∂U U =[1Mf ,1Mr ]
+U = U0
+(25)
+
+ 0
+0
+Dmpc = KD + K G (X0 )+GP+EU0 −Ampc X0 (26)
+Considering the calculation requirements of MPC,
+the vehicle system dynamic model (equation (23)) needs to be
+discretised in a certain sampling period Ts with the guidance
+of (27).
+[x [(k + 1) Ts ] − x (kTs )]
+(27)
+Ts →0
+Ts
+k=0,1,2···
+
+ẋ (kTs ) = Lim
+
+Combining with the (27), the time-varying system of (23)
+can be discretised by:
+
+
+
+ x [(k + 1) Ts ] = |I + A{zmpc Ts} x (kTs )
+
+
+
+
+Akt
+
+
+
+
+
+
+
+
+
++ Bmpc Ts u (kTs ) + Dmpc Ts
+| {z }
+| {z }
+Bkt
+
+(28)
+
+Dkt
+
+y [(k + 1) Ts ] = Ckt x [(k + 1) Ts ]
+
+where I = diag{1,1,1,1}, Ckt = C.
+
+where
+
+C=
+
+0
+0
+
+1
+0
+
+0
+1
+
+0
+0
+
+b: THE OBJECTIVE FUNCTION AND CONSTRAINT
+
+
+(22)
+
+Considering the requirements of real-time simulation of
+this system, the linear model predictive control (LMPC)
+method is used to design this controller. Correspondingly,
+the nonlinear vehicle system dynamic model of (14) needs to
+be linearized to satisfy the requirements of LMPC. Taylor’s
+formula is carried out on this nonlinear system dynamic
+model, which is expanded at initial point of state (X0 , U0 ).
+When the higher order terms are ignored, the first order
+and constant of this system can represent the linear system
+dynamic vehicle model, which can be expressed by,
+(
+ẋ = Ampc x + Bmpc u + Dmpc
+(23)
+y = Cmpc x
+where x = X -X0 , u = U -U0 , and y = Y are state variables, input and output matrix, respectively. The Ampc , Bmpc ,
+and Dmpc are the state parameters related with the original
+dynamic model, which can be expressed by (24)∼(26). With
+VOLUME 8, 2020
+
+The stability controller of DAHVs is used to reduce the influence of external disturbance and make the lateral velocity
+and yaw rate to be zero. The objective function of this MPC
+controller for DAHVs is defined below:
+J (k) = [y (k)]T Q̃ [y (k)] + · · · + [u (k)]T
+×R̃ [u (k)] + [1u (k)]T S̃ [1u (k)]
+
+(29)
+
+s.t.
+lb ≤ u(k) ≤ ub
+
+T
+lb = Mf min Mr min
+
+T
+ub = Mf max Mr max
+
+(30)
+(31)
+(32)
+
+where the terms on the right side in (29) are the output cost,
+input cost, and cost of the increment of input, respectively. Q̃,
+R̃ and S̃ are weights to balance each term. lb and ub in (30)
+are the boundaries of input, which are related with the direct
+yaw moment in front and rear vehicle parts expressed by (32).
+104057
+
+T. Xu et al.: Differential Drive Based Yaw Stabilization Using MPC for DAHV
+
+TABLE 2. The gains of EKF and MPC algorithms.
+
+C. THE LOWER CONTROLLER OF THE TORQUE
+DISTRIBUTION DESIGN
+
+The lower controller of this paper is designed for the direct
+yaw moment distribution obtained from the stability controller. In order to reduce its influence on the longitudinal
+dynamics of DAHVs, the strategy of torque distribution can
+be expressed by (33) combining with the outputs of PID
+controller Td .
+
+
+ Tt1 = Td − 1Mf /L
+
+ T = T + 1M /L
+t2
+d
+f
+(33)
+ Tt3 = Td + 1Mr /L
+
+
+
+Tt4 = Td − 1Mr /L
+where Tt1 , Tt2 , Tt3 , and Tt4 are required torque of front-left,
+front-right, rear-left, and rear-right wheels, respectively. L is
+the wheel track of DAHVs.
+
+FIGURE 7. Results of the external disturbing torque observed by EKF in
+the simulation.
+
+FIGURE 8. Results of the articulation angle under different controller in
+the simulation.
+
+V. CASE STUDY
+
+In this section, the co-simulation model is implemented to
+verify the effectiveness of the stability controller. In the
+simulation, the vehicle moves on the straight line when the
+perturbation acted on one side of front or rear vehicle part.
+Once this situation occurs, the controller will work to produce
+the direct yaw moment to keep the vehicle stability. The
+control objective is to reduce the vehicle oscillation during
+moving process. The vehicle structure parameters used in
+the co-simulation can refer to the literature [3]. Due to the
+physical limitation of wheel-side motor, the output saturation
+issue is considered in the controller, and the maximal value
+of the direct yaw moment for the front and rear vehicle parts
+are all chosen as 146.7kNm (the maximum output torque
+of wheel-side motor is 2577Nm, the tyre effective radius is
+1.032m, and the gear ratio is 25, which has been introduced in
+literature [17]). For the upper controller, including EKF and
+MPC algorithms, the gains are chosen according to the structure characteristics of DAHVs, which are shown in Table 2.
+In order to highlight the superiority of the MPC controller,
+the LQR approach is used to conduct a comparative simulation. The reason for choosing LQR is that it can yield good
+performance in vehicle stability control for DAHVs, which
+has been introduced in literature [6]. And the advantage of
+the MPC approach compared with LQR is not very large [6],
+[24]. But there are also two reasons for using MPC algorithm
+instead of LQR to achieve the control objective in this paper.
+104058
+
+1) the MPC approach can make the actual vehicle state closer
+to the reference than LQR approach because of its rolling
+optimization technology in a simulation step; 2) the MPC
+approach can deal with the output saturations of drive wheels
+with wheel-side motor, while LQR approach might easily
+exceed the actuator limit of its drive ability.
+With the introduction above, we make simulation with the
+loaded vehicle run on the cement road (the tire-road friction
+coefficient µ = 0.7) and straight line. Its front vehicle
+part is subjected an external disturbing torque (25kNm) at
+0.2s. After that, the controller is activated and makes the
+vehicle stability. Because of the maximum vehicle velocity of
+DAHVs is imitated at 35km/h. So the normal vehicle velocity
+in this simulation is chosen as 20km/h. Otherwise the air
+content of hydraulic oil is chosen as 10%, and the pressure
+in struts is chosen as 5Mpa.
+The comparing results of the external disturbing torque for
+the front and rear vehicle parts between the real parameter
+and the observed value by EKF are shown in Fig. 7. From
+the results, it is found that this EKF observer is effective to
+make the observed value track the real parameter even there
+is one or two step (0.005∼0.01s) delay, which can provide
+appropriate reference for the stability control of DAHVs.
+The results of the articulation angle with or without yaw
+stability controller are shown in Fig. 8. From the simulation
+VOLUME 8, 2020
+
+T. Xu et al.: Differential Drive Based Yaw Stabilization Using MPC for DAHV
+
+controller. And the vehicle will be instability in next step.
+But when the yaw stability controller is implemented into
+the vehicle, its articulation angle can recover the original
+steady-state moving process after one period of oscillation.
+And its oscillation amplitude and period can be reduced
+for about 40% and 80%, respectively. From the simulation
+results, it also can be observed that LQR strategy can already
+keep the vehicle stability, however, the MPC approach can
+further reduce the vehicle oscillation amplitude and period,
+which is related to the control of boundaries issue treatment
+of actuator limitation. As for the control inputs of different
+vehicle parts provided by wheel-side motor, it is validated
+that the MPC strategy can maintain this control inputs with
+the actuator limitation, shown as Fig. 9, which is hard for the
+LQR strategy.
+FIGURE 9. Results of control inputs of front and rear vehicle parts
+provided by wheel-side motor in the simulation.
+
+VI. CONCLUSION
+
+results, one can observed that, the vehicle moving process
+shows the oscillation with the increased amplitude of articulation angle under the parameters above without stability
+
+
+
+m1
+
+0
+
+
+0
+R=
+ m2 cos (θ )
+
+ −m2 sin (θ )
+0
+
+
+0
+m1
+0
+m2 sin (θ )
+m2 cos (θ )
+0
+
+The goal of this study is to present a yaw stability controller
+for DAHVs with the application of MPC strategy, which was
+realised with the direct yaw moment produced by differential
+driving forces of independently wheel-side motor.
+
+0
+0
+Izf 
+m2 a − Lf 0 sin (θ)
+m2 Lf cos (θ )
+0
+
+
+
+0
+
+0
+
+
+0
+
+− cos (θ) 
+
+−m2 Lr 
+−Izr
+
+Cxf
+
+Cyf 
+
+
+a − Lf 0 Cyf
+
+
+− cos (θ) Cxf − sin (θ ) Cyf
+
+
+sin (θ ) Cxf − cos (θ ) Cyf
+− (b − LrO ) sin (θ ) Cxf + (b − LrO ) cos (θ ) Cyf
+
+
+
+
+
+a11 = −Ap cos θfL + Aa cos θfR , a21 = Aa cos θfL − Ap cos θfR , a31 = Fwxf − m1 vyf ωf ,
+
+
+
+
+
+
+
+
+
+a12 = Ap sin θfL − Aa sin θfR , a22 = −Aa sin θfL + Ap sin θfR , a32 = Fwyf + m1 vxf · ωf
+
+
+
+
+
+
+
+
+
+
+a13 = Ap · cos θfL · LfL + Aa · cos θfR · LfR + Ap sin θfL − Aa sin θfR a − LfO − af ,
+
+
+
+
+
+
+
+
+
+a23 = −Aa cos θfL · LfL − Ap cos θfR · LfR + −Aa sin θfL + Ap sin θfR a − LfO − af ,
+
+
+
+
+
+
+ a33 = (T1 + T2 ) + Twyzf + Twxzf , a14 = Ap cos (θrL ) − Aa cos (θrR ) ,
+
+ a = −A cos (θ ) + A cos (θ ) ,
+24
+a
+rL
+p
+rR
+
+
+
+
+a
+=
+F
++
+m
+v
+ω
++
+m
+ω
++ ωr vxf sin (θ ) − vyf + ωf · Lf cos (θ ) ,
+34
+wxr
+2
+yr
+r
+2
+f
+
+
+
+
+
+a15 = −Ap sin (θrL ) + Aa sin (θrR ) , a25 = Aa sin (θrL ) − Ap sin (θrR ) ,
+
+
+
+
+
+
+
+a35 = Fwyr − m2 vxr ωr + m2 ωf + ωr vxf cos (θ ) + vyf + ωf · Lf sin (θ ) ,
+
+
+
+
+
+
+a16 = −Ap cos (θrL ) · LrL − Aa cos (θrR ) · LrR + Ap sin (θrL ) − Aa sin (θrR ) (b − LrO − br ) ,
+
+
+
+
+
+ a26 = Aa cos (θrL ) · LrL + Ap cos (θrR ) · LrR + −Aa sin (θrL ) + Ap sin (θrR ) (b − LrO − br ) ,
+
+
+
+a36 = (T3 + T4 ) + Twyzr + Twxzr
+
+
+K11 K12 K13
+ K21 K22 K23 
+
+K =
+ K31 K32 K33 
+K41 K42 K43
+
+
+
+
+H =
+
+
+
+
+VOLUME 8, 2020
+
+(I-1)
+
+(I-2)
+
+(I-3)
+
+(I-4)
+
+104059
+
+T. Xu et al.: Differential Drive Based Yaw Stabilization Using MPC for DAHV
+
+This paper is the first one to bring the intelligent control methods, including EKF and MPC, into DAHVs for
+its yaw stability. In this paper, the vehicle dynamic mathematic model and co-simulation virtual model are firstly
+discussed briefly and verified by field test. As the verification techniques, the co-simulation model is more reasonable than the traditional methods with simple virtual model.
+Based on these analyses, the sensibility of different vehicle parameters to its yaw stability is studied. Due to the
+ability of prediction and boundary treatment of MPC, it is
+used for the differential drive control development with the
+decoupling analyses of vehicle dynamic model. In order to
+produce the oscillatory yaw motion in prediction model of
+MPC for its control, the EKF is implemented to observe
+the real external disturbance with the guidance of nonlinear
+vehicle dynamic model. Case study under certain vehicle
+parameters and quantitative external disturbance is conducted
+to verify the analyses above. The results demonstrated that
+the designed controller can reduce the oscillation amplitude and period of vehicle yaw motion for about 40% and
+80% respectively, which improve the vehicle stability greatly.
+Future work will focus on the practical application in the real
+DAHVs.
+
+m2 cos (θ )
+
+m1
+
+ m2 sin (θ )
+D = −
+
+m1
+
+0
+
+m2 sin (θ )
+m1
+m2 cos (θ )
+m1
+0
+
+
+
+ 1
+ m1
+
+ 0
+
+K0 = 
+
+ 0
+
+
+0
+
+0
+
+0
+
+1
+m1
+0
+0
+
+
+0
+
+0
+
+0
+
+1
+Izf
+0
+
+0
+0
+
+0
+
+0
+
+0
+
+0
+
+0
+
+
+
+m1 ωf 0
+
+
+
+0
+
+0 
+Ampc = KD + K 
+ m2 ωf 0 sin (θ )
+
+
+ m2 ωf 0 cos (θ )
+
+0
+
+
+0 0
+0 0
+
+
+1 0
+
+Bmpc = KD + K 0 
+0 0
+
+
+0 0
+0 1
+104060
+
+m2 Lf sin (θ )
+Izf
+m2 Lf cos (θ )
+Izf
+0
+0
+
+APPENDIX
+
+(I-1)–(I-4), as shown at the bottom of the previous page,
+where K 11-K 43 can be expressed by
+
+A1 B1 C3
+A1 B3 C2 − AB2 C3
+
+
+, K12 =
+,
+K11 =
+
+
+m
+KK
+m1 KK
+
+1
+
+
+−A1 B1 C2
+
+
+
+K13 =
+
+
+m1 KK
+
+
+
+
+A21 C3
+A
+A
+C
+
+1 2 3 − A1 A3 C2
+
+
+K
+=
+,
+K
+=
+−
+,
+21
+22
+
+
+m1 KK
+m1 KK
+
+
+
+
+A2 C2
+
+
+
+K23 = 1
+
+
+m1 KK
+
+
+
+A2 C3
+A1 A2 C3 − A1 A3 C2
+K31 = Z
+, K32 = −Z 1 , (I-5)
+
+KK
+KK
+
+
+
+
+A21 C2
+
+
+K33 = Z
+
+
+
+KK
+
+
+
+
+
+− (A1 B3 − A3 B1 ) A2 + (A1 B2 − A2 B1 ) A3
+
+
+,
+K41 =
+
+
+
+KK
+
+
+
+(A1 B3 − A3 B1 ) A1
+
+
+,
+K42 =
+
+
+
+KK
+
+
+
+
+ K43 = − (A1 B2 − A2 B1 ) A1
+KK
+
+−1
+
+0
+
+0
+
+−1
+
+0
+
+0
+
+
+0 
+
+
+0 
+
+
+−1
+
+(I-8)
+
+
+
+
+
+0
+
+
+
+0
+
+
+0
+
+(I-9)
+
+−m1 ωf 0
+
+−m1 vyf 0
+
+0
+
+0
+
+m1 vxf 0
+
+0
+
+0
+m2 vxf 0 sin (θ ) − m2 vyf 0 cos (θ )
+−2m2 cos (θ ) Lf ωf 0
+m2 vxf 0 cos (θ) + m2 vyf 0 sin (θ )
+−2m2 sin (θ ) Lf ωf 0
+0
+
+
+
+
+
+
+0
+
+
+−2m2 ωr0 Lr 
+
+
+
+
+0
+
+0
+
+−m2 ωf 0 cos (θ )
+m2 ωf 0 sin (θ )
+0
+
+
+
+0
+
+(I-10)
+
+(I-11)
+
+VOLUME 8, 2020
+
+T. Xu et al.: Differential Drive Based Yaw Stabilization Using MPC for DAHV
+
+where A1∼ A3, B1∼ B3, C2∼ C3, KK, and U are shown
+in (I-6).
+
+
+
+m2
+
+
++
+1
+cos (θ ) ,
+A
+=
+1
+
+
+m1 
+
+
+
+
+
+m2 Lf
+m2
+
+
+
++
+a
+−
+L
++
+1
+sin (θ )
+B
+=
+fO
+1
+
+
+m1  Izf
+
+
+
+
+m2
+
+
+
+sin (θ ) ,
+A2 = −1 −
+
+
+m
+
+ 1
+
+
+
+
+m2 Lf
+m2
+
+B2 =
++
+a − LfO + 1 cos (θ ) , (I-6)
+m1
+Izf
+
+
+
+C2 = −m2 Lr
+
+
+
+
+
+A
+=
+(b − LrO ) sin (θ ) , B3 = − (b − LrO ) cos (θ ) ,
+
+3
+
+
+
+
+C3 = −Izr ,
+
+
+
+
+a − LfO
+
+
+, KK = − (A1 B3 − A3 B1 ) AC2
+Z=
+
+
+Izf
+
+
+
++ (A1 B2 − A2 B1 ) A1 C3
+
+
+Bmpc
+Ampc
+
+
+ϕekf =   0 0 0 0   0 0  
+(I-7)
+0
+
+0
+
+0
+
+0
+
+0
+
+0
+
+where Ampc and Bmpc are shown in (I-10) and (I-11), respectively.
+REFERENCES
+[1] Q. Gu, L. Liu, G. Bai, K. Li, Y. Meng, and F. Ma, ‘‘Longitudinal and
+lateral trajectory planning for the typical duty cycle of autonomous load
+haul dump,’’ IEEE Access, vol. 7, pp. 126679–126695, 2019.
+[2] T. Xu, Y. Shen, J. Xie, and W. Zhang, Study of Hydraulic Steering Process
+for Intelligent Autonomous Articulated Vehicle. Warrendale, PA, USA:
+SAE, 2018.
+[3] T. Xu, Y. Shen, Y. Huang, and A. Khajepour, ‘‘Study of hydraulic
+steering process for articulated heavy vehicles based on the principle of
+the least resistance,’’ IEEE/ASME Trans. Mechatronics, vol. 24, no. 4,
+pp. 1662–1673, Aug. 2019.
+[4] P. A. Dudziski, ‘‘Design characteristics of steering systems for mobile
+wheeled Earthmoving equipment,’’ J. Terramechan., vol. 26, no. 1,
+pp. 25–82, Jan. 1989.
+[5] D. N. L. Horton and D. A. Crolla, ‘‘Theoretical analysis of the steering
+behaviour of articulated frame steer vehicles,’’ Vehicle Syst. Dyn., vol. 15,
+no. 4, pp. 211–234, Jan. 1986.
+[6] Y. Gao, Y. Shen, T. Xu, W. Zhang, and L. Guvenc, ‘‘Oscillatory yaw motion
+control for hydraulic power steering articulated vehicles considering the
+influence of varying bulk modulus,’’ IEEE Trans. Control Syst. Technol.,
+vol. 27, no. 3, pp. 1284–1292, May 2019.
+[7] N. L. Azad, A. Khajepour, and J. McPhee, ‘‘Analysis of jackknifing in
+articulated steer vehicles,’’ in Proc. IEEE Vehicle Power Propuls. Conf.,
+Oct. 2005, pp. 86–90.
+[8] Y. He, A. Khajepour, J. McPhee, and X. Wang, ‘‘Dynamic modelling and
+stability analysis of articulated frame steer vehicles,’’ Int. J. Heavy Veh.
+Syst., vol. 12, no. 1, pp. 28–59, 2004.
+[9] Y. Gao, Y. Shen, Y. Yang, W. Zhang, and L. Guvenc, ‘‘Modelling, verification and analysis of articulated steer vehicles and a new way to eliminate
+jack-knife and snaking behavior,’’ Int. J. Heavy Veh. syst., vol. 26, nos. 3–4,
+pp. 375–404, 2019.
+[10] N. L. Azad, A. Khajepour, and J. McPhee, ‘‘Effects of locking
+differentials on the snaking behaviour of articulated steer vehicles,’’
+Int. J. Veh. Syst. Model. Test., vol. 2, no. 2, pp. 101–127,
+2007.
+[11] N. L. Azad, A. Khajepour, and J. McPhee, Stability Control of Articulated
+Steer Vehicles by Passive and Active Steering Systems. Warrendale, PA,
+USA: SAE, 2005.
+[12] N. Lashgarian Azad, A. Khajepour, and J. Mcphee, ‘‘Robust state feedback
+stabilization of articulated steer vehicles,’’ Vehicle Syst. Dyn., vol. 45, no. 3,
+pp. 249–275, Mar. 2007.
+VOLUME 8, 2020
+
+[13] N. L. Azad, A. Khajepour, and J. McPhee, ‘‘Robust stabilization of articulated steer vehicles by differential braking,’’ in Proc. CSME Forum, Symp.
+Intell. Vehicles Transp. Syst., Calgary, BC, Canada, 2006, pp. 1–5.
+[14] H. Cherouat and S. Diop, ‘‘An observer and an integrated braking/traction
+and steering control for a cornering vehicle,’’ in Proc. Amer. Control Conf.,
+2005, pp. 2212–2217.
+[15] H. Peng and D. Eisele, ‘‘Vehicle dynamics control with rollover prevention
+for articulated heavy trucks,’’ in Proc. 5th Int. Symp. Adv. Vehicle Control,
+Ann Arbor, MN, USA, 2000, pp. 1–8.
+[16] J. J. Chun, P. Wang, Y. Shen, and J. Michael, ‘‘Differential control strategy
+based on an equal slip rate for an all-wheel electric-drive underground articulated dumping truck,’’ J. Eng. Sci. Tech. Rev., vol. 7, no. 4, pp. 163–168,
+2014.
+[17] T. Xu, X. Ji, and Y. Shen, ‘‘A novel assist-steering method with direct yaw
+moment for distributed-drive articulated heavy vehicle,’’ P. I. Mech. Eng.
+K, J. Mul., vol. 234, no. 1, pp. 214–224, 2020.
+[18] Y. Yin, S. Rakheja, and P.-E. Boileau, ‘‘Multi-performance analyses
+and design optimisation of hydro-pneumatic suspension system for an
+articulated frame-steered vehicle,’’ Vehicle Syst. Dyn., vol. 57, no. 1,
+pp. 108–133, Jan. 2019.
+[19] J. Tang, Y. Gao, H. Yu, Y. Wang, Y. Ai, and D. Cao, ‘‘Real-time display
+method for mining vehicle simulation based on virtual reality,’’ in Proc.
+IEEE 28th Int. Symp. Ind. Electron. (ISIE), Jun. 2019, pp. 1530–1535.
+[20] D. A. Crolla, ‘‘The steering behaviour of articulated body steer vehicles,’’
+in Proc. Int. Mech. Eng. Conf., 1983, pp. 1–10.
+[21] E. Regolin, A. Alatorre, M. Zambelli, and A. C. Victorino, ‘‘A slidingmode virtual sensor for wheel forces estimation with accuracy enhancement via EKF,’’ IEEE Trans. Veh. Tech., vol. 68, no. 4, pp. 3457–3471,
+Oct. 2019.
+[22] A. Giannitrapani, N. Ceccarelli, F. Scortecci, and A. Garulli, ‘‘Comparison
+of EKF and UKF for spacecraft localization via angle measurements,’’
+IEEE Trans. Aerosp. Electron. Syst., vol. 47, no. 1, pp. 75–84, May 2011.
+[23] Y. Liu, X. Ji, K. Yang, X. He, X. Na, and Y. Liu, ‘‘Finite-time optimized
+robust control with adaptive state estimation algorithm for autonomous
+heavy vehicle,’’ Mech. Syst. Signal Process., vol. 139, May 2020,
+Art. no. 106616.
+[24] C. Hu, R. Wang, F. Yan, Y. Huang, H. Wang, and C. Wei, ‘‘Differential steering based yaw stabilization using ISMC for independently actuated electric vehicles,’’ IEEE Trans. Intell. Transp. Syst., vol. 19, no. 2,
+pp. 627–638, Feb. 2018.
+
+TAO XU (Member, IEEE) received the B.S. degree
+in vehicle engineering from the Shandong University of Science and Technology, China, in 2013,
+and the Ph.D. degree in mechanical engineering
+from the University of Science and Technology,
+Beijing, China, in 2019. He holds a postdoctoral
+position at the State Key Laboratory of Automotive Safety and Energy, Tsinghua University, Beijing. He is working on articulated heavy vehicle
+design and control; vehicle dynamics and control.
+
+XUEWU JI received the B.S., M.S., and Ph.D.
+degrees in automotive engineering from the College of Automotive Engineering, Jilin University, Changchun, China, in 1987, 1990, and 1994,
+respectively. He is currently an Associate Professor with the State Key Laboratory of Automotive Safety and Energy, Tsinghua University, Beijing, China. His research interests include vehicle
+dynamics and control, and advanced steering system technology. He was a recipient of the National
+Science and Technology Progress Award for his achievements in the industrialization of electric power steering technology, in 2014.
+104061
+
+T. Xu et al.: Differential Drive Based Yaw Stabilization Using MPC for DAHV
+
+YULONG LIU received the B.S. degree from the
+Hefei University of Technology, China, in 2016.
+He is currently pursuing the Ph.D. degree in
+mechanical engineering with the State Key Laboratory of Automotive Safety and Energy, Tsinghua
+University, China. His research interests include
+vehicle dynamics and control, driver-vehicle
+shared control, and motion planning for automated
+vehicle.
+
+104062
+
+YAHUI LIU (Member, IEEE) received the B.S.
+degree from Jilin University, Changchun, China,
+in 2003, and the Ph.D. degree from Beihang University, Beijing, China, in 2009, all in automotive
+engineering. He is currently an Associate Professor with the State Key Laboratory of Automotive
+Safety and Energy, Tsinghua University, Beijing.
+His research interests include driver-vehicle system dynamics, driver-vehicle automation collaboration, and shared control.
+
+VOLUME 8, 2020
+
+

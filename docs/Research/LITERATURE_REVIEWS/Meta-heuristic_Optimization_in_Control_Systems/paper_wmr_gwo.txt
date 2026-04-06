@@ -1,0 +1,1381 @@
+Design a New Hybrid Controller Based
+on an Improvement Version of Grey
+Wolf Optimization for Trajectory
+Tracking of Wheeled Mobile Robot
+
+Rasha Mohammed Hussein
+Lect. Doctor
+At Mechanical Engineering Department
+University of Technology
+Iraq
+
+Nonholonomic wheeled mobile robots are considered to be multi-input
+multi-output systems that are performed in varying environments. This
+work presents the trajectory tracking control of a nonholonomic wheeled
+mobile robot (WMR). The Kinematic and the dynamic models of the robot
+were derived. A new hybrid controller was designed, which consisted of
+two controllers based on an optimization algorithm to solve the trajectory
+tracking problem. The first controller is the Fractional order PID
+controller, which is based on the kinematic model and has been applied to
+control the linear and the angular robot velocities, while the second
+controller is a linear quadratic regulator (LQR) and is based on the
+dynamic model used to control the motors' torques. A new, improved
+version of grey wolf optimization wasadopted to tune the parameters of the
+hybrid controller. The main goals of this improvement are rapid
+convergence towards a solution, reducing the effect of the wolves' random
+motion, andbalancing exploitation and exploration processes. MATLAB
+software was used to simulate the results under an S-shape trajectory and
+to evaluate the robustness and performance of the proposed control unit.
+The simulation results demonstrated the adopted control system's activity
+and efficiency based on the mean square error (MSE) between the desired
+and actual trajectory. The values of MSE of trajectory in the X and Y
+directions and the orientation are [6.589*10-4(m) 8.421*10-5(m)
+0.00401(rad)]T. Also, the adopted control system can generate smooth
+values of the control input signals without sharp spikes. The performance
+of the presented control system has been verified and compared with the
+results obtained from the other two control systems, and the simulation
+results have offered the superiority and effectiveness of the hybrid
+controller of this work.
+Keyword: Wheeled mobile robot, Hybrid controller, Grey wolf
+optimization
+
+1.
+
+INTRODUCTION
+
+In recent years, the research about the wheeled mobile
+robot (WMR) increased excitingly because of their
+theoretically regaled characteristics [1]. WMR is consi–
+dered the most widely utilized mobile robot type [2].
+WMR is utilized in many fields or applications, from
+dangerous environments, such as mining and the nuclear
+industry, to daily life applications, such as household
+work and autopilot robots for cars. Also, WMR is suc–
+cessfully applied in hazardous environments where
+human life can be endangered, such as in explosive
+detection operations [3]. Trajectory tracking control
+means the ability of the robot to track a desired path or
+trajectory [4]. Many studies solve the problem of
+Received: January 2023, Accepted: March 2023
+Correspondence to: Dr Rasha Mohammed Hussein
+Mechanical Engineering Department, University of
+Technology- Iraq
+E-mail: Rasha.M.Hussein@uotechnology.edu.iq
+doi: 10.5937/fme2302140H
+© Faculty of Mechanical Engineering, Belgrade. All rights reserved
+
+trajectory tracking by using various approaches. In [5], a
+hybrid controller was used to solve the motion control
+of a WMR. The hybrid controller consisted of a back–
+stepping controller (BSC) based on the kinematic model
+and fractional order PID (FOPID) controller based on
+the dynamic model. The gains' parameters of both BSC
+and FOPID were tuned using a modified version of a
+beetle swarm optimization. In [6], a nonlinear model
+predictive controller (NMPC) was presented to solve the
+trajectory tracking problem of a continuum robot. A
+particle swarm optimization (PSO) algorithm was
+proposed to solve the limited computational burden of
+the NMPC. A circular trajectory was chosen to test the
+efficiency of the adopted controller. In [7], a neural
+network with a PID controller was used to solve the
+trajectory tracking of a mecanum WMR. The kinematic
+and dynamic models of the robot were derived. An
+adopted control system was applied to control the
+robot's velocities. The stability of the control system
+was tested by using the Lyapunov method. In [8], an
+adaptive fractional order parallel fuzzy PID control was
+FME Transactions (2023) 51, 140-148 140
+
+adopted for the tracking control of a WMR. The effect
+of uncertainty, noise, and time delay was considered in
+the robot's dynamic model. The gains' parameters of the
+control system were evaluated and tuned using Grey
+Wolf Optimization (GWO).In [9], a multi-objective
+Grey Wolf Optimization (MOGWO) was adopted to
+schedule the material transport systems relying on a
+single WMR. The mathematical model of the MOGWO
+included 13 fitness functions combined to perform an
+optimal solution for the scheduling problem. In [10],
+combined controllers consisting of BSC and Fuzzy-PID
+were applied. BSC was used based on the kinematic
+model of the WMR, while the Fuzzy-PID was utilized
+based on the dynamic model. Infinity trajectory was
+selected to test the performance of the combined
+controller. In [11], the trajectory tracking problem of a
+WMR was solved by using recursive integral BSC. The
+stability of the control system was checked by using the
+Lyapunov method. Two trajectories were chosen,
+circular and lemniscate, to test the performance of the
+control system. In [12], the trajectory tracking problem
+of a WMR with the presence of slipping and skidding
+phenomena was investigated. A nonlinear disturbance
+observer was used to estimate the disturbance effect. An
+integral sliding mode control was employed as a control
+system. In [13], two robotic arms were developed and
+designed to sort and classify objects. The vision system
+conducted the classification process based on size and
+shape. The experimental control system contained one
+master and two slave microcontrollers. Two Arduino
+microcontrollers were enslaved to control the speed of
+the stepper motors, while Raspberry pi4 was employed
+as a master to receive the commands from the vision
+system. In [14], the scheduling problem of a WMR was
+analyzed. The whale optimization approach (WOA) was
+used to select an optimum path in order to carry goods,
+materials, and parts in an industrial environment. A
+modified mathematical model based on the WOA in
+order was suggested to make a minimization to seven
+fitness functions. In [15], a new NMPC was investigated
+as a control system for the trajectory tracking of a
+WMR. A set of enhancements in the cost function and
+optimizer was applied to reduce posture errors. In [16],
+a hybrid control system comprising BSC and fuzzy
+sliding mode control was proposed. BSC was used
+based on the robot's kinematic model, while fuzzy
+sliding mode control was utilized based on the dynamic
+model. The fuzzy logic system tuned the gains'
+parameters of the sliding mode control. A circular
+trajectory was adopted to test the performance of the
+WMR control system. In [17], a fractional order state
+feedback controller was applied for the trajectory
+tracking of a nonholonomic WMR. The proposed
+control system was considered based on the kinematic
+and dynamic models of the robot. The stability of the
+system was checked by using the Lyapunov method. In
+[18], time-varying BSC was used based on the
+kinematic model of the WMR. The Lyapunov stability
+criteria were utilized to test the stability of the control
+system. A circular trajectory was chosen to check the
+performance of the adopted controller. In [19], an
+integral BSC was applied theoretically and
+experimentally to solve the trajectory-tracking problem
+FME Transactions
+
+of a WMR. A circular trajectory was selected to test the
+control system's performance, and the results indicated
+that the integral BSC's performance was better than the
+conventional BSC's.
+In this work, a hybrid controller is applied based on
+the kinematic and dynamic models in order to solve the
+trajectory tracking problem of a nonholonomic
+WMR.FOPID controller is applied based on the kine–
+matic model to control the robot's linear and angular
+velocities, while the magnitudes of the motor torques
+are controlled by using a linear quadratic regulator
+(LQR) controller. An improved version of the gray wolf
+optimization (IGWO) algorithm is adopted to tune the
+gains parameters of the FOPID controller as well as the
+parameters of the weighted matrices of the LQR
+controller instead of selecting the parameters rapidly.
+2.
+
+MATHEMATICAL MODEL OF THE WMR
+
+This section presents the kinematic and dynamic models
+of a nonholonomic WMR. It is supposed that the WMR
+moves on a flat surface (without considering the effect
+of the slipping). The robot consists of two driving
+wheels fixed on the same axis and one caster wheel. The
+basic schematic of the WMR is shown in figure (1).
+
+Figure 1. Basic schematic of the WMR
+
+2.1 Kinematic model:
+
+The Kinematic of the mobile robots describes the rela–
+tion between the robot's (body) velocities and the
+wheel's angular velocities [2]. The motion of the WMR
+is controlled by the angular speed of the right wheel
+(ωR) and the angular speed of the left wheel (ωL). The
+translation velocities of both the left and the right
+wheels are evaluated as [2]:
+VR = r ⋅ ωR
+
+(1)
+
+VL = r ⋅ ωL
+
+(2)
+
+where (r) represents the wheel's radius. The linear and
+the angular velocities of the robot body (V and ω) are
+obtained as [3]:
+
+ω=
+
+VR −VL
+
+ω=
+
+VR +VL
+
+D
+D
+
+(3)
+(4)
+VOL. 51, No 2, 2023 ▪ 141
+
+where (D) is the distance between the two wheels. The
+posture of the WMR with respect to the global
+coordinate system is represented by a state vector
+q=[XG, YG, θ]T, and the posture vector with respect to
+the local coordinate system is q=[xL, yL, θ]T. Point (C)
+represents the center mass of the robot. The kinematic
+equation of the robot with respect to the local
+coordinates can be represented as:
+⎡r
+⎡ x L ⎤ ⎢ 2
+⎢ ⎥ ⎢
+⎢ y L ⎥ = ⎢ 0
+⎢ θ ⎥ ⎢ −r
+⎣ ⎦ ⎢
+⎣D
+
+r⎤
+2⎥ ω
+⎥⎡ L⎤
+0 ⎥⎢ ⎥
+ωR
+r ⎥⎣ ⎦
+⎥
+D⎦
+
+(12)
+
+By taking the derivation of both sides of (12), the
+following relation is obtained:
+x1 = a ( t ) =
+
+( FR + FL )
+
+(13)
+
+m
+
+According to the relation in (10), (13) can be rep–
+resented as:
+x1 ( t ) =
+
+(5)
+
+1
+1
+u1 ( t ) + u2 ( t )
+m
+m
+
+(14)
+
+Also, from (9), x2 = ω and its derivation are:
+
+while the kinematic equation of the robot with respect to
+the global coordinates can be represented as:
+⎡ xG ⎤
+⎡cosθ
+⎡V ⎤ ⎢
+⎢ ⎥
+⎢ y G ⎥ = R ⋅ ⎢ω ⎥ = ⎢ sin θ
+⎣ ⎦ ⎢ 0
+⎢ θ ⎥
+⎣
+⎣ ⎦
+
+x1 = V
+
+0⎤
+⎡V ⎤
+0 ⎥⎥ ⋅ ⎢ ⎥
+ω
+1 ⎥⎦ ⎣ ⎦
+
+x 2 ( t ) = α ( t ) =
+
+(15)
+
+The following relation can describe the motor's
+torques:
+
+(6)
+
+where (R) is the matrix rotation matrix.
+
+−D
+D
+u1 ( t ) + u2 ( t )
+2I
+2I
+
+τ L = I ⋅ α L + F ⋅ ωL + FL,r
+
+(16)
+
+τ R = I ⋅ α R + F ⋅ ωR + FR,r
+
+(17)
+
+where (F) is the friction force, and (αL) and (αR) are the
+wheel's angular acceleration. The equations of ( x3 ) and
+( x 4 ) are obtained as below:
+
+2.2 Dynamic model
+
+The dynamic model of the robot describes the motion of
+the robot, taking into account the effect of the system
+inertia and the external forces. The dynamic model
+equations are described according to that depicted in
+figure (2) below.
+
+1
+r
+F
+⋅ u3 ( t ) − ⋅ u1 ( t ) − ⋅ x3 ( t )
+I
+I
+I
+1
+r
+F
+x 4 ( t ) = ⋅ u4 ( t ) − ⋅ u2 ( t ) − ⋅ x4 ( t )
+I
+I
+I
+x3 ( t ) =
+
+(18)
+(19)
+
+The general form of the state space equations is:
+x = Ax + Bu
+
+(20)
+
+y = cx
+
+(21)
+
+The (14),(15),(18), and (19) can be written in a
+matrix form as:
+
+Figure 2. Dynamic force representation of the WMR
+
+FR + FL = m ⋅ a
+I ⋅α =
+
+( FR − FL )
+2
+
+(7)
+⋅D
+
+(8)
+
+where (m) is the robot mass, (FR) and (FL) are the forces
+applied to the right and the left wheels, respectively, (I)
+is the mass moment of inertia, and (α) is the angular
+acceleration. Now, the state space model of the robot
+can be represented according to the kinematic and
+dynamic models. The variables of inputs, outputs, and
+states are chosen as follows:
+x ( t ) = [ x1 , x2 , x3 , x4 ] = [V , ω , ωR , ωL ]
+
+(9)
+
+u ( t ) = [u1 , u2 , u3 , u4 ] = [ FL , FR ,τ L ,τ R ]
+
+(10)
+
+y = [ y1 , y2 ] = [ωL , ωR ]
+
+(11)
+
+where (τL) and (τR) are the left and the right motor
+torques, respectively. From (9), one can obtain:
+142 ▪ VOL. 51, No 2, 2023
+
+⎡0
+⎢0
+⎢
+x = ⎢⎢0
+⎢
+⎢0
+⎢⎣
+
+0
+0
+
+0
+0
+F
+0 −
+I
+0
+
+0
+
+1
+⎡ 1
+⎤
+⎢ m m 0 0⎥
+0 ⎤
+⎢
+⎥
+0 ⎥⎥
+⎢ −D D 0 0 ⎥
+⎢ 2I 2I
+⎥
+⎥
+0 ⎥ x(t) + ⎢
+⎥ u ( t ) (22)
+r
+1
+−
+⎢
+0
+0⎥
+⎥
+I
+⎢ l
+⎥
+F⎥
+− ⎥
+⎢
+⎥
+1
+r
+−
+I⎦
+0
+⎢ 0
+⎥
+l
+I⎦
+⎣
+
+⎡0 0 1 0 ⎤
+y=⎢
+⎥ x (t )
+⎣0 0 0 1 ⎦
+3.
+
+(23)
+
+TRAJECTORY TRACKING CONTROL DESIGN
+
+This section has discussed the trajectory tracking cont–
+rol of a WMR. A new hybrid controller is implemented
+based on the kinematic and dynamic models of a non–
+holonomic WMR. The new hybrid controller consists of
+two controllers. The first controller is the Fractional
+order PID (FOPID) controller, which is applied to
+control the linear and the angular robot velocities, while
+the second controller is a linear quadratic regulator
+FME Transactions
+
+(LQR) and is used to design the motors torques (τR) and
+(τL).
+
+The (R) and (Q) matrices are represented as:
+⎡ R1
+⎢0
+R=⎢
+⎢0
+⎢
+⎣0
+
+3.1 Fractional order PID (FOPID) controller:
+
+‘
+A fractional order PID (FOPID) controller is a nonlinear
+tuneable feedback control system [20]. The structure of
+the FOPID controller contains five parameters which
+are proportional gain (kp), integral gain (ki), derivative
+gain (kd), integral order (α), and the derivative order (β).
+(α) and (β) may not be integers. The basic equation of
+the FOPID controller in the time domain is [20]:
+u ( t ) = k pe ( t ) + ki D −α e ( t ) + kd D β e ( t )
+
+(24)
+
+where u(t) is the controlled signal, and e(t) is the error
+signal. When WMR tracks a desired trajectory, some
+tracking errors appear in X, Y, and θ directions. The
+mathematical model of the tracking errors is presented
+as follows:
+⎡ ex ⎤ ⎡ Xd − X ⎤
+⎢ ⎥ ⎢
+⎥
+⎢e y ⎥ = ⎢ Yd − Y ⎥
+⎢e ⎥ ⎢ θ −θ ⎥
+⎦
+⎣ z⎦ ⎣ d
+
+(25)
+
+The general ranges of each FOPID control parameter
+are:
+k p = [0 − 1.5] , ki [0 − 0.25] , kd = [0 − 0.75]
+
+α = [0 − 0.1] , β = [0 − 0.125]
+In this work, the FOPID controller is adopted to
+control the magnitudes of the linear and the angular
+robot velocities`, so two FOPID controllers are used.
+The optimum magnitudes of the five FOPID parameters
+are computed from the optimization algorithm in the
+next section.
+
+0
+
+0
+
+R2
+
+0
+
+0
+
+R3
+
+0
+
+0
+
+0 ⎤
+⎡Q1 0
+⎢0 Q
+0 ⎥⎥
+2
+,Q = ⎢
+⎢0 0
+0 ⎥
+⎥
+⎢
+R4 ⎦
+⎣0 0
+
+0
+0
+Q3
+0
+
+0⎤
+0 ⎥⎥
+0⎥
+⎥
+Q4 ⎦
+
+In this work, the main purpose of using LQR control
+is to design the left and right motion torque.
+Selecting the best or optimum parameters of mat–
+rices (Q) and (R) is very important because it reflects on
+the performance of the LQR controller. In the present
+work, the parameters of matrices (Q) and (R) are not
+selected arbitrarily, but instead of that, they are chosen
+optimally by using the optimization algorithm that is
+discussed in the next section.
+4.
+
+IMPROVED GREY WOLF OPTIMIZATION (IGWO)
+ALGORITHM
+
+The grey wolf optimization (GWO) algorithm is a metaheuristic algorithm that emulates the gray wolf's beha–
+vior. It was introduced in 2014 by Mirjalili and Lewis in
+order to solve optimization problems [22]. It is iterative
+and population based on other meta-heuristic algorithms,
+like particle swarm optimization (PSO), artificial bee
+colony (ABC), ant colony optimization (ACO), etc. The
+mathematical model of the GWO consists of four basic
+parts: social hierarchy, encircling prey, and hunting and
+attacking prey. The social hie–rarchy of the GWO
+contains four wolves' leadership kinds which are alpha
+(α), beta (β), delta (δ), and omega (ω) [22]. Alpha (α)
+kind is considered the strongest type, which is responsible
+for the decision-maker in the group, while the beta (β)
+kind is the advisor of alpha. Delta (δ), as well as omega
+(ω), is placed in the third and fourth positions in the
+hierarchy of the wolf, as illustrated in figure (3).
+
+3.2 Linear quadratic regulator (LQR) controller
+
+LQR control is considered an optimal and modern
+control method [21]. LQR is utilized to minimize the
+WMR tracking position errors according to the integral
+of the quadratic performance index (J) that is written as
+[21]:
+
+(
+
+)
+
+1 ∞
+J = ∫ xT Qx + uT Ru dt
+2 0
+
+(26)
+
+u = −Kx
+
+(27)
+
+where u(t) is the controlled torque signal, (Q) is a
+positive semi-definite symmetric matrix, (R) is a posi–
+tive definite matrix, and (K) is the optimal gain matrix
+that is evaluated as below [21]:
+K = R −1BT P
+
+(28)
+
+where (P) is a positive definite matrix which is obtained
+from the Riccati equation as below [21]:
+AT P + PA − PBR −1BP + Q = 0
+
+(29)
+
+where (A) and (B) are the state and the input matrices
+that are described in (22).
+FME Transactions
+
+Figure 3. Hierarchy of the grey wolves [22]
+
+GWO is considered a population-based inspired
+algorithm because it builds an initial random population.
+During the iterative procedure, the positions of the
+search agents are changed to obtain better solutions. The
+operation of the wolf (α), wolf (β), and wolf (δ) changed
+by their positions continuously at the iteration, and the
+equations that represent the encircling phase are [23]:
+JG JG JJG
+JJG
+D = C ⋅ XP (t ) − X (t )
+(30)
+JJG
+JJG
+JG JG
+X ( t + 1) = X P ( t ) − A ⋅ D
+(31)
+JG
+JG
+JJG
+where A and C are the coefficient vectors, X P is the
+JJG
+position vector of the prey, X is the grey wolf position
+vector, (t) is the current iteration, (t+1) is the next ite–
+JG
+ration, and D is the distance between the grey wolf and
+JG
+JG
+the prey. The coefficients A and C have depicted as [23]:
+VOL. 51, No 2, 2023 ▪ 143
+
+JG
+G JG G
+A = 2ar1 − a
+(32)
+JG
+JG
+C = 2r2
+(33)
+JG
+JG
+where r1 and r2 are random vectors within the range
+G
+[0,1], and a represents a convergence factor that
+decreases from 2 to 0 through the iterations, and its
+equation can be defined as [23]:
+a = 2−
+
+2t
+Tmax
+
+(34)
+
+where Tmax is the maximum number of iterations.
+The hunting behavior mechanism in GWO is guided
+by (α,β,δ) grey wolves. First, the prey's location is
+unknown, but an assumption has been made that makes
+the wolves know the location of the prey. The
+mathematical model of the hunting process is defined as
+[23]:
+JJJG JJG JJJG JJG JJJG JJG JJJG JJG
+Dα = C1 ⋅ Xα − X , Dβ = C2 ⋅ Xβ − X ,
+(35)
+JJJG JJG JJJG JJG
+Dδ = C3 ⋅ Xδ − X
+JJJG JJJG
+JJJG
+where Dα , Dβ and Dδ represent the distance bet–
+
+ween the wolves α, β, and δ and the pack wolf, res–
+pectively.
+The main outcome of the GWO is the solutions that
+avoid trapping in the local minima. But, the problem of
+balancing exploitation and exploration and making the
+wolves' location as close as possible to the prey needs to
+be enhanced. In the classical GWO, the updating
+position of the grey wolf is defined by Eq.(31).
+Therefore, a new, improved algorithm, i.e., Improved
+Grey Wolf Optimization (IGWO), is adopted. The
+JG
+JG
+parameters r1 and r2 in the classical GWO are random
+vectors within the range [0,1] whose magnitudes are
+considered to be decisive in adducing the balance
+between the exploitation and exploration processes; in
+JG
+addition, it is included in the account of the A vector
+which enters into account of Eq. (31). So, a new mat–
+JG
+JG
+hematical model for representing r1 and r2 parameters
+is expressed as below:
+t
+JG JG
+r1 = r2 = 0.835 ∗ rand ( 0,1) + 0.165 ∗ e N
+
+(36)
+
+where (t) is the current iteration, and (N) is the number of
+optimized parameters, equal to 11 parameters. From Eq.
+JG
+JG
+(36), it can be seen that the r1 and r2 vectors are not
+entirely random values such as in the classical GWO
+optimization, i.e.,(Eqs. 32 and 33) but it contains a part
+t
+N
+0.365 ∗ e
+
+(which is considered to be an adaptive part)
+that is changed with each iteration. This modified
+equation, i.e., (Eq. 36), achieves a sufficient balance
+between the exploitation and exploration processes and
+increases the chance of making the wolf close to the prey.
+In the current work, IGWO is applied to compute the
+optimum values of the (Q) and (R) matrices' elements of
+144 ▪ VOL. 51, No 2, 2023
+
+the LQR controller as well as the optimum magnitudes
+of the FOPID controller parameters.
+5.
+
+RESULTS AND DISCUSSIONS
+
+This section verifies the adopted hybrid controller by
+simulation work with MATLAB software. The physical
+parameters of the WMR are selected based on the real
+magnitudes found in [9] and summarized in Table (1)
+below.
+Table 1. Physical Parameters of the WMR
+
+Parameter
+r
+D
+m
+I
+
+Value
+0.05m
+0.27m
+4kg
+2.5 kg.m2
+
+The simulation is carried out by tracking WMR with
+an S-shape trajectory. The trajectory consists of nine
+segments (S1→S9). Five of the nine segments are line
+segments with a desired angular velocity ωd=0 and a
+desired linear velocity Vd=0.15 (m/s). The other four
+segments are arc segments with a desired linear velocity
+Vd=0.15 (m/s) and a desired angular velocity ωd=0.6
+(rad/s). The following equations represent the S-shape
+trajectory below:
+1- For horizontal segments, the trajectory equations are:
+⎡ xd ⎤ ⎡ x0 + vd ∗ t ⎤
+⎢y ⎥ = ⎢
+⎥
+y0
+⎢ d⎥ ⎢
+⎥
+⎢⎣θ d ⎥⎦ ⎢⎣
+⎥⎦
+0
+
+(37)
+
+2- For vertical segments, the trajectory equations are:
+x0
+⎡ xd ⎤ ⎡
+⎤
+⎢ y ⎥ = ⎢ y + v ∗ t⎥
+⎢ d⎥ ⎢ 0 d ⎥
+⎢⎣θd ⎥⎦ ⎢⎣
+⎥⎦
+0
+
+(38)
+
+3- For arc segments:
+⎡
+⎤
+⎡ xd ⎤ ⎢ x0 + R cos (θ ) ⎥
+⎢ y ⎥ = ⎢ y + R sin θ ⎥
+( )⎥
+⎢ d⎥ ⎢ 0
+⎥
+⎢⎣θ d ⎥⎦ ⎢
+t
+⎢ θd ±
+⎥
+10 ⎦
+⎣
+
+(39)
+
+where (t) is the simulation time. Different initial
+conditions for [xd, yd, θd]T are required to generate the
+desired trajectory. The values of the initial conditions
+are listed in Table (2).
+Table 2: Initial conditions for square trajectory
+
+Trajectory Segment
+S1
+S2
+S3
+S4
+S5
+S6
+S7
+S8
+S9
+
+Initial Condition
+[0 0 0]T
+[0.5 0 0]T
+[0.75 0.25 π/2]T
+[0.75 0.55 π/2]T
+[0.5 0.8 π]T
+[0 8 π]T
+[-0.25 1.05 π/2]T
+[-0.25 1.3 π/2]T
+[0 1.6 0]T
+
+FME Transactions
+
+The robot starts its movement from an initial position
+which is represented by q=[0 0 0]T, and figure (4) mani–
+fests the tracking performance of the adopted controller.
+
+Figure (6) illustrates the variation of the robot
+velocities with the simulation time.
+
+Figure 4. S-shape trajectory tracking performance
+
+The above figure shows that the desired trajectory is
+within the blue color, and the actual or robot trajectory
+is within the red color. Also, it is clear from the above
+figure that the WMR can achieve a very good matching
+with the desired trajectory.
+The optimum values of the FOPID controller and the
+elements of R and Q matrices are:
+
+Figure 6.Linear and angular velocities of WMR
+
+The linear velocity of the robot is with the red color,
+while the angular velocity is with the green color. It can be
+observed from the above figure that the WMR takes a short
+time (about two seconds) to reach the desired velocities
+(V=0.15 m/s and ω=0.6 rad/s) at each trajectory segment.
+Figure (7) evinces the controlled torque's behavior.
+
+k p = 0.8215, ki = 0.09875, kd = 0.3265, α = 0.02267
+0
+0
+0 ⎤
+⎡12.5569
+⎢ 0
+⎥
+11.2897
+0
+0
+⎥,
+R=⎢
+⎢ 0
+0
+3.6584
+0 ⎥
+⎢
+⎥
+0
+0
+7.5619 ⎦
+⎣ 0
+0
+0
+0 ⎤
+⎡2.895
+⎢ 0
+5.1181
+0
+0 ⎥⎥
+Q=⎢
+⎢ 0
+0
+1.1147
+0 ⎥
+⎢
+⎥
+0
+0
+4.6028 ⎦
+⎣ 0
+
+Figure (5) displays the position and orientation errors.
+Figure 7: The generated controlled torques behavior
+
+The simulation results from figures (4) to figure (7)
+demonstrate the activity and the efficiency of the adop–
+ted control system by showing the ability of the control
+system to generate the smooth values of the control input
+signals (V, ω, τ) without any presence of sharp spikes.
+To test the performance of the hybrid controller, that
+is adopted in this work, a comparison study has been
+done with the work of [11] that used recursive integral
+backstepping control during the circular trajectory.
+Figures (8) and (9) portray the simulation results of the
+comparison study.
+Figure 5.Tracking errors behavior of the trajectory
+
+The above figure reveals that all errors go to a zero
+value after about three seconds. The maximum tracking
+error in the (X) and (Y) directions at the beginning of the
+simulation are 0.008 (m) and 7*10-4 (m), respectively,
+and these values after three seconds are decreased to zero
+value. At the same time, the maximum orientation error is
+about -0.025 (rad), which is decreased to zero after about
+two seconds. Also, the values of the mean square error
+(MSE) of trajectory in the X and Y directions as well as
+the orientation, are [6.589*10-4 (m) and 8.421*10-5 (m)
+0.00401(rad)]T, respectively.
+FME Transactions
+
+Figure 8. Trajectory tracking performance (a) by the pro–
+posed controller of this work(b) by the controller that was
+adopted in [11].
+
+VOL. 51, No 2, 2023 ▪ 145
+
+Table (3) evinces the comparison results of the mean
+square error (MSE) for the state error components (eX,
+eY, eθ) obtained from the hybrid controller of this work
+(LQR-FOPID-IGwo) and the hybrid controller of the
+work [5]. Figure (10a) illustrates a very good matching
+between the desired and actual tracking, while there are
+some small deviations between the reference and the
+actual trajectory in figure (10b). Figure (10) exhibits the
+hybrid controller methodology of the current work
+having an effective performance and is better than the
+hybrid controller in [5].
+Table 3: MSE of the two controller methodologies for 8shape trajectory
+
+Trajectory
+
+8-shape
+
+Figure 9. Trajectory errors (a) by the proposed hybrid cont–
+roller of this work (b) by the controller that was adopted in [11].
+
+From figure (8) that is shown above, it can be noticed
+that the desired trajectory is with the blue color, while the
+robot trajectory is with the red color. Accor–ding to this
+figure, a very good tracking performance is obtained from
+the adopted controller of this work and the controller
+proposed in [11] because the simulation tracking follo–
+wed by WMR is considered almost coin–ciding. Figure
+(9) elucidates the tracking errors from both controllers.
+Figure (9a) depicts a very good trajectory response,
+where all the errors go after about one second to a zero
+value, while in figure (9b), the tracking errors in the (X)
+and (Y) coordinates are not convergent to a zero value.
+Still, instead of that, they fluctuate between zero and (0.01 m). This matter indicates that the controller's per–
+formance adopted in the present work is better and more
+robust than the controller proposed in [11].
+The performance of the proposed hybrid controller
+of this work is further tested with the hybrid controller
+comprising backstepping and fractional-order PID
+controller adopted in [5] during the 8-shape trajectory.
+Figure (10) reveals the comparison study's simulation
+results and trajectory performance.
+
+Figure10. Trajectory tracking performance (a) by the pro–
+posed hybrid controller of this work and (b) by the hybrid
+controller that was adopted in [5]
+
+146 ▪ VOL. 51, No 2, 2023
+
+Controller
+Methodology
+BSCFOPID [5]
+LQRFOPID-IGWO
+(current
+method)
+
+MSE
+(eX)
+(m)
+1.642
+e-03
+6.225 e04
+
+MSE
+(eY)
+(m)
+5.087
+e-03
+8.157
+e-04
+
+MSE
+(eθ)
+(rad)
+4.051
+e-03
+6.041
+e-04
+
+The results that are tabulated in the above table
+indicate that the magnitudes of the MSE of the hybrid
+controller methodology of the present work (LQRFOPID based on IGWO) are less than those of the
+hybrid controller methodology adopted in [5] (BSCFOPID). This matter indicates that the performance of
+the controller methodology of this work is better than
+the hybrid controller [5].
+6.
+
+CONCLUSIONS
+
+In the current work, based on the kinematic and dy–
+namic models of the WMR, a new hybrid controller
+consisting of LQR and FOPID based on an optimization
+algorithm is proposed to solve the trajectory tracking
+problem. The new hybrid controller is utilized to find
+the best control actions (robot velocity and the gene–
+rated torques) with more stability and without any osci–
+llation in the output response. A new modified version
+of the GWO is adopted to tune and select the optimum
+values of the control system parameters with a mini–
+mum time. The main goals of this improvement are
+rapid convergence toward a solution, reducing the effect
+of the wolves' random motion, and balancing the explo–
+itation and exploration processes. The S-shape tra–
+jectory is selected to present the robustness of the adop–
+ted control system. The simulation results elucidated
+that the proposed hybrid controller can generate smooth
+robot velocities (V=0.15 m/s and ω=0.6 rad/s) and
+smooth motors torques which are not exceeded 0.2
+(N.m) without any sharp spikes, as well asall position
+and orientation errors go to a zero value after about
+three seconds. The values of the MSE of S-trajectory in
+the X and Y directions and the orientation are
+[6.589*10-4 (m) and 8.421*10-5 (m) 0.00401(rad)]T,
+respectively. The robustness of the adopted hybrid
+controller is verified and compared with two cases or
+works, and all the comparisons are developed in
+MATLAB software. In the first case, a comparison is
+conducted with a work that used recursive integral
+FME Transactions
+
+backstepping control during a circular trajectory. The
+simulation results showed that the performance of the
+new hybrid controller of this work is better than that of
+the recursive integral backstepping control through a
+circular trajectory in terms of the position and the
+orientation errors' values. The errors' values obtained
+from the present new hybrid controller are convergent to
+a zero value after 1 second, while the errors' values ob–
+tained from the recursive integral backstepping control
+fluctuate between (0 and -0.01 m) during all the simu–
+lations. While in the second case, a comparison is car–
+ried out with combined backstepping and FOPID cont–
+rollers during an 8-shape trajectory. The MSE magni–
+tudes obtained from backstepping and FOPID cont–
+rollers of all errors are [1.642 e-03 (m), 5.087 e-03(m),
+and 4.051 e-03 (rad)]T, whereas the MSE magnitudes
+obtained from the new hybrid controller of this work,
+i.e., (LQR-FOPID-IGWO) are [6.225 e-04 (m), 8.157
+e-04 (m) and 6.041 e-04]T. This matter indicates that the
+performance of the controller methodology of this work
+(FOPID- LQR-IGWO) is better and more robust than
+that of the controller systems adopted in the previous
+works. Future work will focus on other interesting
+problems, such as avoiding static and dynamic obstacles
+in a complex environment and the trajectory tracking of
+a holonomic WMR.
+REFERENCES
+
+[1] Roland Siegwart and Illah R. Nourbakhsh,
+“Introduction to Autonomous Mobile Robots”,
+Cambridge, 2nd edition, MIT Press, UK, 2004.
+[2] G. Klancar, A. Zdesar, S. Blazic, I. Škrjanc: “Whe–
+eled Mobile Robotics from Fundamentals Towards
+Autonomous Systems”, Oxford, Elsevier, 2017.
+[3] S.G. Tzafestas, “Introduction to Mobile Robot
+Control”, First edition, Elsevier, 2014.
+[4] Carlos Canudas de Wit, Bruno Siciliano and
+Georges Bastin, “Theory of Robot Control”,
+Springer, 1996.
+[5] Lin Xu, Jiaqiang Du, Baoye Song and Maoyong
+Cao: A combined backstepping and fractional-order
+PID controller to trajectory tracking of mobile
+robots, Systems Science and Control Engineering
+Journal, Vol. 10, No. 1, pp. 134-141, 2022.
+[6] Ammar Amouri, Abdelhakim Cherfia, Halim
+Merabti, and Yazid Laib Dit Leksir: Nonlinear
+Model Predictive Control of a Class of Continuum
+Robot Using Kinematic and Dynamic Models,
+FME Transactions, Vol. 50, No. 2, pp. 339350,2022.
+[7] Mateusz Szeremeta and Marcin Szuster: Neural
+Tracking Control of a Four-Wheeled Mobile Robot
+with Mecanum Wheels, Applied Sciences, Vol. 12,
+No. 2, pp. 1-21,2022.
+[8] Kartik Singhal, Vineet Kumar, and K.P.S Rana:
+Robust trajectory tracking control of nonholonomic
+wheeled mobile robots using an adaptive fractional
+order parallel fuzzy PID controller, Journal of the
+Franklin Institute, Vol. 359, No. 7, pp. 4160-, 2022.
+
+FME Transactions
+
+[9] Milica Petrović,
+Aleksandar
+Jokić,
+Zoran
+Miljković, and Zbigniew Kulesza: Robust trajectory
+tracking control of nonholonomic wheeled mobile
+robots using an adaptive fractional order parallel
+fuzzy PID controller, Applied Soft Computing
+Journal, Vol. 131, No. 3, pp. 3960-3974, 2022.
+[10] A. Mai, T. Son Dang, D. Tu Duong, Van Chuong
+Le: A combined backstepping and adaptive fuzzy
+PID approach for trajectory tracking of autonomous
+mobile robots, Journal of the Brazilian Society of
+Mechanical Sciences and Engineering, Vol. 8, No.
+5, pp. 1-13, 2021.
+[11] M.J., Rabbani, Attaullah Y. Memon: Trajectory
+Tracking and Stabilization of Nonholonomic
+Wheeled Mobile Robot Using Recursive Integral
+Backstepping Control, Elect–ronics, Vol. 10, No. 5,
+2021.
+[12] Xiaoshan Gao, Liang and Chirs Gerada: Modelling
+and Analysis in Trajectory Tracking Control for
+Wheeled Mobile Robots with Wheel Skidding and
+Slipping: Disturbance Rejection Predictive,
+Actuators, Vol. 10, N0. 3, pp. 1-15, 2021.
+[13] Vo Duy Cong, Le Duc Hanh, Le Hoai Phuong and
+Dang Anh Duy: Design and Development of Robot
+Arm System for Classification and Sorting Using
+Machine Vision, FME Transaction, Vol. 50,
+No.1,pp. 22-38, 2022.
+[14] Milica Petrović, Zoran Miljković, and Aleksandar
+Jokić: A novel methodology for optimal single
+mobile robot scheduling using whale optimization
+algorithm, Applied Soft Computing Journal, Vol.
+81, No.11, pp. 314-327, 2022.
+[15] Tiago P Nascimento, Carlos Eduardo Trabuca
+Dorea and Luiz Marcos G. Goncaves: Nonlinear
+Model Predictive Control for Trajectory Tracking
+of Nonholonomic Mobile Robots: A Modified
+Approach, International Journal of Advanced
+Robotic Systems, Vol.8, No.5, pp.1-14, 2018.
+[16] Xing Wu, Peng Jin, Ting Zou, Zeyu Q, Haining
+Xiao, and Peihuang Lou: Backstepping Trajectory
+Tracking Based on Fuzzy Sliding Mode Control for
+Differential Mobile Robots, Journal of Intelligent &
+Robotic Systems, Vol. 10, No. 3, pp. 109-121,
+2019.
+[17] Omar Waleed Abdulwahhab and Nizar Hadi Abbas:
+Design and Stability Analysis of a Fractional Order
+State Feedback Controller for Trajectory Tracking
+of a Differential Drive Robot, International Journal
+of Control, Automation and Systems, Vol. 16, No.
+8, pp. 1-11, 2017.
+[18] Mohmood Ali Moqbel Obaid and Abdul Rashid
+Husain: Time Varying Backstepping Control for
+Trajectory Tracking of Mobile Robot, International
+Journal of Computational Vision and Roboics, Vol.
+7, No. 1/2, pp. 172-181,2017.
+[19] Bouzgou Kamel, Ibari Benaoumeur, Benchikh and
+Ahmed-Foitih Zoubir: Integral Backstepping
+Approach for Mobile Robot Control, Telkominka,
+Vol. 15, No. 3, pp. 1173-1180, 2017.
+
+VOL. 51, No 2, 2023 ▪ 147
+
+[20] Majid Zamani, Masoud Karimi-Ghartemani, Nasser
+Sadati and Mostafa Parniani: Design of Fractional
+Order PID controller for an AVR using Particle
+Swarm Optimization, Control Engineering Practice,
+Vol. 17, N0. 5, pp. 1380-1387, 2009.
+[21] R. S. Burns, “Advanced Control Engineering.
+Boston”, Butterworth Heinemann, 2001.
+[22] S. Mirjalili, S.M. Mirjalili, A. Lewis: Grey Wolf
+Optimizer, Advance in Engineering Software, Vol.
+69, No. 7, pp. 46-61, 2014.
+[23] Abdulla Alzaqebah, Ibrahim Aljarah, and Omar AlKadi: A modified grey wolf optimization algorithm
+for an intrusion detection system, mathematics,
+Vol. 10, No. 6, pp. 1-16, 2022.
+Symbols
+
+ωR
+ωL
+VR
+VL
+r
+V
+ω
+D
+C
+m
+FR
+FL
+I
+α
+τR
+ΤL
+F
+αR
+αL
+u(t)
+e(t)
+ex
+ey
+ez
+kp
+ki
+kd
+Q
+R
+K
+P
+A
+B
+t
+T
+JG JG
+r1 , r2
+G
+a
+N
+
+The angular speed of the right wheel (rad/s)
+The angular speed of the left wheel (rad/s)
+Translation velocity of the right (m/s)
+Translation velocity of the left (m/s)
+Wheel's radius (m)
+The linear velocity of the robot body (m/s)
+Angular velocity of the robot body (rad/s)
+The distance between the two wheels
+The point of the center mass of the robot
+The robot mass
+Forces applied to the right wheel (N)
+Forces applied to the left wheel (N)
+Robot mass moment of inertia
+Angular acceleration of the robot body
+(rad/s2)
+The right motor torque (N.m)
+The left motor torque (N.m)
+Friction force
+Right wheel angular acceleration (rad/s2)
+Left wheel angular acceleration (rad/s2)
+The controlled signal
+the error signal
+Error in X-direction (m)
+Error in X-direction (m)
+Orientation error (rad)
+Proportional gain
+Integral gain
+Derivative gain
+Positive semi-definite symmetric matrix
+Positive-definite matrix
+Optimal gain matrix
+Riccati Matrix
+State matrix
+Input matrices
+Current iteration
+Total number of iterations
+Random vectors
+Convergence factor
+Number of optimized parameters
+
+148 ▪ VOL. 51, No 2, 2023
+
+Abbreviations
+
+WMR
+BSC
+PID
+FOPID
+NMPC
+PSO
+GWO
+MOGWO
+WOA
+LQR
+
+Wheeled Mobile Robot
+Backstepping controller
+Proportional-Integral-Derivative
+Fractional order PID
+The nonlinear model predictive controller
+Particle swarm optimization
+Grey Wolf Optimization
+Multi-objective Grey Wolf Optimization
+Whale optimization approach
+Linear quadratic regulator
+
+ДИЗАЈНИ НОВОГ ХИБРИДНОГ КОНТРОЛЕРА
+ЗАСНОВАН НА ПОБОЉШАНОЈ ВЕРЗИЈИ
+ОПТИМИЗАЦИЈЕ СИВИ ВУК ЗА ПРАЋЕЊЕ
+ПУТАЊЕ МОБИЛНОГ РОБОТА НА
+ТОЧКОВИМА
+Р.М. Хусеин
+Нехолономски мобилни роботи на точковима се
+сматрају системима са више улаза и више излаза
+који се изводе у различитим окружењима. Овај рад
+представља контролу праћења путање нехоло–
+номског мобилног робота на точковима (ВМР).
+Изведени су кинематички и динамички модели
+робота. Дизајниран је нови хибридни контролер који
+се састојао од два контролера заснована на
+оптимизацијском алгоритму за решавање проблема
+праћења путање. Први контролер је ПИД контролер
+фракционог реда, који је заснован на кинематичком
+моделу и примењен је за управљање линеарним и
+угаоним брзинама робота, док је други контролер
+линеарни квадратни регулатор (ЛКР) и базиран је на
+динамичком моделу. користи се за контролу обртног
+момента мотора. Нова, побољшана верзија
+оптимизације сивог вука је усвојена за подешавање
+параметара хибридног контролера. Главни циљеви
+овог побољшања су брза конвергенција ка решењу,
+смањење ефекта насумичног кретања вукова и
+балансирање процеса експлоатације и истраживања.
+МАТЛАБ софтвер је коришћен за симулацију
+резултата под трајекторијом С-облика и за процену
+робусности и перформанси предложене контролне
+јединице. Резултати симулације су показали
+активност и ефикасност усвојеног система
+управљања на основу средње квадратне грешке
+(МСЕ) између жељене и стварне путање. Вредности
+МСЕ путање у правцима Кс и И и оријентације су
+[6,589*10-4(м) 8,421*10-5(м) 0,00401(рад)]Т. Такође,
+усвојени систем управљања може да генерише
+глатке вредности контролних улазних сигнала без
+оштрих скокова. Перформансе приказаног система
+управљања су верификоване и упоређене са
+резултатима добијеним из друга два система
+управљања, а резултати симулације су понудили
+супериорност и ефективност хибридног регулатора
+овог рада.
+
+FME Transactions
+
+

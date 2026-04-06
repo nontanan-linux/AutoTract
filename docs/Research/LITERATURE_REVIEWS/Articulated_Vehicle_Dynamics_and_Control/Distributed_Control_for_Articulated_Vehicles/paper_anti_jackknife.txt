@@ -1,0 +1,1532 @@
+IEEE TRANSACTIONS ON TRANSPORTATION ELECTRIFICATION, VOL. 11, NO. 5, OCTOBER 2025
+
+12289
+
+Synergistic Control Strategy for Enhanced
+Anti-Jackknifing Stability in Distributed-Drive
+Articulated Trucks
+Yang Tian , He Ma , Yahui Zhang , Member, IEEE, Guilin Wen ,
+Xiangyu Wang , and Liang Li , Senior Member, IEEE
+Abstract— Electro-hydraulic compound steering systems
+(EHCSSs) adopted by distributed-drive articulated trucks
+(DATs) provide the probability of further realizing active
+steering safety (ASS). However, due to the DATs’ articulated
+mechanical structure characteristics, a singular control strategy
+frequently cannot effectively solve lateral stability problems
+such as jackknifing. Hence, this article proposes a novel
+control strategy integrating active steering, torque vectoring,
+and differential braking to suppress the jackknife with
+improved lateral stability and less longitudinal speed loss.
+First, a nonhierarchical dynamic model fused with EHCSS is
+established, and the Artemisinin optimization algorithm (AOA)
+is then applied to model parameter majorization. Afterward,
+an advanced strategy is developed to suppress the jackknife of
+DATs. Specifically, the proposed anti-jackknifing control strategy
+is realized through the active steering of the front tractor wheel
+to track the ideal trajectory, the torque vectoring control of the
+rear tractor wheel, and the differential braking of the trailer.
+Finally, hardware-in-the-loop (HIL) experiments are performed
+to prove the validity and feasibility. The experiment results
+illustrate that the proposed strategy is markedly effective in
+anti-jackknifing. Compared to the control groups, the maximum
+slip angles of the tractor and trailer are improved by 47.86%
+and 84.26%, respectively, and the maximum yaw rates are
+improved by 70.20% and 51.71%.
+Index Terms— Active steering, anti-jackknifing control strategy, Artemisinin optimization algorithm (AOA), differential
+braking, distributed-drive articulated trucks (DATs), torque vectoring.
+
+I. I NTRODUCTION
+
+E
+
+LECTRIC and automated technologies are driving transformative change in the heavy truck industry, advancing
+transportation toward greater intelligence and efficiency [1],
+[2]. Distributed-drive articulated trucks (DATs), powered by
+electric propulsion, provide substantial advantages over traditional vehicles, including greater maneuverability, enhanced
+Received 9 December 2024; revised 5 April 2025; accepted 7 July 2025.
+Date of publication 10 July 2025; date of current version 25 September 2025.
+This work was supported in part by the National Natural Science Foundation
+of China under Grant 52172370 and Grant 52102440 and in part by the
+State Key Laboratory of Intelligent Green Vehicle and Mobility under Project
+KF2410. (Corresponding author: Yahui Zhang.)
+Yang Tian, He Ma, Yahui Zhang, and Guilin Wen are with the State Key
+Laboratory of Crane Technology, Yanshan University, Qinhuangdao, Hebei
+066004, China (e-mail: yang.tian@ysu.edu.cn; mhfwj@stumail.ysu.edu.cn;
+zhangyahui@ysu.edu.cn; glwen@ysu.edu.cn).
+Xiangyu Wang and Liang Li are with the School of Vehicle
+and Mobility, Tsinghua University, Beijing 100084, China (e-mail:
+wangxy_15@tsinghua.edu.cn; liangl@tsinghua.edu.cn).
+Digital Object Identifier 10.1109/TTE.2025.3587953
+
+stability, improved energy efficiency, and superior performance in challenging conditions [3]. However, due to the
+considerably higher damage resulting from accidents involving
+DATs compared to passenger cars, there are growing safety
+concerns associated with the operation of DATs [4], [5]. The
+articulated mechanical structure of DATs makes them particularly susceptible to jackknifing, which can greatly affect their
+lateral stability while driving [6]. Jackknifing is a hazardous
+event in which the trailer of an articulated vehicle swings
+sharply toward the tractor, resembling the motion of a folding
+knife [7]. Path tracking control provides effective solutions to
+mitigate these issues and ensure the safe operation of DATs,
+a critical topic in both industry and academia [8], [9], [10].
+Automotive original equipment manufacturers (OEMs) have
+developed more efficient control subsystems for path-tracking,
+including active front steering systems [11], active rear
+steering systems [12], and torque vectoring control systems
+[13]. Several scholars have implemented the electro-hydraulic
+compound steering system (EHCSS) for active steering control [14], [15]. The EHCSS combines the advantages of
+electric and hydraulic steering systems, offering active steering
+capabilities for DATs [16]. Deploying the EHCSS is essential
+for ensuring effective lateral stability control of DATs in
+challenging operational environments and precise trajectory
+tracking. However, integrating multiple control strategies with
+the EHCSS to address jackknifing and stability challenges in
+DATs under varying operational conditions remains largely
+unexplored.
+The combined control strategy of differential braking and
+active steering has been demonstrated to enhance the lateral
+stability of DATs [17]. The controller in [18] employs model
+predictive control (MPC), using differential braking to conservatively generate additional yaw moments while employing
+active steering for precise trajectory tracking. By integrating
+the active steering and differential braking systems, [19]
+enhances the directional stability of vehicles that turn at high
+speeds on various road conditions. Additionally, [20] establishes a reconfigurable controller, which integrates multiple
+strategies of active steering, torque vector, and differential
+braking. Choi et al. [21] develop a coordinated control of
+motor-driven power steering torque overlay and differential
+braking under extreme conditions. In [22], an improved torque
+vector control and differential braking strategy are proposed.
+To increase the driving speed and enhance the lateral vehicle
+stability during cornering, Her et al. [23] propose an integrated
+
+2332-7782 © 2025 IEEE. All rights reserved, including rights for text and data mining, and training of artificial intelligence
+and similar technologies. Personal use is permitted, but republication/redistribution requires IEEE permission.
+See https://www.ieee.org/publications/rights/index.html for more information.
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 03:04:00 UTC from IEEE Xplore. Restrictions apply.
+
+12290
+
+IEEE TRANSACTIONS ON TRANSPORTATION ELECTRIFICATION, VOL. 11, NO. 5, OCTOBER 2025
+
+chassis control algorithm with differential braking, front/rear
+traction torque, and active roll torque control. Ataei et al.
+[24] introduce a reconfigurable structure including differential
+braking, torque vectoring, and active steering that can adapt
+to various vehicle configurations and actuator combinations.
+Although the aforementioned control strategies address vehicle control in lateral instability, little attention was paid to
+analyzing the structural characteristics of DATs and proposing
+a targeted solution to effectively and efficiently suppress the
+jackknifing issues.
+Designing an effective control strategy for the lateral stability of DATs requires coordinating the interactions between
+steering, torque vector control, and differential braking while
+quickly and accurately tracking the ideal trajectory [20], [24].
+The structural complexity of the EHCSS presents challenges
+for coordinated control [14], [25]. A layered time-delay robust
+control strategy is proposed in [26] to ensure the safety of
+SbW vehicles. However, hierarchical control design may cause
+information delays and inaccurate coordination between multiple control strategies, leading to inefficiency [27]. Tian et al.
+[28] establish a nonhierarchical model, designing a preset
+performance controller that considers the sideslip angle and
+yaw rate. Based on a non-hierarchical sensing control structure, a decentralized control scheme is designed in [29]
+for motion and formation control tasks. Wang et al. [30]
+employ an adaptive genetic algorithm to optimize the model,
+enhancing its responsiveness. Therefore, to achieve precise
+trajectory tracking and minimize system response time while
+integrating multiple strategies, it is essential to establish a
+non-hierarchical model that incorporates both the vehicle and
+steering systems [31].
+The key contributions of this research are as follows.
+
+1) A novel anti-jackknifing control strategy is proposed
+through the active steering of the tractor front wheel,
+the direct yaw moment control of the tractor rear wheel,
+and the differential braking of the trailer. Compared
+to single control strategies, the proposed control strategy achieves more accurate front wheel angle tracking,
+smaller sideslip angle, and yaw rate with less longitudinal speed loss.
+2) A novel model fusing a 3 DoF model and an EHCSS
+model is developed, integrating the Artemisinin optimization algorithm (AOA) for optimizing tire cornering
+stiffness and an improved fitness function for accurate
+parameter identification, effectively addressing the limitations of rigid hierarchical structures, allowing for faster
+system response and improved stability control.
+
+The remainder of this article is organized as follows:
+Section II introduces the EHCSS model and 3 DoF model.
+In Section III, AOA is integrated to calculate relevant parameters and optimize the fused model. The design of the control
+strategy is in Section IV. Hardware-in-the-loop (HIL) experiments are analyzed in Section V. Finally, the conclusion in
+Section VI offers a comprehensive summary of this article.
+
+Fig. 1.
+
+3 DoF dynamics model of DATs.
+
+II. V EHICLE DYNAMIC M ODEL
+A non-hierarchical dynamic model is established in this
+section. The model consists of two parts: the 3 DoF model
+and the EHCSS model.
+A. Vehicle Dynamics Model
+Fig. 1 describes the simplification process based on lateral
+dynamics for DATs. The sideslip angle and the yaw rate of
+the tractor and trailer are selected as the state variables.
+According to the motion of the tractor, the equations are
+established as follows:
+
+I1zz ψ̈1h = a f h F1 f h cos δ f h
+− b f h F2 f h − c f h F4h
+(1)
+
+
+m 1 u 1h β̇1h + ψ̇1h = F1 f h cos δ f h + F2 f h + F4h
+(2)
+where I1zz is the moment of inertia of the tractor around the
+z-axis; a f h and b f h are the distances from the tractor mass
+center to the front and rear axles, respectively. c f h denotes
+the distance from the tractor mass center to the fifth wheel.
+u 1h is the longitudinal speed. F1 f h , F2 f h , and F4h represent
+the lateral forces on the front and rear axles of the tractor
+and the force exerted by the trailer at the connection device,
+respectively. ψ̇1h and ψ̈1h are the yaw rate and the yaw angle
+acceleration of the tractor. β̇1h is the velocity of the tractor
+mass center, δ f h and δr h denote the front wheel angle and the
+rear wheel angle, respectively.
+According to the motion of the trailer, the equations are
+established as follows:
+I2zz ψ̈2h = −er h F4h cos 0h − dr h F3r h cos (δr h )
+(3)
+
+m 2 u 2h β̇2h + ψ̇2h = F3r h cos (δr h ) − F4h cos 0h
+(4)
+where I2zz is the moment of inertia of the trailer around the
+z-axis. er h and dr h are the distances from the center of mass
+of the trailer to the fifth wheel and rearmost axle, respectively.
+u 2h donates the longitudinal speed of the trailer, and F3r h is
+the lateral force on the equivalent shaft of the trailer. ψ̈2h and
+ψ̇2h denote the yaw angle acceleration and the yaw rate of the
+trailer. β̇2h represents the velocity of the center of mass of the
+trailer. 0h is the articulated angle.
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 03:04:00 UTC from IEEE Xplore. Restrictions apply.
+
+TIAN et al.: SYNERGISTIC CONTROL STRATEGY FOR ENHANCED ANTI-JACKKNIFING STABILITY IN DATs
+
+12291
+
+The motion constraint of DATs can be expressed by the
+following equation:
+cfh
+er h
+β̇1h − β̇2h −
+ψ̈1h −
+ψ̈2h + ψ̇1h − ψ̇2h = 0.
+(5)
+u 1h
+u 2h
+The tire lateral force can be approximated by the following
+equation [32]:
+
+
+
+a f h ψ̇1h
+
+
+− δfh
+F1 f h = k1 f h β1h +
+
+
+u 1h
+
+
+
+
+
+
+b f h ψ̇1h
+(6)
+F2 f h = k2 f h β1h −
+
+u 1h
+
+
+
+
+
+
+
+d ψ̇
+
+ F3r h = k3r h β2h − r h 2h + δr h
+u 2h
+where k1 f h , k2 f h , and k3r h are the lateral stiffness of the
+front and rear axle of the tractor and the lateral stiffness of
+the equivalent shaft of the trailer, respectively. β1h and β2h
+represent the sideslip angle of tractor and trailer.
+In most real-world driving scenarios, especially during
+high-speed stable driving, the relative motion between the
+trailer and the tractor is minimal. Since this paper mainly
+studies the motion of DATs under high-speed conditions,
+it is reasonable to assume that the longitudinal speeds of the
+trailer and the tractor are equal. This simplification not only
+aligns with conventional vehicle dynamics modeling methods
+but also simplifies the mathematical formulation, making the
+controller design more practical
+u 1h = u 2h = u h
+
+Fig. 2.
+
+Structural diagram of the EHCSS.
+
+Jch and Bch are the moment of inertia and the damping
+coefficients of the steering sector, respectively. TP is the
+equivalent moment on the rocker shaft.
+The flow and pressure at the rotary valve port are determined
+by the following equation:
+
+(7)
+
+where u h is the longitudinal speed of DATs.
+B. EHCSS Model
+EHCSS achieves optimal performance by integrating electronic control units with hydraulic actuators. The electronic
+control units deliver precise command signals, while the
+hydraulic actuators generate significant mechanical force.
+In Fig. 2, the structural diagram of the EHCSS is presented.
+The following equation includes the physical model of the
+EHCSS connected to each of these components [14]:
+
+J θ̈ + Bmh θ̇mh = ς Teps + κsw (θsw − θmh ) − Fh lh
+
+
+ mh mh
+Tch
++ Fhps
+m zh ẍ zh + Bzh ẋ zh = Fzh −
+
+Rw
+
+
+Jch θ̈ch + Bch θ̇ch = Tch − TP
+(8)
+where Jmh represents the moment of inertia. Bmh is the damping coefficient of the steering screw. θmh and θsw denote the
+steering screw angle and the steering wheel angle, respectively.
+ς is the reduction gear ratio. Teps represents the output torque
+of the electric power. κsw denotes the steering shaft stiffness.
+Fh and lh are the axial working load of the steering screw
+and the axial working load of the steering screw, respectively.
+m zh is the steering nut quality. x zh denotes the displacement
+of the steering nut. Bzh is the damping coefficient of the
+steering sector. Fzh is the nut axial force. Tch represents the
+steering sector torque, Rw denotes the sector pitch radius. Fhps
+represents the output power of the hydraulic power model.
+
+q
+
+ 
+ Q σ = C n Aσ
+21Pσ χ sign (1Pσ )
+(9)
+ Q A = A p d xr
+dt
+
+
+
+χ 
+2
+2
+
+
+ PA − PB = SC2 ((Q t − Q A ) /A1 ) − (Q t + Q A /A2 )
+q
+
+ 2 
+χ 
+2
+
++
+Q
+A
++
+−
+Q
+/A
+P
+=
+(Q
+)
+(Q
+)
+
+t
+A
+1
+t
+A
+2
+ t
+SCq2
+Fhps = A p (PA − PB )
+
+(10)
+(11)
+
+where Aσ and Q σ represent the throttle area and flow of
+σ port, Cn represents the discharge coefficient, 1P is the
+pressure drop, χ represents the density of oil, A p is the
+effective area of the piston of the hydraulic cylinder, Q A
+denotes the flow rate of power cylinder, PA and PB are the
+power cylinder inlet and outlet pressure.
+The transmission ratios in a steering system are determined by three fundamental relationships. First, the interaction
+between the steering screw and the steering nut is governed by
+the screw pitch, which converts rotational motion into linear
+displacement. Second, the relationship between the steering
+nut and the steering sector is defined by the effective radius,
+facilitating the transition from linear to rotational movement.
+Finally, the ratio between the steering sector and the front
+wheels dictates how rotational motion is translated into wheel
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 03:04:00 UTC from IEEE Xplore. Restrictions apply.
+
+12292
+
+IEEE TRANSACTIONS ON TRANSPORTATION ELECTRIFICATION, VOL. 11, NO. 5, OCTOBER 2025
+
+angle, controlled by a specific ratio factor
+
+θmh
+2π
+θ̇mh
+θ̈mh
+
+
+=
+=
+=
+
+
+ẍ zh
+ẋ zh
+x zh
+p
+
+
+
+ ẍlm
+ẋlm
+xlm
+=
+=
+= Rw
+θch
+
+θ̈ch
+θ̇ch
+
+
+
+
+θ̈ch
+θch
+θ̇ch
+
+
+= i ch
+=
+=
+
+δfh
+δ̈ f h
+δ̇ f h
+
+µ33 = k3r h (er h + dr h )
+
+(12)
+
+III. PARAMETER O PTIMIZATION
+
+where p represents the screw pitch.
+According to the above equations, (8) can be rewritten as
+follows:
+
+
+1
+ς Teps + κsw i − κδ f m + Tch − TP
+δ̈ f m =
+Jeh
+
+Tch
+−
++ Fhps − Fh lh − Beh δ̇ f m
+(13)
+Rr w
+where Jeh = ((2π/P)Rw Jmh + m zh Rw + Jch )h ch , Beh =
+((2π/P)Rw Bmh + Bzh Rw + Bch )i ch , κ = (2π/P)Rw i ch .
+C. Nonhierarchical Model
+An integrated model fused with a 3-DoF model and an
+EHCSS model has been established here, which can respond
+faster to system changes and improve system stability. The
+control quantity is u = [Teps ]. The state space equation is
+shown below
+ẋ = Ax + Bu + C
+
+
+µ34 = −k3r h dr h (er h + dr h ) u 2h − m 2 u 2h er h
+µ56 = −Beh /Jeh
+
+
+Tch
+1
+κsw i + Tch − TP −
++ Fhps − Fh lh .
+γ16 =
+Jeh
+Rw
+
+(14)
+
+where
+
+T
+x = β1m ψ̇1m β2m ψ̇2m δ f m δ̇ f m
+A = M −1 N, B = M −1 P 1 , C = M −1 Q
+
+
+m 1 u 1h
+0
+m 2 u 2h
+0
+0 0
+m 1 u 1h c f h
+I1zz
+0
+0
+0 0
+
+
+
+0
+0
+m 2 u 2h er h −I2zz 0 0
+
+M=
+
+1
+−c f h /u 1h
+−1
+−er h /u 2h 0 0
+
+
+
+0
+0
+0
+0
+0 1
+0
+0
+0
+0
+1 0
+
+
+µ11 µ12 k3r h µ14
+− k1 f h
+0
+µ21 µ22 0
+0 − k1 f h (a f h + c f h ) 0 
+
+
+ 0
+0 µ33 µ34
+0
+0 
+
+
+N=
+1
+0
+0 
+ 0 −1 0
+
+ 0
+0
+0
+0
+− κsw κ/Jeh
+µ56 
+0
+0
+0
+0
+0
+1
+
+T
+P 1 = 0 0 0 0 0 ζ /Jeh
+
+T
+Q = 0 0 0 0 0 γ16
+
+T
+0
+0
+0
+0 0 ζ /Jeh
+0
+0 0
+0 
+P 2 = 0 1/I1zz
+0
+0
+1/I2zz 0 0
+0
+µ11 = k1 f h + k2 f h
+
+µ12 = a f h k1 f h − b f h k2 f h u 1h − m 1 u 1h
+
+µ14 = −k3r h dr h u 2h − m 2 u 2h
+
+
+µ21 = k1 f h a f h + cr h + k2 f h cr h − b f h
+
+
+µ22 = k1 f h a f h a f h + cr h + k2 f h b f h b f h − cr h /u 1h
+− m 1 u 1h c f h
+
+Before designing the control strategy, it is essential to
+ensure that the dynamic model accurately reflects the operating
+characteristics of the DATs. Among the parameters affecting
+this model, the lateral stiffness of the tires plays a critical role
+in determining side-slip and yaw responses. To solve this issue,
+an optimization process will be conducted before developing
+the control strategy.
+In the optimization section, the selection of tire cornering
+stiffness is based on the AOA to ensure that the model parameters accurately match the Trucksim simulation data. The
+chosen range considers model fitting accuracy, global search
+and local optimization strategies, and engineering feasibility,
+ensuring that the optimized parameters enhance system stability while complying with actual vehicle design standards [33].
+The algorithm’s implementation process is detailed below.
+1) Initialization: The algorithm identifies the “infection
+region” within the problem space, representing the initial
+parameter setting and problem definition stage
+
+
+a1,1
+a1,2
+...
+a1,F
+ a2,1
+a2,2
+...
+a2,F 
+
+
+A M,F = H + T ( Q − H) =  .
+..
+.. 
+..
+ ..
+.
+.
+. 
+a M,1
+
+a M,2
+
+...
+
+a M,F
+(15)
+
+where A is the initial population; M is the search agent; F is
+the multidimensional component of the search agent; Q and
+H are the boundaries of the solution space, respectively; R is
+a sequence of random numbers ranging from 0 to 1.
+2) Comprehensive Elimination: The strategy for the comprehensive elimination phase is represented by the following
+equation:
+
+t+1
+t
+t
+t
+
+rand < 0.5
+ ax,y = ax,y + cax,y (−1) ,
+, r1 < K
+
+ t+1
+t
+t
+t
+ax,y = ax,y + c · best y (−1) , rand > 0.5
+(16)
+t+1 and a t
+where ax,y
+x,y are the search agents before and after the
+update, respectively; bestty is the current optimum; r1 is the
+
+random number in the range [0, 1]; c is the decay index of the
+drug concentration in the human body; and K is the probability
+coefficient. The formula to calculate the two relevant variables
+is provided below
+
+
+
+f
+
+ c = 1 · e− 4 Max f
+(17)
+f 1/6
+
+K =1−
+1
+6
+Max f /
+where f and Max f are the current and maximum number of
+iterations of the algorithm, respectively.
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 03:04:00 UTC from IEEE Xplore. Restrictions apply.
+
+TIAN et al.: SYNERGISTIC CONTROL STRATEGY FOR ENHANCED ANTI-JACKKNIFING STABILITY IN DATs
+
+12293
+
+3) Local Elimination: The algorithm conducts a refined
+search in potential “high-risk areas,” narrowing the search
+scope and focusing resources to explore local regions likely
+containing issues, ensuring precise target coverage. The particle position is calculated using the following equation:
+
+t
+t
+t
+axt+1 = ab3
++ d · ab1
+− ab2
+, rand < Fitnorm (x) (18)
+where Fitnorm (x) and b1 , b2 , b3 are determined by the following formula:
+
+
+ Fitnorm (x) = fit(x) − min(fit)
+max(fit) − min(fit)
+(19)
+
+ b , b , b ∼ U (1, N ), b ̸ = b ̸ = b .
+1 2 3
+1
+2
+3
+4) Final Consolidation: Considering the reactivation of
+dormant malaria parasites leading to symptom relapse during
+treatment, a late consolidation phase strategy was introduced
+to enhance the algorithm’s ability to avoid local optima
+(
+t+1
+t
+ax,y
+= ax,y
+,
+rand < 0.05
+(20)
+t+1
+ax,y = bestx,y , rand < 0.2
+where bestx,y is the subvector of the current optimal solution
+in the jth dimension.
+Algorithm 1 Artemisinin Optimization Pseudo-Code
+while ( f < Max F)
+Calculate the probability K, exponent c.
+For each agent i = 1 : N
+For each dimension j = 1 : D
+If rand < K
+Update search agent a( i, j).
+End If
+Update search agent a( i, j).
+Search agent information crossover.
+End For
+End For
+Calculate the fitness fit.
+Update the population and find the optimal.
+f = f +N
+End While
+In Algorithm 1, the pseudocode clarifies the process of the
+AOA. The parameter identification of the DATs model aims to
+find a set of parameters that best fit the Trucksim simulation
+data by optimizing three key parameters. The fitness function
+is defined as the error between the calculated results and
+the Trucksim data. To ensure the accuracy of parameter
+identification for the entire fusion model, the ideal front wheel
+angle and its derivative are incorporated into the formula.
+Additionally, a difference operation is applied between the
+ideal front wheel angle and its derivative and the outputs from
+the EHCSS model at each time step. Finally, the consistency
+between the model’s prediction results and the reference data
+is assessed using multiple normalized squared error terms
+
+2
+
+2
+z
+z
+ψ̇¯ k1 − ψ̇¯ ϶1
+ψ̇¯ k2 − ψ̇¯ ϶2
+X
+X
+τ=
+
+
+2 +
+
+
+2
+¯
+¯
+i=1 max ψ̇
+i=1
+max
+ψ̇
+϶1
+϶2
+
+Fig. 3.
+
+Identification results (80 and 90 km/h).
+
+2
+2
+z
+X
+β̄k2 − β̄϶2
+β̄k1 − β̄϶1
++
+2 +
+2
+i=1 max β̄϶2
+i=1 max β̄϶1
+
+2
+2
+z
+z
+δ̇¯ f k − δ̇¯϶
+X
+X
+δ̄ f k − δ̄϶
++
+2
+
+
+2 +
+i=1 max δ̄϶
+i=1 max δ̇¯϶
+z
+X
+
+(21)
+
+where ψ̇¯ k1 , β̄k1 , ψ̇¯ k2 , and β̄k2 are the state quantity obtained
+by model output, and ψ̇¯ ϶1 , β̄϶1 , ψ̇¯ ϶2 , and β̄϶2 are the state
+quantity obtained from the Trucksim output. δ f k and δ̇ f k are
+the front wheel angle and the derivative of the front wheel
+angle output by the model, respectively. δ϶ and δ̇϶ are output
+via Trucksim.
+The upper bounds for the corresponding three parameters
+are set as follows: [k1 f h , k2 f h , k3r h ]U = [−le5, −le5, −le5]U .
+The lower bounds are set as follows: [k1 f h , k2 f h , k3r h ] L =
+[−le6, −le6, −le6] L .
+Double lane change (DLC) at speeds of 80 and 90 km/h,
+with a road adhesion coefficient of 0.8, are selected for
+parameter identification. As shown in Fig. 3, a comparison of the parameter identification results with the
+Trucksim output at speeds of 80 and 90 km/h is presented. The identification results at 80 km/h are k1 f h =
+−197938.7204 (N/rad), k2 f h = −574241.1497 (N/rad), and
+k3r h = −249738.3021 (N/rad). The identification results
+at 90 km/h are k1 f h = −203480.106 (N/rad), k2 f h =
+−556310.5185 (N/rad), and k3r h = −238442.5435 (N/rad).
+The overall trends of the sideslip angle and yaw rate are
+consistent with the Trucksim output, validating the effectiveness of the parameter identification model.
+Fig. 4 illustrates the tracking performance of the steering
+wheel angle at speeds of 80 and 90 km/h.
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 03:04:00 UTC from IEEE Xplore. Restrictions apply.
+
+12294
+
+IEEE TRANSACTIONS ON TRANSPORTATION ELECTRIFICATION, VOL. 11, NO. 5, OCTOBER 2025
+
+TABLE II
+K EY PARAMETERS OF DAT S AND EHCSS
+
+Fig. 4.
+
+Comparison of steering wheel (80 and 90 km/h).
+
+Fig. 5. Principle analysis of jackknifing in DATs. (a) Initial vehicle state.
+(b) Vehicle jackknife state.
+TABLE I
+DAT S W HEEL T ORQUE D ISTRIBUTION S TRATEGY
+
+The insufficient lateral force from the tractor’s rear axle
+causes mutual interaction between the torques generated by the
+tractor and the trailer. The tractor generates a torque around
+the hinge point, rotating clockwise, while the trailer generates
+an opposing torque, rotating counterclockwise. This interaction leads to the “jackknifing” phenomenon of the vehicle,
+as illustrated in Fig. 5(b). The resulting torque imbalance at
+the connection point (typically the hinge) misaligns the driving
+trajectories of the tractor and trailer, potentially leading to
+severe vehicle instability or loss of control.
+A. Controller Design
+
+IV. C ONTROL S TRATEGY
+In this section, a novel anti-jackknifing control strategy is
+proposed. This strategy utilizes active steering of the front
+tractor wheels with the EHCSS, torque vectoring of the rear
+tractor wheels, and differential braking of the trailer.
+As shown in Fig. 5(a), when the lateral force exerted on
+the rear axle of the tractor reaches saturation, the rear axle
+will slip in the direction of the lateral force. Assuming the
+lateral force is directed to the left under these circumstances,
+and the front axle of the tractor remains unaffected by slip, the
+instantaneous rotation center of the tractor O1 is determined
+using the vertical line method. Subsequently, the tractor rotates
+clockwise around this rotation center, causing the trailer saddle
+to rotate around the same instantaneous rotation center. The
+instantaneous steering center of the trailer is O2 .
+
+MPC is fundamentally based on the current state variables
+and the system model to predict the evolution of state variables
+over a specified future time horizon. The control strategy
+involves formulating an objective function, which is typically
+a cost function, while incorporating system constraints. The
+optimal control sequence is then determined by solving this
+optimization problem at each time step. In this section, the
+MPC controller is designed according to the non-hierarchical
+model established in Chapter II.
+To link the modeling framework with controller design, the
+MPC state vector and control inputs are directly derived from
+the nonhierarchical dynamic model. The selected states reflect
+the yaw and sideslip dynamics and are highly observable and
+controllable within the EHCSS-integrated DATs system. The
+control inputs correspond to front-wheel steering, rear electric
+yaw moment, and trailer differential braking. This direct mapping reduces delay and improves response accuracy. Unlike
+hierarchical models, the non-hierarchical approach enables
+unified dynamic prediction, enhancing real-time performance
+and system stability. Algorithm 2 provides the pseudocode for
+the MPC-based anti-jackknifing control.
+The forward Euler method is used to discretize the state
+space equation as follows:
+x ω (k + 1) = Akω x ω (k) + B kω uω (k)
+
+(22)
+
+where Akω = I + A2 T s , B kω = B 2 T s .
+A discretization linear prediction model is constructed, and
+the MPC controller predicts the future output by iterating the
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 03:04:00 UTC from IEEE Xplore. Restrictions apply.
+
+TIAN et al.: SYNERGISTIC CONTROL STRATEGY FOR ENHANCED ANTI-JACKKNIFING STABILITY IN DATs
+
+Fig. 6.
+
+12295
+
+HIL platform architecture and experimental process.
+
+Algorithm 2 MPC-Based Anti-Jackknifing Control
+1: Acquire the current state x ω (k) and reference output
+yd (k);
+2: Solve the QP problem to obtain the optimal input uω (k);
+3: Apply uω (k) to the vehicle system.
+
+Fig. 8.
+
+Speed loss under the evaluated conditions.
+
+C ω B kω
+..
+.
+
+
+
+0=
+
+N −1
+
+C ω Akωp B kv
+
+
+C ω Akω
+ . 
+9µ =  ..  .
+
+···
+
+···
+
+0
+..
+.
+
+
+
+
+
+C ω B kω
+
+N
+
+C ω Akωp
+
+Fig. 7. Comparison of DATs sideslip angle and yaw rate at 80 km/h with a
+road adhesion of 0.38.
+
+system equations and sorting out the matrix form. N p and Nc
+are the prediction time domain and the control time domain,
+respectively.
+Y = 9 µ x ω (k) + 0U µ
+
+(23)
+
+where
+
+
+Y =
+
+yω (k + l)
+
+..
+,
+.
+
+
+yω (k + N p )
+
+
+
+Uµ = 
+
+uω (k)
+..
+.
+
+uω (k + N p − 1)
+
+
+
+
+
+The objective function of MPC aims to achieve vehicle
+path following control as well as yaw stability control while
+keeping the controller output as small as possible. Considering
+the system constraints, the performance evaluation function of
+MPC is designed according to the following formula:
+J=
+
+Np h
+X
+i=1
+Nc
+X
+
++
+
+T
+i
+ye (k + i) Q ye (k + i)
+
+
+(uω (k + i))T R (uω (k + i))
+
+(24)
+
+i=1
+
+where ye (k + i) is the difference between ydω (k + i) and
+yω (k + i), Q and R are the weight matrices of the output and
+control quantities, respectively.
+To solve the optimal control sequence for MPC, the optimization problem is transformed into a quadratic programming
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 03:04:00 UTC from IEEE Xplore. Restrictions apply.
+
+12296
+
+IEEE TRANSACTIONS ON TRANSPORTATION ELECTRIFICATION, VOL. 11, NO. 5, OCTOBER 2025
+
+form. Substituting the system prediction equation into the
+MPC performance function, we obtain the following equation:
+J =∥ Y d (k) − 9 µ x ω (k) − 0U µ ∥2Q MPC + ∥ U(k) ∥2RMPC .
+(25)
+Make ε = Y d (k) − 9 µ x(k). The equation can be obtained
+as follows:
+J =∥ ε − 0U (k) ∥2Q MPC + ∥ U(k) ∥2RMPC
+= U T k H mpc Uk + G mpc Uk + εT Q MPC ε
+
+(26)
+
+where H mpc and G mpc are matrices of state and control
+quantities, respectively. H mpc = 0 T Q MPC 0 + RMPC , G mpc =
+−2ε T Q MPC 0.
+εT Q MPC ε is a constant matrix, and, since this term has no
+effect on the solution of the optimization problem, it can be
+ignored. Thus, the MPC optimization problem is transformed
+into a standard quadratic programming form as shown in the
+following equation:
+1
+min J = U T (k) H mpc U (k) + G mpc U (k)
+ 2
+
+
+I
+U max (k)
+s.t.
+U(k) ≤
+.
+−I
+U min (k)
+
+(27)
+
+Finally, the calculated control quantity is used to predict the
+system output of future steps, but in the actual control process,
+only the first control quantity will be applied
+
+
+uω (k) = 1 0 · · · 0 U(k).
+(28)
+B. Torque Distribution Strategy
+For the tractor, the driving torque distribution strategy is
+based on the torque plus-minus complementary principle to
+design the yaw torque distribution controller. The torque
+plus-minus complementary principle is a control strategy that
+balances yaw moments by adjusting the torque distribution
+between the left and right wheels. It works by increasing the
+torque on one side while reducing it on the other, ensuring
+that the total driving force remains stable while generating the
+necessary yaw moment. The equation is shown below
+
+
+
+Td 2 − M1ad l
+
+
+ 1Tl2 =
+2
+(29)
+
+
+
+T
+2
++
+M1ad l
+
+ 1T = d
+r2
+2
+where 1TL2 and 1TR2 are the torque distribution values of
+the left and right wheels of the tractor, respectively, and Td
+represents the driving torque of the demand.
+For the trailer, the braking torque distribution relationship
+is realized by the following equation [34]:
+
+Fzl4
+2M2sum
+
+1Tl4 =
+r4
+
+
+
+p
+F
++
+F
+3
+zl4
+zl5 + Fzl6
+
+
+
+2M2sum
+Fzl5
+1Tl5 =
+r5
+(30)
+
+p3 Fzl4 + Fzl5 + Fzl6
+
+
+
+
+2M2sum
+Fzl5
+
+ 1Tl6 =
+r5
+p3 Fzl4 + Fzl5 + Fzl6
+
+where 1Tl4 , 1Tl5 , and 1Tl6 are the torque distribution values
+of the left of the trailer, p3 are the wheelbase of the trailer, and
+Fzl4 , Fzl5 , and Fzl6 are the longitudinal braking force applied
+sequentially to the left wheel, respectively. Since the left and
+right equations are formulated in the same form, they will not
+be explained here.
+Due to the implementation complexity of the proposed strategy, it is crucial to consider the interaction between multiple
+factors simultaneously, which indicates the importance of the
+wheel torque distribution. The corresponding distribution rules
+are provided in Table I.
+C. Slip Rate Control
+The torque vector control can prevent the tractor from wheel
+locking by generating driving torque, while it is challenging to
+avert wheel locking for the trailer under the torque distribution
+strategy due to its numerous wheels. Thus, controlling the slip
+rate of each trailer wheel is essential to enhance lateral vehicle
+stability.
+The slip rate is calculated using the following equation:
+
+µh = (u h − rh ωh ) u h
+(31)
+where µh is the slip rate; u h is the velocity at the center of
+the wheel, rh is the rolling radius of wheels, and ωh is the
+wheel angular velocity. The slip rate is regulated with a logical
+threshold, ensuring it stays within the range of 0.15–0.21.
+By giving the threshold value of slip rate, the final wheel
+braking torque calculation equation is then obtained as follows:
+
+
+ 1Tη = 1Tη−1 + ηi tq , µh < µmin
+(32)
+1Tη = 1Tη−1 ,
+µmin < µh < µmax
+
+
+1Tη = 1Tη−1 − ηd tq , µh > µmax
+where 1Tη and 1Tη−1 are the magnitude of the braking torque
+at time η and (η − 1), respectively, and tq is the sampling time.
+ηi and ηd are identified as the growth rate and decline rate,
+respectively. The vehicle dynamics parameter information is
+provided in Table II.
+V. E XPERIMENTS AND R ESULTS
+This section presents the experimental validation of the
+proposed control strategy. To validate the effectiveness of the
+control strategy, experimental verification is carried out for
+various conditions of jackknifing. Five sets of control experiments are conducted for comparison. The results demonstrate
+that the proposed control strategy outperforms other control
+strategies under multiple extreme working conditions.
+A. Comparison Control Effect of Different Strategy
+The architecture of the HIL experimental platform is presented in Fig. 6. The Trucksim vehicle model and road
+environment are constructed in PXI. To clarify the connection
+between the HIL experiment, the dynamic model, and the
+control strategy, the 3-DoF vehicle model and the EHCSS
+model were integrated into the HIL platform to simulate real
+vehicle behavior. The proposed control strategy is built in
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 03:04:00 UTC from IEEE Xplore. Restrictions apply.
+
+TIAN et al.: SYNERGISTIC CONTROL STRATEGY FOR ENHANCED ANTI-JACKKNIFING STABILITY IN DATs
+
+12297
+
+Speedgoat, the vehicle controller unit. CAN communication
+connects devices, and the results are monitored by the PC.
+The DLC condition is chosen to verify the superiority
+of the proposed control strategy. Vehicle speeds are set to
+80 and 88 km/h, corresponding to road adhesion coefficients
+of 0.38 and 0.47, respectively. The two selected road conditions represent low-adhesion surfaces that increase the risk
+of vehicle instability, especially jackknifing. These conditions
+were chosen to test the control strategy’s effectiveness in
+maintaining lateral stability and preventing vehicle jackknifing
+under extreme situations. Five groups of control strategies are
+selected for comparison experiments.
+They are, respectively, the following six control strategies.
+1) Tractor front wheel uses EHCSS to active steering,
+and the second shaft generates additional yaw moments
+through torque vector control. The trailer is controlled
+by differential braking.
+2) The tractor implements EHCSS for active steering and
+the trailer for differential braking.
+3) The tractor uses EHCSS for active steering. The trailer
+is not controlled.
+4) Differential braking for tractor and trailer.
+5) The second axle of the tractor adopts torque vector
+control, and the trailer implements differential braking.
+6) The tractor front wheel uses EHCSS to active steering,
+and the second shaft generates additional yaw moments
+through torque vector. The trailer is not controlled.
+The first comparison is the DAT’s sideslip angle and yaw
+rate under DLC with the vehicle speed of 80 km/h and the
+road adhesion coefficient of 0.38 in Fig. 7. It shows that
+the proposed new control strategy outperforms other control
+strategies. Notably, the method involving tractor torque vector
+control and trailer differential braking performs the worst,
+showing larger fluctuations in the slip angle and yaw rate. For
+the slip angle, the proposed control strategy improves by about
+44.14%, and 73.47%, respectively, compared to the worst. For
+the yaw rate, the proposed control strategy improves by about
+70.20% and 51.71%, respectively, compared to the worst.
+Longitudinal velocity loss, lateral acceleration, and steering
+response are essential in comprehensively evaluating the performance and effectiveness of the proposed control strategy.
+As shown in Fig. 8, the longitudinal speed change process of
+the six control strategies is given.
+From the Fig. 8, it is evident that the longitudinal speed of
+the proposed strategy is 67.04 km/h at 12 s, with a speed loss
+rate of 16.20%. The method involving tractor torque vector
+control and trailer differential braking results in the highest
+speed loss rate at 31.03%. When the tractor is controlled
+by active front wheel steering and rear axle torque vector
+control, the speed at 12 s reaches 73.26 km/h, with the lowest
+speed loss rate of about 8.43%. Although the proposed control
+strategy does not have the minimum speed loss rate, it remains
+within an acceptable range.
+As shown in Fig. 9, the articulated angle and lateral acceleration under different control strategies are compared. The
+proposed new control strategy enables the hinge angle to vary
+from −5.5 to +7.3◦ , improving about 60.12% compared to
+
+Fig. 9. Comparison of lateral dynamic parameters at 80 km/h with a road
+adhesion of 0.38.
+
+Fig. 10. Comparison of DATs sideslip angle and yaw rate at 88 km/h with
+a road adhesion of 0.47.
+
+the worst-performing strategy. The lateral acceleration of the
+tractor and trailer varies from −0.5 to 0.4, indicating effective
+lateral stability with the new control strategy. In terms of trajectory tracking performance, the multiple steering strategies
+almost perfectly match the ideal front wheel angle trajectory,
+demonstrating the superior performance of the new control
+strategy in accurately following the predetermined trajectory.
+Overall, the newly proposed control strategy significantly
+improves the stability and accuracy of the system in controlling
+the hinge angle and lateral acceleration. The comparison
+results in Fig. 10 verifies the effectiveness of the new strategy.
+To verify the rationality of the proposed algorithm, an experiment was conducted at a speed of 88 km/h and a road
+adhesion coefficient of 0.47. Additionally, the DLC condition
+is selected for the experiment as it better simulates the vehicle
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 03:04:00 UTC from IEEE Xplore. Restrictions apply.
+
+12298
+
+IEEE TRANSACTIONS ON TRANSPORTATION ELECTRIFICATION, VOL. 11, NO. 5, OCTOBER 2025
+
+control for the trailer are implemented as the proposed control
+strategy under jackknifing conditions. The control strategy is
+verified by HIL experiments under various working conditions. Experimental results indicate that the control strategy
+performs well in lateral stability control under different vehicle
+jackknifing conditions. Comparison with five other strategies
+reveals the feasibility and effectiveness of the proposed control
+strategy. Future work will involve conducting comprehensive
+vehicle tests to validate the control strategy in real scenarios.
+The insights gained from these practical experiments will be
+crucial for the practical deployment of the proposed control
+strategy in DATs.
+R EFERENCES
+
+Fig. 11. Comparison of lateral dynamic parameters at 88 km/h with a road
+adhesion of 0.47.
+
+jackknifing phenomenon. The experiment is conducted under
+various speeds and adhesion coefficients.
+As shown in Fig. 10, comparative experiments with six
+different strategies were performed. The proposed control
+strategy consistently outperformed the others. The slip angle
+of the tractor and trailer was controlled between −3 to 4◦ and
+−3 to 4◦ , respectively. The yaw rate was maintained between
+−14 to 14◦ for the tractor and −16 to 16◦ for the trailer. Compared to the worst strategy, the proposed strategy improves the
+slip angle of the tractor and trailer by approximately 47.86%
+and 84.26%, respectively. The yaw rate is improved by 24.27%
+and 41.57%, respectively.
+Here, the articulated angle and lateral acceleration are
+compared. As shown in Fig. 11, the proposed control strategy
+maintains the articulated angle between −7 and 8◦ , with
+a smaller fluctuation range compared to other strategies.
+The corresponding lateral acceleration is controlled between
+−0.43 and 0.4. Notably, the proposed strategy exhibits greater
+stability, with fewer fluctuations than other control strategies.
+Moreover, the tracking effect of the proposed control strategy is given in Fig. 11. It can be found that the error of the
+tracking effect of the front wheel angle is the smallest, which
+conforms to the ideal trajectory given.
+VI. C ONCLUSION
+In this study, an integrated control strategy is developed
+and implemented in the DAT’s stability control to suppress
+jackknifing under extreme conditions. Specifically, the proposed strategy is realized through the active steering of the
+tractor’s front wheel, the torque vectoring of the tractor’s rear
+wheel, and the differential braking of the trailer. By integrating
+the EHCSS model into the DATs 3 DoF model, a new nonhierarchical model is established. The AOA is used to identify
+the parameters of this hierarchical model. The optimization
+results demonstrate that the new model is effective for developing active steering functions based on EHCSS. Additionally,
+torque vector control for the tractor and differential braking
+
+[1] Y. Lu et al., “An active front steering system design considering the
+CAN network delay,” IEEE Trans. Transport. Electrific., vol. 9, no. 4,
+pp. 5244–5256, Jul. 2023.
+[2] J. Wang, Z. Wang, P. Liu, H. Xu, D. Guo, and W. Wei, “Differential drive
+collaborative steering control of independent-wheel-drive articulatedsteering electric vehicles for energy saving,” IEEE Trans. Transport.
+Electrific., vol. 10, no. 2, pp. 4142–4158, Jun. 2024.
+[3] T. Xu, W. Fan, Y. Sun, X. Ji, and Y. Liu, “Differential steering
+control based on CNF and ADRC techniques for distributed-drive
+articulated heavy vehicles,” IEEE Trans. Veh. Technol., vol. 73, no. 5,
+pp. 6429–6442, May 2024.
+[4] T. Xu, Y. Liu, X. Cao, and X. Ji, “Cascaded steering control paradigm
+for the lateral automation of heavy commercial vehicles,” IEEE Trans.
+Transport. Electrific., vol. 8, no. 2, pp. 2346–2360, Jun. 2022.
+[5] S. Feng et al., “Dense reinforcement learning for safety validation
+of autonomous vehicles,” Nature, vol. 615, no. 7953, pp. 620–627,
+Mar. 2023.
+[6] L. Deng, M. H. Hajiesmaili, M. Chen, and H. Zeng, “Energy-efficient
+timely transportation of long-haul heavy-duty trucks,” IEEE Trans. Intell.
+Transp. Syst., vol. 19, no. 7, pp. 2099–2113, Jul. 2018.
+[7] M. Beglini, T. Belvedere, L. Lanari, and G. Oriolo, “An intrinsically
+stable MPC approach for anti-jackknifing control of tractor-trailer vehicles,” IEEE/ASME Trans. Mechatronics, vol. 27, no. 6, pp. 4417–4428,
+Dec. 2022.
+[8] Y. Kebbati, N. Ait-Oufroukh, V. Vigneron, and D. Ichalal, “Neural
+network and ANFIS based auto-adaptive MPC for path tracking in
+autonomous vehicles,” in Proc. IEEE Int. Conf. Netw., Sens. Control
+(ICNSC), vol. 1, Dec. 2021, pp. 1–6.
+[9] H. Chen and C. Lv, “Online learning-informed feedforward-feedback
+controller synthesis for path tracking of autonomous vehicles,” IEEE
+Trans. Intell. Vehicles, vol. 8, no. 4, pp. 2759–2769, Apr. 2023.
+[10] Y. Zhang, M. Xu, Y. Qin, M. Dong, L. Gao, and E. Hashemi,
+“MILE: Multiobjective integrated model predictive adaptive cruise control for intelligent vehicle,” IEEE Trans. Ind. Informat., vol. 19, no. 7,
+pp. 8539–8548, Jul. 2023.
+[11] H. Xu, Y. Zhao, W. Pi, Q. Wang, F. Lin, and C. Zhang, “Integrated
+control of active front wheel steering and active suspension based on
+differential flatness and nonlinear disturbance observer,” IEEE Trans.
+Veh. Technol., vol. 71, no. 5, pp. 4813–4824, May 2022.
+[12] P. Hang, X. Chen, and W. Wang, “Cooperative control framework for
+human driver and active rear steering system to advance active safety,”
+IEEE Trans. Intell. Vehicles, vol. 6, no. 3, pp. 460–469, Sep. 2021.
+[13] C. Chatzikomis, A. Sorniotti, P. Gruber, M. Zanchetta, D. Willans, and
+B. Balcombe, “Comparison of path tracking and torque-vectoring controllers for autonomous electric vehicles,” IEEE Trans. Intell. Vehicles,
+vol. 3, no. 4, pp. 559–570, Dec. 2018.
+[14] H. Du, L. Wang, J. Chen, H. Huang, and X. Feng, “Integral sliding-mode
+tracking control for heavy vehicle electrohydraulic power steering system,” IEEE/ASME Trans. Mechatronics, vol. 26, no. 3, pp. 1455–1466,
+Jun. 2021.
+[15] C. Morton, C. M. Spargo, and V. Pickert, “Electrified hydraulic power
+steering system in hybrid electric heavy trucks,” IET Electr. Syst.
+Transp., vol. 4, no. 3, pp. 70–77, Sep. 2014.
+[16] T. Cui, W. Zhao, and K. Tai, “Optimal design of electro-hydraulic active
+steering system for intelligent transportation environment,” Energy,
+vol. 214, Jan. 2021, Art. no. 118911.
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 03:04:00 UTC from IEEE Xplore. Restrictions apply.
+
+TIAN et al.: SYNERGISTIC CONTROL STRATEGY FOR ENHANCED ANTI-JACKKNIFING STABILITY IN DATs
+
+[17] J. Sung, S. Choi, and K. Huh, “A differential brake-actuated steering
+system for redundancy of steer-by-wire,” IEEE Trans. Intell. Vehicles,
+vol. 9, no. 1, pp. 993–1004, Jan. 2024.
+[18] R. Hajiloo, M. Abroshan, A. Khajepour, A. Kasaiezadeh, and S.K. Chen, “Integrated steering and differential braking for emergency
+collision avoidance in autonomous vehicles,” IEEE Trans. Intell. Transp.
+Syst., vol. 22, no. 5, pp. 3167–3178, May 2021.
+[19] H. Mirzaeinejad, M. Mirzaei, and S. Rafatnia, “A novel technique
+for optimal integration of active steering and differential braking with
+estimation to improve vehicle directional stability,” ISA Trans., vol. 80,
+pp. 513–527, Sep. 2018.
+[20] M. Ataei, A. Khajepour, and S. Jeon, “Reconfigurable integrated stability control for four- and three-wheeled urban vehicles with flexible
+combinations of actuation systems,” IEEE/ASME Trans. Mechatronics,
+vol. 23, no. 5, pp. 2031–2041, Oct. 2018.
+[21] J. Choi, K. Yi, J. Suh, and B. Ko, “Coordinated control of motor-driven
+power steering torque overlay and differential braking for emergency
+driving support,” IEEE Trans. Veh. Technol., vol. 63, no. 2, pp. 566–579,
+Feb. 2014.
+[22] R. Hajiloo, A. Khajepour, A. Kasaiezadeh, S.-K. Chen, and B. Litkouhi,
+“A model predictive control of electronic limited slip differential and
+differential braking for improving vehicle yaw stability,” IEEE Trans.
+Control Syst. Technol., vol. 31, no. 2, pp. 797–808, Mar. 2023.
+[23] H. Her, Y. Koh, E. Joa, K. Yi, and K. Kim, “An integrated control
+of differential braking, front/rear traction, and active roll moment for
+limit handling performance,” IEEE Trans. Veh. Technol., vol. 65, no. 6,
+pp. 4288–4300, Jun. 2016.
+[24] M. Ataei, A. Khajepour, and S. Jeon, “A novel reconfigurable integrated
+vehicle stability control with omni actuation systems,” IEEE Trans. Veh.
+Technol., vol. 67, no. 4, pp. 2945–2957, Apr. 2018.
+[25] Z. Zheng et al., “Extension coordinated control of distributed-driven
+electric vehicles based on evolutionary game theory,” Control Eng.
+Pract., vol. 137, Aug. 2023, Art. no. 105583.
+[26] B. Zhang, W. Zhao, C. Wang, and Y. Lian, “Layered time-delay robust
+control strategy for yaw stability of SbW vehicles,” IEEE Trans. Intell.
+Vehicles, vol. 8, no. 7, pp. 3913–3924, Aug. 2023.
+[27] C. Tang and A. Khajepour, “Integrated stability control for narrow tilting
+vehicles: An envelope approach,” IEEE Trans. Intell. Transp. Syst.,
+vol. 22, no. 5, pp. 3158–3166, May 2021.
+[28] Y. Tian et al., “Nonhierarchical prescribed performance control for
+yaw stability of intelligent heavy trucks with electrohydraulic compound steering,” IEEE Trans. Transport. Electrific., vol. 11, no. 3,
+pp. 7151–7161, Jun. 2025.
+[29] J. Liu, Z. Wang, and L. Zhang, “Integrated vehicle-following control for four-wheel-independent-drive electric vehicles against non-ideal
+V2X communication,” IEEE Trans. Veh. Technol., vol. 71, no. 4,
+pp. 3648–3659, Apr. 2022.
+[30] F. Wang et al., “A robust adaptive fault-tolerant estimator for
+sideslip angle and tire cornering stiffness with multiple missing data,”
+IEEE/ASME Trans. Mechatronics, vol. 29, no. 6, pp. 1–14, Dec. 2024.
+[31] W. Zhao, Z. Luan, and C. Wang, “Parametric optimization of novel
+electric–hydraulic hybrid steering system based on a shuffled particle
+swarm optimization algorithm,” J. Cleaner Prod., vol. 186, pp. 865–876,
+Jun. 2018.
+[32] Z. Nie, J. Gao, and K. Zhang, “Integrated control strategy for articulated
+heavy vehicles based on a linear model with real-time parameters,” Int.
+J. Heavy Vehicle Syst., vol. 26, nos. 3–4, pp. 432–462, 2019.
+[33] C. Yuan et al., “Artemisinin optimization based on malaria therapy:
+Algorithm and applications to medical image segmentation,” Displays,
+vol. 84, Sep. 2024, Art. no. 102740.
+[34] L. De Novellis, A. Sorniotti, and P. Gruber, “Wheel torque distribution
+criteria for electric vehicles with torque-vectoring differentials,” IEEE
+Trans. Veh. Technol., vol. 63, no. 4, pp. 1593–1602, May 2014.
+
+Yang Tian received the Ph.D. degree from the
+University of Technology Sydney, Sydney, NSW,
+Australia, in 2021.
+He is currently a Lecturer at the School of
+Mechanical Engineering, Yanshan University, Qinhuangdao, China. His current research focuses
+on vehicle dynamics and control and connected/automated vehicles.
+
+12299
+
+He Ma received the B.Eng. degree from North China
+University of Science and Technology, Tangshan,
+Hebei, China, in 2022. He is currently pursuing the
+M.Sc. degree at the School of Mechanical Engineering, Yanshan University, Qinhuangdao, China.
+His research interests encompass the lateral stability of autonomous vehicles and path tracking.
+
+Yahui Zhang (Member, IEEE) received the Ph.D.
+degree in mechanical engineering from Sophia University, Tokyo, Japan, in 2017.
+Since 2017, he has been a Post-Doctoral Research
+Associate at Sophia University. He is currently
+working as an Associate Professor with the School
+of Mechanical Engineering, Yanshan University,
+Qinhuangdao, China. His current research interests
+include decision-making, motion control of intelligent and connected vehicles, and optimal control of
+electrified powertrain systems.
+
+Guilin Wen received the M.S. and Ph.D. degrees
+in mechanics from Southwest Jiaotong University,
+Chengdu, China, in 1998 and 2001, respectively.
+He is currently a Full Professor with the School
+of Mechanical Engineering, Yanshan University,
+Qinhuangdao, China. His research interests include
+nonlinear dynamics and control, structure design and
+optimization, and vibration control.
+Dr. Wen is currently is a member of the Road
+Vehicle Professional Committee of China Intelligent
+Transportation Systems Association. He has served
+as the subeditor of Journal of Franklin Institute, and the Deputy Chief
+Designer of Chang’e 3 Mobile Subsystem Model.
+
+Xiangyu Wang received the B.S. and Ph.D. degrees
+in automotive engineering from Tsinghua University,
+Beijing, China, in 2015 and 2020, respectively.
+He is currently an Assistant Professor at the
+School of Vehicle and Mobility, Tsinghua University. His research interests include dynamics,
+decision-making, path planning, and motion control
+of intelligent and connected vehicles.
+
+Liang Li (Senior Member, IEEE) received the
+Ph.D. degree in mechanical engineering from the
+Department of Automotive Engineering, Tsinghua
+University, Beijing, China, in 2008.
+Since 2017, he has been a Tenured Professor at
+Tsinghua University. His research interests mainly
+include vehicle dynamics and control.
+Prof. Li received the Second prize of the National
+Science and Technology Progress Award in 2019 and
+the National Science Fund for Excellent Young
+Scholars of the People’s Republic of China in 2014.
+He is currently an Associate Editor of IET Intelligent Transport Systems and
+PLOS One.
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 03:04:00 UTC from IEEE Xplore. Restrictions apply.
+
+

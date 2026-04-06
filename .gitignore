@@ -1,0 +1,32 @@
+# ROS2 build artifacts
+build/
+install/
+log/
+
+# Environment files
+.env
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+env/
+venv/
+ENV/
+
+# Repository management
+# (Exclude sub-repos if you use vcs or git submodules separately)
+# tracter_ws/src/tracter_control/
+
+# IDEs
+.vscode/
+.idea/
+.DS_Store
+
+# Temporary files
+*.swp
+*.bak
+*~

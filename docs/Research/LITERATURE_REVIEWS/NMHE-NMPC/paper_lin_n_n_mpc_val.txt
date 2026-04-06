@@ -1,0 +1,598 @@
+                                          IEEE/ASME TRANSACTIONS ON MECHATRONICS, VOL. 23, NO. 5, OCTOBER 2018                                                2023
+
+
+
+
+                     Experimental Validation of Linear and
+                       Nonlinear MPC on an Articulated
+                         Unmanned Ground Vehicle
+           Erkan Kayacan             , Member, IEEE, Wouter Saeys, Herman Ramon, Calin Belta                                        , Fellow, IEEE,
+                                             and Joshua M. Peschel , Member, IEEE
+
+
+      Abstract—This paper focuses on the trajectory tracking                         outstandingly. It is expected that the population of the world will
+   control problem for an articulated unmanned ground                                reach 9.1 billion by 2050. Therefore, agricultural production
+   vehicle. We propose and compare two approaches in terms                           will have to be double in order to feed a larger population and
+   of performance and computational complexity. The first
+   uses a nonlinear mathematical model derived from first                            provide increasing demands for bioenergy [1]. To meet the
+   principles and combines a nonlinear model predictive con-                         demand for agricultural products, one possible solution is the
+   troller (NMPC) with a nonlinear moving horizon estimator                          automation of agricultural machines to get higher efficiencies
+   (NMHE) to produce a control strategy. The second is based                         and better precisions. Moreover, multitasking operations are
+   on an input-state linearization (ISL) of the original model
+                                                                                     needed in agricultural applications. For instance, a human op-
+   followed by linear model predictive control (LMPC). A fast
+   real-time iteration scheme is proposed, implemented for                           erator simultaneously has to drive the agricultural vehicle with
+   the NMHE-NMPC framework and benchmarked against                                   high precision, and adjust the position of a trailer and/or further
+   the ISL-LMPC framework, which is a traditional and cheap                          parameters of several agricultural apparatus during tillage and
+   method. The experimental results for a time-based tra-                            planting. In this instance, a sophisticated and versatile control
+   jectory show that the NMHE-NMPC framework with the
+                                                                                     algorithm for the navigation of unmanned agricultural ground
+   proposed real-time iteration scheme gives better trajectory
+   tracking performance than the ISL-LMPC framework and                              vehicles is a necessity to lead to an additional increment in the
+   the required computation time is feasible for real-time                           performance of the human operator.
+   applications. Moreover, the ISL-LMPC produces results of                             The current implementations for automatic guidance of au-
+   a quality comparable to the NMHE-NMPC framework at a                              tonomous ground vehicles are based on either local positioning
+   significantly reduced computational cost.
+                                                                                     systems (vision or laser-based sensors) or global positioning
+     Index Terms—Articulated unmanned vehicle, auto-                                 systems (GPSs). Local positioning systems have been used in
+   nomous system, input-state linearization, model predictive                        autonomous applications since the 1970s [2], [3]. It has been
+   control (MPC).                                                                    reported that their main disadvantage is the sensitivity to light
+                               I. INTRODUCTION                                       conditions in outdoor environments, although they are cheap
+                                                                                     to implement [4]. Recent developments in satellite technolo-
+          HE size of arable farmland on the earth has been
+   T      decreasing while human population has been increasing
+                                                                                     gies have led to an increase in the use of the latter, which has
+                                                                                     gradually replaced the former prevalent in the 1990s [5], [6].
+                                                                                     Real-time kinematic (RTK)-GPS yielding centimeter precision
+     Manuscript received July 8, 2016; revised January 17, 2017, March 26,
+   2017, June 22, 2017, and August 30, 2017; accepted July 4, 2018. Date
+                                                                                     [7] has enabled intensive research on agricultural vehicles.
+   of publication July 11, 2018; date of current version October 15, 2018.           Automated agricultural vehicles with GPSs have many ad-
+   Recommended by Technical Editor L. Wu. This work was supported                    vantages, such as extricating the driver from tiresome tasks
+   by the Institute for the Promotion of Innovation through Science and
+   Technology in Flanders (IWT-Vlaanderen) under Project IWT-SBO 80032
+                                                                                     of accurately steering the vehicle, increasing trajectory track-
+   (LeCoPro). (Corresponding author: Erkan Kayacan.)                                 ing accuracy, and being able to operate at night or in foggy
+     E. Kayacan is with the Senseable City Laboratory and the Computer               weather.
+   Science and Artificial Intelligence Laboratory, Massachusetts Institute of
+   Technology, Cambridge, MA 02139 USA (e-mail: erkank@mit.edu).
+                                                                                        Various control techniques have been used to solve the tra-
+     W. Saeys and H. Ramon are with the Division of Mechatronics, Bio-               jectory tracking problem for tractors with and without trailers
+   statistics and Sensors, Department of Biosystems, University of Leuven,           [8], [9]. An adaptive controller was employed for a tractor as-
+   Leuven 3001, Belgium (e-mail: wouter.saeys@kuleuven.be; herman.
+   ramon@kuleuven.be).
+                                                                                     sembled with dissimilar trailers in order to track straight lines
+     C. Belta is with the Division of Systems Engineering, Boston University,        [10]. Moreover, a linear optimal control method was proposed
+   Boston, MA 02215 USA (e-mail: cbelta@bu.edu).                                     for a tractor–trailer system [11]. These controllers have been
+     J. M. Peschel is with the Department of Agricultural and Biosys-
+   tems Engineering, Iowa State University, Ames, IA 50011 USA (e-mail:
+                                                                                     contingent on linearized dynamic and kinematic models, which
+   peschel@iastate.edu).                                                             are only valid for small yaw deviations around a fixed value
+     Color versions of one or more of the figures in this paper are available        and small steering angles, such that they are restricted to linear
+   online at http://ieeexplore.ieee.org.
+     Digital Object Identifier 10.1109/TMECH.2018.2854877
+                                                                                     trajectories.
+
+
+                       1083-4435 © 2018 IEEE. Personal use is permitted, but republication/redistribution requires IEEE permission.
+                            See http://www.ieee.org/publications standards/publications/rights/index.html for more information.
+
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 04:38:33 UTC from IEEE Xplore. Restrictions apply.
+    2024                                                                        IEEE/ASME TRANSACTIONS ON MECHATRONICS, VOL. 23, NO. 5, OCTOBER 2018
+
+
+
+       Model predictive control (MPC) is a popular technique in the
+    process industry for multi-input-multioutput applications [12],
+    [13]. Forasmuch as the tractor–trailer system can be described
+    by variable set points for following curvilinear trajectories, this
+    involves a merger between MPC structure and a nonlinear model
+    known as nonlinear MPC (NMPC). The NMPC was designed
+    for a tractor–trailer system along with a curvilinear trajectory
+    in [14] while an extended Kalman filter (EKF) was designed to
+    estimate the yaw angles of the tractor and trailer. In [15], the
+    states of an agricultural vehicle including slips parameters were
+    estimated with nonlinear moving horizon estimation (NMHE)
+    and forwarded to an NMPC. This concept has been extended                          Fig. 1. On the top left side: the electromechanical valve, on the bottom
+    for the tracking of a space-based trajectory by a tractor–trailer                 left side: the electrohydraulic valve, on the top right side: the potentiome-
+    system in a centralized control structure and accomplished re-                    ter, on the bottom right side: the articulated unmanned ground vehicle.
+    sults have been reported in [16]. Moreover, decentralized and
+    distributed NMPC approaches have been recommended to re-
+    duce the computational burden with minimal loss of tracking
+    performance [17], [18].
+       Although trajectory tracking performance obtained in the
+    aforementioned studies is quite good, traditional NMPC imple-
+    mentations are computationally expensive. Therefore, the aim of
+    this study was to design fast frameworks for trajectory tracking
+    problem and compare their performance with regard to compu-
+    tational burden and tracking error. First, a fast NMHE-NMPC
+    framework is designed for tracking a time-based trajectory. In
+    the NMHE-NMPC framework, the NMHE learns traction pa-                             Fig. 2. Schematic representation of tricycle model for an unmanned
+    rameters using onboard sensors online, and the NMPC enables                       tractor–trailer system.
+    high accurate trajectory tracking. Thus, we provide robust track-
+    ing performance when uncertainty is high as uncertainty is re-                    (OSPC50-LS/EH-20, Dan-foss, Nordborg, Denmark) for the
+    duced through learning, whereas traditional NMPC approaches                       steering mechanisms and an electromechanical valve (LA12,
+    do not typically account for model uncertainty. Moreover, a                       Linak, Nordborg, Denmark) for the hydrostat system. In addi-
+    real-time iteration scheme is proposed to solve NMHE and                          tion, a potentiometer (533-540- J00A3X0-0, Mobil Elektronik,
+    NMPC problems efficiently. Second, it is shown that the nonlin-                   Langenbeutingen, Germany), an inductive sensor and two en-
+    ear model is input-state linearizable and an LMPC is proposed                     coders mounted on the rear wheels are used to measure, respec-
+    for the linear transformation of the system. Both the frameworks                  tively, the angle of the front wheels of the tractor, the steering
+    are then implemented on a real-time system and benchmarked                        angle of the trailer, and the speed of the system. A real-time
+    against each other.                                                               operating system equipped with a 2.26 GHz Intel Core2 Quad
+       This paper is organized as follows: The system is described                    Q9100 quad-core processor is used to implement control algo-
+    in Section II. Formulations and implementations of NMHE and                       rithms that have been executed and updated at a rate of 200 ms
+    NMPC are given in Section III. The input-state linearization ap-                  in LabVIEW.
+    proach and LMPC control structure are explained in Section IV.                       The adaptive kinematic model for the unmanned tractor–
+    Real-time experimental results are given in Section V. Finally,                   trailer system is an extended version of the one presented in
+    the study is concluded in Section VI.                                             [11] and [19]. In order to make the system model adaptive, three
+                                                                                      traction parameters (μ, κ, η) are inserted. The tractor and trailer
+                                                                                      rigid bodies are mechanically coupled by the drawbar so that
+               II. UNMANNED TRACTOR–TRAILER SYSTEM
+                                                                                      there exist two revolute joints (RJs) that interconnect the draw-
+       The goal of this paper is to obtain a precise trajectory track-                bar to the tractor at RJ1 and the drawbar to the trailer at RJ2 , as
+    ing performance to ensure constant distances between rows to                      illustrated in Fig. 2 . The centers of gravity of the tractor and
+    prevent from crop damage while variable soil conditions are                       trailer are, respectively, represented by CGt and CGi . The equa-
+    subjected to an uneven, rough, and wet grass field. The small                     tions for the system, which are a combination of the kinematic
+    tractor–trailer system, the actuators, and the sensors are shown                  model in [20] and the speed model in [21], are written as
+    in Fig. 1.
+       In order to measure the global position of the system, a                                                  ẋt = μv cos (ψ t )
+    RTK-GPS (AsteRx2eH, Septentrio Satellite Navigation NV,                                                      ẏ t = μv sin (ψ t )
+    Belgium) with the aid of Flepos network is used with two an-
+    tennas installed on the tractor and the trailer. There are three                                                      μv tan (κδ t )
+                                                                                                                 ψ̇ t =
+    actuators to control the system: two electrohydraulic valves                                                               Lt
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 04:38:33 UTC from IEEE Xplore. Restrictions apply.
+   KAYACAN et al.: EXPERIMENTAL VALIDATION OF LINEAR AND NONLINEAR MPC ON AN ARTICULATED UNMANNED GROUND VEHICLE                                              2025
+
+
+
+
+       ẋi = μv cos (ψ i )                                                           are estimated online so that the parameters in (5) can vary over
+                                                                                     time.
+       ẏ i = μv sin (ψ i )
+              μv               Ld                                                                    III. NMHE-NMPC FRAMEWORK
+       ψ̇ i = i sin (ηδ i + β) + t tan (κδ t ) cos (ηδ i + β)
+              L                 L                                                       NMHE-NMPC framework was developed and implemented
+                v     K                                                              for the space-based trajectory approach in [13], [16], and [17]. In
+         v̇ = − + HP                                            (1)                  this section, we will develop this framework for the time-based
+                τ     τ
+                                                                                     trajectory approach.
+   where xt (m), y t (m), xi (m), y i (m), ψ t (rad) and ψ i (rad)
+   denote, respectively, the positions and yaw angles of the trac-
+   tor and trailer while v (m/s) denotes circumferential speed of                    A. Nonlinear Moving Horizon Estimation
+   the wheels. The steering angles are, respectively, denoted by δ t                    Although values of all system states must be gathered for
+   (rad) and δ i (rad) for the tractor and trailer while the angle at                NMPC, it is impossible to measure all of them in practice. For
+   RJ1 and the hydrostat position are, respectively, denoted by β                    this reason, it is a requirement to estimate unmeasured states
+   (rad) and HP (%). Moreover, μ, κ, and η denote the traction                       or unknown model parameters online. The traditional method
+   coefficients for the longitudinal and side slips. It should be noted              as a state estimator is the EKF. However, the major drawback
+   that traction parameters can merely acquire values between zero                   of the EKF is that it cannot take the bounds on the states into
+   and one on asphalt roads and soil surfaces. If the traction pa-                   account. To accomplish this restraint of the EKF in this paper,
+   rameter for the longitudinal slip is equal to one, all the rotary                 NMHE has been employed inasmuch as it takes the state and
+   motion of the wheels is transformed into the linear motion of                     parameter estimation regarding bounds into account within the
+   the vehicle. Moreover, a proportion of zero expresses that tires                  same problem [15], [22], [23].
+   are rotating and the ground wheel speed is equal to zero so that                     In this paper, we consider an NMHE formulation in the fol-
+   the system is not completely controllable. In other words, the                    lowing form at each sampling time t:
+   definition of the traction parameter μ for longitudinal slip al-                                                                         
+   lows to convert the circumferential wheel speed ν into a ground                                               x̂(tk − th ) − x(tk − th ) 2
+                                                                                                      min                                   
+   wheel speed μν. The definition of the two traction parameters                                   x(.),p,u (.)            p̂ − p           
+                                                                                                                                              P
+   for side slips maintains a manner to determine effective steering                                                  tk
+   angles, i.e., κδ t and ηδ i . It is assumed that each fraction for                                           +               ym − y(t)2H dt
+   each steering angle ensures the actual tractor and trailer turn-                                                  t k −t h
+   ing motions. Furthermore, the difference between yaw angles is                                                         
+                                                                                               s.t. ẋ(t) = f x(t), u(t), p
+   equal to the summation of the angle at RJ1 and the steering angle                                                      
+   of the trailer, i.e., φi − φt = β + δ i . Since there are constraints                            y(t) = h x(t), u(t), p
+   on β and δ i defined, respectively, in (7) and (10), it is to be
+                                                                                                    −20◦ ≤ β ≤ 20◦
+   noted that the yaw angle difference cannot become larger than
+   β + δ i = 45◦ .                                                                                        0 ≤ μ, κ, η ≤ 1 ∀t ∈ [tk − th , tk ]                 (7)
+      The equations in (1) are formulated in the following form:
+                                                                                 where ym and y denote, respectively, the measured output and
+                 ẋ = f x, u, p and y = h x, u, p                    (2)             the output function of the system model. The deviations in the
+                                                                                     estimates for the states and parameters before the estimation
+   with
+                                                                                     horizon x̂(tk − th ) and p̂(tk − th ) are minimized by a sym-
+                                       T
+            x = xt y t ψ t xi y i ψ i v                                      (3)     metric positive semidefinite weighting matrix P , while the de-
+                          T                                                        viations of the measured and system outputs in the estimation
+            u = δ t δ i HP                                                   (4)     horizon are minimized by a symmetric positive semidefinite
+                           T                                                       weighting matrix H [24]. The first part of the cost function in
+            p= μ κ η β                                                       (5)     (7) is named the arrival cost and must be bounded as a require-
+                                            T                                      ment. If not, it may go to infinity. Therefore, the impact of the
+            y = xt y t xi y i v δ t δ i HP β                                 (6)
+                                                                                     old measurements on P is reduced by a weighting matrix Dupdate
+   where x, u, p, and y denote, respectively, the vectors of state, in-              in (8) [23].
+   put, varying parameter, and output of the system. The measured,                      The NMHE method can estimate the immeasurable states and
+   fixed physical parameters are the distance between the front and                  parameters of the system model simultaneously. These param-
+   rear wheels of the tractor Lt = 1.4 m, the distance between the                   eters have been assumed to be time-invariant and not subject
+   RJ2 and the rear wheel of the trailer Li = 1.3 m, and the distance                to process noise over the estimation horizon. However, it is as-
+   between the rear wheel of the tractor and RJ2 Ld = 1.1 m. The                     sumed that the parameters are time-varying Gaussian random
+   identified, fixed parameters are [21]: the time-constant τ = 2.05                 variables in the arrival cost. Therefore, additional weighting fac-
+   and the gain K = 0.016 for the wheel speed model while the                        tors must be added as the variance of the parameters noise and
+   engine speed is at 2500 r/min. The angle between the tractor                      the parameters appears only in the arrival cost. The extended
+   and drawbar β is measured and the traction parameters μ, κ, η                     weighting matrix Dupdate ∈ R(n x +n p )×(n x +n p ) can be written
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 04:38:33 UTC from IEEE Xplore. Restrictions apply.
+    2026                                                                                 IEEE/ASME TRANSACTIONS ON MECHATRONICS, VOL. 23, NO. 5, OCTOBER 2018
+
+
+
+    as follows:                                                                              positive definite weighting matrices, xr denotes, respectively,
+                                             D   nx
+                                                          0                                  the references for the states, x and Δu denote, respectively, the
+                             Dupdate =                                               (8)     states and the change of the inputs, tk denotes the current time,
+                                               0        Dn p                                 th denotes the prediction horizon. x̂(tk ) denotes the estimated
+                                                                                             state vector by the NMHE. The first sample of u(t), u(t, x(t)) =
+    where Dn x ∈ Rn x ×n x and Dn p ∈ Rn p ×n p represent the
+                                                                                             u∗ (tk ), is applied to the system and the NMPC problem is
+    weighting matrix for the state noise covariance and the weight-
+                                                                                             solved again over a moving horizon for the subsequent sampling
+    ing matrix for the parameter pseudovariance. The weighting
+                                                                                             time [13].
+    matrix Dupdate is chosen based on the objective. Low gain in
+                                                                                                The references for the state are written as
+    the process noise results in better estimation accuracy; however,
+    it causes time-lag between true and estimated values. There-                                            xr = (xtr , yrt , ψrt , xir , yri , ψri , vr )T .   (11)
+    fore, the weighting coefficients for the measured states and
+                                                                                                The weighting matrices Q, R, and S have been written as
+    parameters (e.g., xt , y t , xi , y i , v, and β) are selected large
+    while the weighting coefficients for the immeasurable states                                       Q = diag(2, 2, 0, 4, 4, 0, 0),            S = 10 × Q
+    and parameters (e.g., ψ t , ψ i , μ, κ, and η) are selected small
+                                                                                                       R = diag(7, 7, 7).                                       (12)
+    in this paper. Thus, the input to the NMHE algorithm becomes
+    the output of the system in (6) while the output of NMHE                                    The weighting matrix R is selected larger than the weight-
+    becomes the full states in (3) and full-varying parameters in                            ing matrix Q so as to obtain well damped closed-loop system
+    (5). Moreover, standard deviations of the measurements have                              response. The other justification is that the system dynamics is
+    been set to σx t = σy t = σx i = σy i = 0.03 m, σβ = 0.0175 rad,                         slow so that it is not able to give a rapid reaction. Inasmuch as
+    σv = 0.1 m/s, σδ t = 0.0175 rad, σδ i = 0.0175 rad, and σHP = 3                          the last state error value in the prediction horizon is so crucial
+    based on the information obtained from the real- time experi-                            for the stability issues, the weighting matrix S is adjusted to ten
+    ments. The following weighting matrices H and Dupdate have                               times larger than the weighting matrix Q.
+    been used in NMHE:                                                                          If the prediction and control horizons are selected large, the
+             H = diag(σx2 t , σy2 t , σx2 i , σy2 i , σv2 , σδ2t , σδ2i , σH      2 −1       computation burden for the NMPC will increase unreasonably
+                                                                             P , σβ )
+                                                                           2
+                                                                                             so that solving the optimization problem will be infeasible.
+       Dupdate = diag(xt , y t , ψ t , xi , y i , ψ i , μ, κ, η, β, v)                       Moreover, if the prediction and control horizons are selected
+                                                                                             too small, the stabilization of the system may not be achieved.
+                 = diag(10.0, 10.0, 0.1, 10.0, 10.0, 0.1,
+                                                                                             As reported in [26], the prediction and control horizons of the
+                        0.25, 0.25, 0.25, 1, 1).                                     (9)     NMPC must be large enough for a stable performance taking the
+                                                                                             velocity of the vehicle into consideration. Since the velocity of
+    The estimation horizon th has been set to 3 s.
+                                                                                             the tractor–trailer system is quite low, the prediction and control
+                                                                                             horizons do not have to be very large in this study. Therefore,
+    B. Nonlinear Model Predictive Control
+                                                                                             the prediction and control horizons th have been set to 3 s.
+       A nonlinear model represented in (2) f (·, ·, ·) : Rn x ×
+    R −→ Rn x is the continuously state update function and
+      nu
+                                                                                             C. Implementation
+    f (0, 0, p) = 0 ∀t in which x ∈ Rn x and u ∈ Rn u are the
+                                                                                                The optimization problems in NMHE (7) and NMPC (10) are
+    state and input vectors. The states and inputs have to fulfill
+                                                                                             very similar so that using the same solution method for both
+    x ∈ X, u ∈ U where X ⊆ Rn x is closed, U ⊆ Rn u is com-
+                                                                                             of them makes sense [15]. Inasmuch as they are nonlinear and
+    pact, and each set contains the origin in its interior point.
+                                                                                             nonconvex optimization problems, the computational burden for
+       In this study, we consider an NMPC formulation at each
+                                                                                             solving these problems is quite large, and depends on the order
+    sampling time t in the following form:
+                                                                                             of the system, the nonlinearity of the system, the horizon length,
+                         t k +t h                                                          and used nonlinear optimization solver.
+               min                  xr (t) − x(t)2Q + Δu(t)2R dt
+              x(.),u (.)      tk
+                                                                                                In this study, the multiple shooting method has been con-
+                                                                                             solidated with a generalized Gauss–Newton method [27]. The
+                            + xr (tk + th ) − x(tk + th )2S                                significant benefit is that second derivatives that are arduous
+     s.t. x(tk ) = x̂(tk )                                                                   computing are not necessary. However, the drawback is that it
+                                                                                           is troublesome to foreknow the required number of iterations
+           ẋ(t) = f x(t), u(t), p                                                           to attain a desired accuracy [28]. A simple solution that limits
+           −35◦ ≤ δ t (t) ≤ 35◦                                                              the number of iterations to 1 was proposed in [29]. Moreover,
+                                                                                             Gauss–Newton iteration is divided into two parts: preparation
+           −25◦ ≤ δ i (t) ≤ 25◦                                                              and feedback parts. The preparation part is executed prior to
+                                                                                             the feedback part, and the feedback part is executed after mea-
+               0% ≤ HP(t) ≤ 100%                      ∀t ∈ [tk , tk + th ]         (10)
+                                                                                             surements for NMHE and estimates for NMPC are available. In
+    where the first and last parts are called the stage cost and the                         the preparation part, the system dynamics are integrated with
+    terminal penalty enforced the stability of NMPC in [25] in which                         the previous solution, and objectives, constraints, and corre-
+    Q ∈ Rn x ×n x , R ∈ Rn u ×n u , and S ∈ Rn x ×n x are symmetric                          sponding sensitives are evaluated. In the feedback part, a single
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 04:38:33 UTC from IEEE Xplore. Restrictions apply.
+   KAYACAN et al.: EXPERIMENTAL VALIDATION OF LINEAR AND NONLINEAR MPC ON AN ARTICULATED UNMANNED GROUND VEHICLE                                                2027
+
+
+
+   quadratic programming is solved with the current measurements                     where          ż1 = ż3 , ż2 = ż4 , ż3 = −z3 /τ + uz 1 , ż4 = −z4 /τ +
+   for the NMHE and the current estimates for the NMPC. Thus,                        uz 2 , ż5 = ż7 , ż6 = ż8 , ż7 = −z7 /τ + uz 3 , ż8 = −z8 /τ + uz 4 ,
+                                                                                                                    T
+   the new estimates for the NMHE and a new control signal for                       and yz = z1 z2 z5 z6
+   the NMPC are obtained. Compared to the classical method,                             As can be seen from the formulation above, there are four
+   this method minimizes feedback delay and produces similar re-                     inputs for the virtual linear system even though the number
+   sults with higher computational efficiency [29]. Furthermore,                     of inputs for the real-time system is equal to 3. This results in
+   the NMPC and NMHE are run in parallel, on separate processor                      two input transformations for the HP. One of these transfor-
+   cores, the NMHE preparation step is triggered at the same time                    mations is based on the position of the tractor while the other
+   as the NMPC feedback step. Therefore, this solution method                        is calculated with respect to the information coming from the
+   reduces the overall required time for the preparation steps of                    trailer. Since the HP is the input for the speed measured by en-
+   the NMHE-NMPC. The ACADO code generation tool has been                            coders mounted on the tractor rear wheels, the transformation
+   used to solve constrained nonlinear optimization problems in the                  obtained from the equations of the tractor is used for the HP
+   NMPC and NMHE [28]. Moreover, qpOASES software pack-                              transformation. Moreover, the steering angle of the trailer is not
+   age, which is an open-source C++ implementation of online                         input-linearizable for the transformation. Therefore, we have to
+   active set strategy, has been used as a QP solver [30].                           rely on the small steering angle assumption so that the term
+                                                                                     cos(δ i + β) is assumed to be equal to 1. Thus, the total input
+                       IV. ISL-LMPC FRAMEWORK                                        transformation can be written as follows:
+   A. Input-State Linearization Transformation                                                                       Lt (−u sin ψ t + u cos ψ t ) 
+                                                                                                                                z1           z2
+                                                                                                 δ t = arctan
+      In the ISL-LMPC framework, an EKF has been used as an                                                                          v2
+   estimator. Since an EKF is not able to deal with the bounds on                                                   Li (−u sin ψ i + u cos ψ i )
+                                                                                                                               z3           z4
+   the states and parameters, we exclude the traction parameters                                 δ i = arcsin
+                                                                                                                                    v2
+   for this framework.
+                                                                                                             Ld                                  
+      The input-state linearization is a useful method to compensate                                       − t (−uz 1 sin ψ t + uz 2 cos ψ t ) − β
+   the nonlinearity of a system. In this section, a nonlinear model                                          L
+                                                                                                           τ                                  v
+   for the tractor–trailer system excluding the traction parameters                             HP =           uz 1 cos ψ t + uz 2 sin ψ t +      .          (18)
+   in (1) is transformed into a virtual linear model by using an                                          K                                    τ
+   input-state linearization method. Once a virtual linear model
+                                                                                     B. Linear Model Predictive Control
+   has been obtained, linear control techniques are used to design
+   a controller for the overall system.                                                 In this study, we considered the following LMPC formulation
+      By taking a nonlinear system in (2) into account in which                      at each sampling time t
+   f (x(t), u(t), p) is input-state linearizable if there exists a dif-                                    t k +t h
+   feomorphism, such that the new state variables z = Tx (x) trans-                        min                        (zr (t) − z(t)2Q +  uz (t)2R )dt
+                                                                                         x(.),u (.)
+   form the nonlinear system in (2) into the following linear time-                                      tk
+   invariant system [31]:                                                                             + zr (tk + th ) − z(tk + th )2S
+                                ż = Az + Buz                               (13)     s.t.ż(t) = Az(t) + Buz (t)
+   where the pair (A, B) is controllable. The transformation between                      −2 ≤ z3 (t), z4 (t), z7 (t), z8 (t) ≤ 2        ∀t ∈ [tk , tk + th ]
+   the real and virtual control inputs resulting in the compensation
+   of the system nonlinearities and a controllable linear system can                      −2 ≤ z3 (tk +th ), z4 (tk +th ), z7 (tk + th ), z8 (tk + th ) ≤ 2
+   be written as follows:                                                                                                                               (19)
+
+                             u = φ(x) + Tu (x)uz                            (14)     where zr is the reference for the system states and uz is the
+                                                                                     change of the input. The maximum speed of the system is 2 m/s;
+   where Tu (x) is assumed to be nonsingular [31].                                   therefore, the constraints on z3 , z4 , z7 , and z8 are defined in the
+      The new states, the positions, and velocities of the tractor and               formulation of the LMPC.
+   trailer are defined as follows:                                                      The prediction horizon th has been set to 3 s. As motivated in
+                                                                 T
+        z = xt y t v cos ψ t v sin ψ t xi y i v cos ψ i v sin ψ i                    Section III-B, the prediction horizon must not be very large due
+                                                    T                              to the fact that the velocity of the system is too low. Moreover, the
+          = z1 z2 z3 z4 z5 z6 z7 z8 .                                (15)            weighting matrices Q, R, and S have been defined as follows:
+      By combing the time derivative of (15) with the equations                             Q = diag(1, 1, 0, 0, 0.01, 0.01, 0, 0),          S = 10 × Q
+   for the yaw angles and longitudinal speed model in (1), the
+   state-space model can be written as follows:                                             R = diag(1, 1, 0.01, 0.01)                                          (20)
+
+                                 ż = Az + Buz                              (16)       As can be seen from (19), the LMPC formulation is a
+                                                                                     convex optimization problem while the formulation for NMPC
+                                yz = Cz                                     (17)     in (10) is the constrained nonlinear optimization problem
+
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 04:38:33 UTC from IEEE Xplore. Restrictions apply.
+    2028                                                                        IEEE/ASME TRANSACTIONS ON MECHATRONICS, VOL. 23, NO. 5, OCTOBER 2018
+
+
+
+                                                                                      respectively, 16.65 and 10.32 cm for straight lines while 33.09
+                                                                                      and 25.01 cm for curvilinear lines. It is pointed out that the tra-
+                                                                                      jectory tracking error for straight lines has been less than the one
+                                                                                      for the curvilinear lines as shown in Fig. 4(c). The same frame-
+                                                                                      work was implemented for the space-based trajectory method in
+                                                                                      [16] while the time-based one has been used in this paper. The
+                                                                                      trajectory error to the space-based trajectory was less than the
+                                                                                      one to the time-based trajectory for straight lines, while it was
+    Fig. 3. Control scheme for the LMPC by using the input-state
+    linearization.
+                                                                                      more than the one to the time-based trajectory for curvilinear
+                                                                                      lines. Therefore, it can be concluded that the preferred approach
+                                                                                      depends on the shape of the trajectory. Moreover, an NMHE-
+    that is nonconvex. Therefore, it should be noted that the
+                                                                                      NMPC framework for the time-based approach was designed
+    required computational time for the LMPC is significantly
+                                                                                      for agricultural vehicles in [15]. It was reported that Euclidean
+    less than the one for NMPC. The LMPC was implemented by
+                                                                                      error was around 1 m. This shows the superiority of our
+    using the MPC toolbox in LabVIEW, which is a traditional
+                                                                                      frameworks.
+    method.
+                                                                                         By using the ISL-LMPC framework, the mean values of Eu-
+       The block diagram of the control scheme for the IST-LMPC
+                                                                                      clidean errors of the tractor and the trailer have been obtained, re-
+    framework is shown in Fig. 3. As can be seen in Fig. 3, the
+                                                                                      spectively, 19.26 and 15.27 cm for the straight lines while 37.01
+    generated inputs for the linear system are fed to the input lin-
+                                                                                      and 33.33 cm for the curvilinear lines as shown in Fig. 4(d).
+    earization transformation to find proper inputs for the real-time
+                                                                                      As reported in [33], the linear control techniques are invalid for
+    system. Similarly, the outputs of the real-time system are fed to
+                                                                                      curvilinear trajectories. However, thanks to the ISL transforma-
+    the state linearization transformation to calculate the states of
+                                                                                      tion, the ISL-LMPC framework is capable of staying on-track.
+    the linear system.
+                                                                                      When these two frameworks have been compared, it is seen
+                                                                                      that the ISL-LMPC framework has performed worse than the
+                         V. EXPERIMENTAL RESULTS                                      NMHE-NMPC framework for both the tracking of the straight
+       For an autonomous ground vehicle application, there are two                    and the curvilinear lines. In the ISL-LMPC framework, traction
+    types of reference definitions: one is a time-based trajectory and                parameters are excluded from the model and the linearization
+    the second is a space-based trajectory. Whereas the longitudi-                    of the system is executed at every time-step. Aforementioned
+    nal speed of the ground vehicle is constant in the latter, it is                  factors are the reasons for the degraded performance.
+    controlled in the former [20], [32]. The space-based trajectory                      The outputs of the controllers, which are the steering angles
+    approach is convenient in case of one vehicle in agricultural op-                 references for the tractor and trailer (δ t , δ i ), and the HP refer-
+    erations. If several vehicles are operating cooperatively, some of                ence, are illustrated in Fig. 4(e). As seen in these figures, control
+    them need to be in a specific position in a specific time instant.                signals stay within the bounds and the control signals generated
+    For example, if a combine harvester and multiple tractor–trailer                  by NMPC are more smooth than the ones generated by LMPC.
+    combinations are operating together, the tractor–trailer systems                  The reason for this difference is the high nonlinearity of the input
+    have to align with and follow the combine harvester that may                      transformation for the ISL-LMPC framework. Moreover, esti-
+    vary its speed to maximally use its capacity. Therefore, the                      mated traction parameters by the NMHE are shown in Fig. 4(f).
+    tractor–trailer systems should change their speed to get in line                  These estimates stay within the bounds.
+    with and keep track of the combine harvester. This cannot be ob-                     The execution times for NMHE, NMPC, and LMPC are sum-
+    tained with a space-based trajectory but requires the tracking of                 marized in Table I. Preparation time denotes the required com-
+    a time-based trajectory approach. Another example is the track-                   putation time to evaluate objective, constraints, and condensing
+    ing of path with variable speed to adapt the machine to variable                  procedure till all measurements are received, while feedback
+    crop density. Therefore, a time-based trajectory consisting of an                 time is the required computation time to compute linear term
+    eight-shaped trajectory has been used as a reference signal. The                  and constraints bounds in condensed QP, and to send generated
+    eight-shaped trajectory consists of two smooth curvilinear lines                  signals to actuators. As seen from this table, the average compu-
+    and two straight lines.                                                           tation times for NMHE and NMPC were, respectively, equal to
+       Throughout the experiments, the articulated unmanned                           6.8575 and 5.3904 ms. Thus, the overall computation time for
+    ground vehicle has faced with uneven terrain and the sampling                     the NMHE-NMPC framework was equal to 12.2479 ms. While
+    time of the frameworks is 0.2 s in real-time. The autonomous                      the maximal computation time for the NMPC has been still rea-
+    tractor–trailer system has succeeded in staying on-track for the                  sonable for real-time, the mean value of the computation time
+    NMHE-NMPC and ISL-LMPC frameworks as shown, respec-                               for LMPC has been eight times lower with 1.2330 ms. More-
+    tively, in Fig. 4(a) and (b).                                                     over, it is required to monitor Karush–Kuhn–Tucker tolerances
+       Euclidean errors for the tractor and trailer are, respectively,                to check the optimality of optimization problems for the NMHE
+    shown for the nonlinear and linear controllers in Fig. 4(c) and                   and NMPC. These mean values of the KKT tolerances were,
+    (d). By using the NMHE-NMPC framework, the mean values                            respectively, 7.8641 10−4 and 4.264 10−3 . They are low enough
+    of Euclidean errors of the tractor and trailer are obtained,                      to claim the optimality.
+
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 04:38:33 UTC from IEEE Xplore. Restrictions apply.
+   KAYACAN et al.: EXPERIMENTAL VALIDATION OF LINEAR AND NONLINEAR MPC ON AN ARTICULATED UNMANNED GROUND VEHICLE                                                 2029
+
+
+
+
+   Fig. 4. Experimental results. (a) Reference and actual trajectories for NMPC. (b) Reference and actual trajectories for LMPC. (c) Euclidean error
+   to the reference trajectory for NMPC. (d) Euclidean error to the reference trajectory for LMPC. (e) Control signals. (f) Traction parameters.
+
+
+
+                                 TABLE I                                                                               REFERENCES
+             EXECUTION TIMES OF THE NMHE, NMPC, AND LMPC
+                                                                                      [1] “How to feed the world in 2050,” Food Agriculture Org. United Nations,
+                                                                                          Rome, Italy, Tech. Rep., Oct. 2009.
+                                                                                      [2] A. Julian, “Design and performance of a steering control system for agri-
+                                                                                          cultural tractors,” J. Agricultural Eng. Res., vol. 16, no. 3, pp. 324–336,
+                                                                                          1971.
+                                                                                      [3] J. Reid and S. Searcy, “Vision-based guidance of an agriculture tractor,”
+                                                                                          IEEE Control Syst. Mag., vol. 7, no. 2, pp. 39–43, Apr. 1987.
+                                                                                      [4] S. A. Hiremath, G. W. Van Der Heijden, F. K. Van Evert, A. Stein, and
+                                                                                          C. J. Ter Braak, “Laser range finder model for autonomous navigation
+                               VI. CONCLUSION                                             of a robot in a maize field using a particle filter,” Comput. Electron.
+                                                                                          Agriculture, vol. 100, pp. 41–50, 2014.
+      The NMHE-NMPC and ISL-LMPC frameworks have been                                 [5] P. W. Bradford, J. Spilker, and P. Enge, Global Positioning System: Theory
+                                                                                          and Applications, vol. 109. AIAA Washington, DC, USA, 1996.
+   developed for the time-based trajectory tracking problem of                        [6] T. Bell, “Automatic tractor guidance using carrier-phase differential
+   an articulated unmanned ground vehicle and implemented on                              GPS,” Comput. Electron. Agriculture, vol. 25, no. 1/2, pp. 53–66,
+   a real-time system. Experimental results have shown that both                          2000.
+                                                                                      [7] D. Bevly and B. Parkinson, “Cascaded Kalman filters for accurate estima-
+   frameworks are capable of keeping the system on track. Thanks                          tion of multiple biases, dead-reckoning navigation, and full state feedback
+   to the 1-step Gauss–Newton iteration principle, the computa-                           control of ground vehicles,” IEEE Trans. Control Syst. Technol., vol. 15,
+   tionally efficient NMHE-NMPC framework requires a compu-                               no. 2, pp. 199–208, Mar. 2007.
+                                                                                      [8] A. Khalaji and S. Moosavian, “Robust adaptive controller for a tractor-
+   tation time of around 12 ms, while the computation time for                            trailer mobile robot,” IEEE/ASME Trans. Mechatronics, vol. 19, no. 3,
+   the ISL-LMPC framework is less than 2 ms. This reduction on                            pp. 943–953, Jun. 2014.
+   computational burden came at the price of a worse tracking er-                     [9] M. Michalek and M. Kielczewski, “The concept of passive control assis-
+                                                                                          tance for docking maneuvers with n-trailer vehicles,” IEEE/ASME Trans.
+   ror; however, the ISL-LMPC framework can be used in case of                            Mechatronics, vol. 20, no. 5, pp. 2075–2084, Oct. 2015.
+   limited computation power in real-time.                                           [10] J. B. Derrick and D. M. Bevly, “Adaptive steering control of a farm
+      Recent developments in microprocessors technology and                               tractor with varying yaw rate properties,” J. Field Robot., vol. 26, no. 6/7,
+                                                                                          pp. 519–536, 2009.
+   fast solution tools for NMPC have changed the well-known                          [11] M. Karkee and B. L. Steward, “Study of the open and closed loop char-
+   paradigm in a way that the belief of using NMPC for only rel-                          acteristics of a tractor and a single axle towed implement system,” J.
+   atively slow dynamic systems is no longer true. Comparative                            Terramechanics, vol. 47, no. 6, pp. 379–393, 2010.
+                                                                                     [12] H. Li and W. Yan, “Model predictive stabilization of constrained under-
+   results presented in this paper also show that NMPC imple-                             actuated autonomous underwater vehicles with guaranteed feasibility and
+   mentations for fast robotic systems do not require enormous                            stability,” IEEE/ASME Trans. Mechatronics, vol. 22, no. 3, pp. 1185–1194,
+   computation power anymore.                                                             Jun. 2017.
+
+
+
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 04:38:33 UTC from IEEE Xplore. Restrictions apply.
+    2030                                                                          IEEE/ASME TRANSACTIONS ON MECHATRONICS, VOL. 23, NO. 5, OCTOBER 2018
+
+
+
+    [13] E. Kayacan, E. Kayacan, I.-M. Chen, H. Ramon, and W. Saeys, On the                                   Erkan Kayacan (S’12–M’16) received the Ph.D.
+         Comparison of Model-Based and Model-Free Controllers in Guidance,                                    degree in mechatronics, biostatistics and sen-
+         Navigation and Control of Agricultural Vehicles. Cham, Switzerland:                                  sors from the University of Leuven, Leuven,
+         Springer, 2018, pp. 49–73.                                                                           Belgium, in 2014.
+    [14] J. Backman, T. Oksanen, and A. Visala, “Navigation system for agri-                                      He is currently a Postdoctoral Associate
+         cultural machines: Nonlinear model predictive path tracking,” Comput.                                with Senseable City Laboratory and Com-
+         Electron. Agriculture, vol. 82, pp. 32–43, 2012.                                                     puter Science & Artificial Intelligence Laboratory,
+    [15] T. Kraus, H. Ferreau, E. Kayacan, H. Ramon, J. D. Baerdemaeker,                                      Massachusetts Institute of Technology, Cam-
+         M. Diehl, and W. Saeys, “Moving horizon estimation and nonlinear model                               bridge, MA, USA. His research interests include
+         predictive control for autonomous agricultural vehicles,” Comput. Elec-                              real-time optimization-based control and estima-
+         tron. Agriculture, vol. 98, pp. 25–33, 2013.                                                         tion methods, nonlinear control theory, learning
+    [16] E. Kayacan, E. Kayacan, H. Ramon, and W. Saeys, “Learning in central-          algorithms and machine learning with a heavy emphasis on applications
+         ized nonlinear model predictive control: Application to an autonomous          to autonomous systems and field robotics.
+         tractor-trailer system,” IEEE Trans. Control Syst. Technol., vol. 23, no. 1,
+         pp. 197–205, Jan. 2015.
+    [17] E. Kayacan, E. Kayacan, H. Ramon, and W. Saeys, “Robust tube-based
+         decentralized nonlinear model predictive control of an autonomous tractor-
+         trailer system,” IEEE/ASME Trans. Mechatronics, vol. 20, no. 1, pp. 447–                               Wouter Saeys received the M.Sc. and Ph.D. de-
+         456, Feb. 2015.                                                                                        grees in bioscience engineering from the Univer-
+    [18] E. Kayacan, E. Kayacan, H. Ramon, and W. Saeys, “Distributed non-                                      sity of Leuven (KU Leuven), Leuven, Belgium, in
+         linear model predictive control of an autonomous tractor-trailer system,”                              2002 and 2006, respectively.
+         Mechatronics, vol. 24, no. 8, pp. 926–933, 2014.                                                           Since 2017, he has been an Associate Pro-
+    [19] M. Karkee, “Modeling, identification and analysis of tractor and sin-                                  fessor with the Biosystems Department, KU
+         gle axle towed implement system,” Ph.D. dissertation, Dept. Agricultural                               Leuven, where he leads a group focusing
+         Biosyst. Eng., Iowa State Univ., Ames, IA, USA, 2009.                                                  on Agrofood Mechatronics. His main research
+    [20] E. Kayacan, H. Ramon, and W. Saeys, “Robust trajectory tracking                                        interests include agricultural automation and
+         error model-based predictive control for unmanned ground vehicles,”                                    robotics, chemometrics, light transport model-
+         IEEE/ASME Trans. Mechatronics, vol. 21, no. 2, pp. 806–814, Apr.                                       ing, and optical characterization of biological
+         2016.                                                                                                  materials.
+    [21] E. Kayacan, E. Kayacan, H. Ramon, and W. Saeys, “Nonlinear model-
+         ing and identification of an autonomous tractor-trailer system,” Comput.
+         Electron. Agriculture, vol. 106, pp. 1–10, 2014.
+                                                                                                                Herman Ramon received the M.Sc. degree in
+    [22] C. Rao, J. Rawlings, and D. Mayne, “Constrained state estimation for
+                                                                                                                bioscience engineering from Gent University,
+         nonlinear discrete-time systems: Stability and moving horizon approxi-                                 Gent, Belgium, and the Ph.D. degree in biolog-
+         mations,” IEEE Trans. Autom. Control, vol. 48, no. 2, pp. 246–258, Feb.
+                                                                                                                ical sciences from the University of Leuven (KU
+         2003.
+                                                                                                                Leuven), Leuven, Belgium, in 1993.
+    [23] P. Kühl, M. Diehl, T. Kraus, J. P. Schlöder, and H. G. Bock, “A real-time
+                                                                                                                   He is currently a Professor with the Faculty
+         algorithm for moving horizon state and parameter estimation,” Comput.
+                                                                                                                of Bioscience Engineering, KU Leuven, lectur-
+         Chemical Eng., vol. 35, no. 1, pp. 71–83, 2011.
+                                                                                                                ing on field robotics, system dynamics, applied
+    [24] H. Ferreau, T. Kraus, M. Vukov, W. Saeys, and M. Diehl, “High-speed
+                                                                                                                mechanics, and mathematical biology.
+         moving horizon estimation based on automatic code generation,” in Proc.
+         IEEE 51st Annu. Conf. Decis. Control, 2012, pp. 687–692.
+    [25] D. Mayne, J. Rawlings, C. Rao, and P. Scokaert, “Constrained model
+         predictive control: Stability and optimality,” Automatica, vol. 36, no. 6,
+         pp. 789–814, 2000.                                                                                     Calin Belta (M’03–SM’11–F’17) received the
+    [26] P. Falcone, F. Borrelli, J. Asgari, H. Tseng, and D. Hrovat, “Predic-                                  M.Sc. and Ph.D. degrees in mechanical en-
+         tive active steering control for autonomous vehicle systems,” IEEE                                     gineering from the University of Pennsylvania,
+         Trans. Control Syst. Technol., vol. 15, no. 3, pp. 566–580, May                                        Philadelphia, PA, USA, in 2001 and 2003,
+         2007.                                                                                                  respectively.
+    [27] M. Diehl, H. G. Bock, and J. P. Schlder, “A real-time iteration scheme                                     He is currently a Professor with the Depart-
+         for nonlinear optimization in optimal feedback control,” SIAM J. Control                               ment of Mechanical Engineering, Boston Univer-
+         Optim., vol. 43, no. 5, pp. 1714–1736, 2005.                                                           sity (BU), Boston, MA, USA, where he holds the
+    [28] B. Houska, H. J. Ferreau, and M. Diehl, “Acado toolkitan open-                                         Tegan family Distinguished Faculty Fellowship.
+         source framework for automatic control and dynamic optimiza-                                           He is the Director of the BU Robotics Laboratory
+         tion,” Optimal Control Appl. Methods, vol. 32, no. 3, pp. 298–312,                                     and of the Center for Autonomous and Robotic
+         2011.                                                                          Systems. His research interests include dynamics and control theory,
+    [29] M. Diehl, H. Bock, J. P. Schlder, R. Findeisen, Z. Nagy, and F. Allgower,      with particular emphasis on hybrid and cyber-physical systems, for-
+         “Real-time optimization and nonlinear model predictive control of pro-         mal synthesis and verification, and applications in robotics and systems
+         cesses governed by differential-algebraic equations,” J. Process Control,      biology.
+         vol. 12, no. 4, pp. 577–585, 2002.
+    [30] H. J. Ferreau, C. Kirches, A. Potschka, H. G. Bock, and M. Diehl,
+         “qpOASES: A parametric active-set algorithm for quadratic program-
+         ming,” Math. Program. Comput., vol. 6, no. 4, pp. 327–363, Dec.                                        Joshua M. Peschel (M’02) received the Ph.D.
+         2014.                                                                                                  degree in computer science from Texas A&M
+    [31] J.-J. E. Slotine and W. Li, Applied Nonlinear Control. Englewood Cliffs,                               University, College Station, TX, USA, in 2012.
+         NJ, USA: Prentice-Hall, 1991.                                                                             He is currently an Assistant Professor in agri-
+    [32] E. Kayacan, E. Kayacan, H. Ramon, and W. Saeys, “Towards agrobots:                                     cultural and biosystems engineering, a Black
+         Identification of the yaw dynamics and trajectory tracking of an au-                                   & Veatch Faculty Fellow, and the Director of
+         tonomous tractor,” Comput. Electron. Agriculture, vol. 115, pp. 78–87,                                 the Human-Infrastructure Interaction Lab, Iowa
+         2015.                                                                                                  State University, Ames, IA, USA. His research
+    [33] J. M. Snider, “Automatic steering methods for autonomous automobile                                    interests focuses on innovative sensing and
+         path tracking,” Robot. Inst., Pittsburgh, PA, USA, Tech. Rep. CMU-RITR-                                sense-making for smart agricultural, natural, and
+         09-08, 2009.                                                                                           urban systems.
+
+
+
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 04:38:33 UTC from IEEE Xplore. Restrictions apply.
+

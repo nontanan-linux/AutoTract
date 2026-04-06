@@ -1,0 +1,481 @@
+2025 7th International Conference on Information Science, Electrical and Automation Engineering (ISEAE) | 979-8-3315-1038-1/25/$31.00 ©2025 IEEE | DOI: 10.1109/ISEAE64934.2025.11042155
+
+2025 7th International Conference on Information Science, Electrical and Automation Engineering (ISEAE)
+
+Construction of a Joint Simulation Platform Using
+SUMO, CARLA, and Autoware and Its Application
+in Multi-Vehicle Interactions at Unsignalized
+Intersections
+Bo Liu
+School of Automotive and
+Mechatronic Engineering
+Harbin Cambridge University
+Harbin, Heilongjiang, China
+bliu33@gmail.com
+
+Haoyang Duan
+School of Automotive and
+Mechatronic Engineering
+Harbin Cambridge University
+Harbin, Heilongjiang, China
+
+Jian He
+School of Intelligent and
+Electrical-Electronic Engineering
+Harbin Cambridge University
+Harbin, Heilongjiang, China
+
+Rongrong Li
+School of Automotive and
+Mechatronic Engineering
+Harbin Cambridge University
+Harbin, Heilongjiang, China
+
+Hao Li
+Company of Qingfei.AI
+Hangzhou, Zhejiang, China
+Corresponding author: haoliarts@gmail.com
+
+Yifei Sun
+Company of Qingfei.AI
+Hangzhou, Zhejiang, China
+
+Abstract—This study aims to construct a joint simulation
+platform based on SUMO, CARLA, and Autoware, and apply the
+platform to the investigation of multi-vehicle game scenarios at
+unsignalized intersections. By leveraging the strengths of these
+three open-source tools, we created an efficient environment for
+modeling complex traffic scenarios and evaluating autonomous
+driving algorithms with a low-code approach. The research
+primarily focuses on reproducing deadlock situations
+encountered by Robotaxis during public road tests and assessing
+the impact of vehicle-to-infrastructure (V2X) cooperation on
+traffic efficiency through comparative experiments. The results
+demonstrate that the proposed platform effectively simulates
+multi-vehicle interactions, serving as a valuable tool for
+optimizing autonomous driving systems.
+
+aims to construct a joint simulation platform that combines
+SUMO, CARLA, and Autoware [2][3][4][5][6], thereby
+providing researchers with a tool to efficiently implement
+multi-vehicle interactions scenarios without the need to
+develop a comprehensive autonomous driving code.
+The significance of constructing a joint simulation platform
+is threefold. Firstly, it allows for the simulation of intricate
+real-world traffic scenarios, providing a safe and controlled
+environment for the development and validation of autonomous
+driving algorithms. Secondly, by integrating various simulation
+tools, researchers can comprehensively evaluate the
+performance of autonomous systems with low-code approach.
+Lastly, the platform facilitates investigations into the effects of
+advanced technologies, such as V2X cooperation, on traffic
+efficiency.
+
+Keywords-Joint Simulation; Autonomous Driving; MultiVehicle Interaction; SUMO; CARLA; Autoware; Unsignalized
+Intersection
+
+II. CONSTRUCTION OF THE JOINT SIMULATION PLATFORM
+
+I. INTRODUCTION
+The rapid advancement of autonomous driving technology
+has intensified research on the safe and efficient deployment of
+autonomous vehicles in real-world traffic [1]. Complex
+unsignalized intersections often lead to low traffic efficiency or
+complete deadlock due to the competitive behavior of multiple
+vehicles. Many scholars have focused their efforts on this
+research direction. However, for the majority of researchers,
+conducting such studies in real traffic environments is
+impractical, let alone replicating these intersection gametheoretic traffic scenarios in real traffic settings. This study
+
+A. Overview of Three Open-Source Tools
+The three open-source tools utilized in this study each
+contribute unique capabilities, making them well-suited for
+constructing a comprehensive simulation platform [7][8].
+SUMO (Simulation of Urban MObility) is a microscopic
+traffic simulation software that excels in modeling large-scale
+traffic flows and collecting detailed traffic data, such as
+average travel time and speed.
+CARLA (CAR Learning to Act) is a high-fidelity
+autonomous driving simulation platform built on Unreal
+
+The Scientific Research Foundation of Harbin Cambridge University
+(2024JQKY02)
+
+979-8-3315-1038-1/25/$31.00 ©2025 IEEE
+
+503
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 30,2026 at 02:20:46 UTC from IEEE Xplore. Restrictions apply.
+
+directions of vehicles, and the status of traffic lights (although
+the signal status is fixed at non-signal intersections, this
+information is crucial in more complex scenarios)—packaged
+in a specific data format (like XML) to CARLA at
+predetermined time steps. Upon receiving this information,
+CARLA adjusts the generation and driving paths of vehicles in
+its simulation environment based on SUMO's traffic flow state,
+ensuring consistency with the macro traffic flow of SUMO. At
+the same time, CARLA provides real-time status updates of
+vehicles, such as collision detection results and whether
+vehicles have deviated from their preset trajectories, back to
+SUMO. Once SUMO receives this feedback, it can further
+update traffic flow statistics, providing more accurate data
+support for subsequent traffic analysis.
+
+Engine, providing realistic visual environments and physical
+characteristics.
+Autoware is an open-source software stack for autonomous
+driving, encompassing modules for perception, localization,
+planning, and control.
+B. Architecture Design of the Joint Simulation Platform
+The architecture design of the joint simulation platform is
+crucial for conducting efficient multi-vehicle simulations, as
+shown in Fig. 1. The platform integrates SUMO and CARLA
+via the TraCI interface, then integrates CARLA and Autoware
+through ROS (Robot Operating System), ensuring seamless
+communication and data exchange. SUMO serves as the core
+for traffic management, constructing the basic road network
+and defining macroscopic traffic parameters. It generates
+detailed road maps, including lane numbers, speed limits, and
+turning rules, while allowing flexible settings for vehicle
+departure times and route planning.
+
+Data Interaction between CARLA and Autoware: Data
+exchange between the two is achieved through ROS topics and
+services. CARLA publishes sensor data, such as images
+captured by cameras and point cloud data generated by radar,
+to the corresponding topics according to ROS topic
+specifications. Autoware subscribes to these topics, processes
+the sensor data in its internal perception module. After
+Autoware processes the sensor data and generates control
+commands (such as acceleration, deceleration, and turning
+commands), it sends these commands to CARLA via ROS
+services. Upon receiving the control commands, CARLA
+converts them into actual control signals for the vehicles,
+enabling them to drive in the simulation environment.
+
+Data Exchange Channel
+TraCI
+
+ROS-Bridge
+
+Monitoring
+
+Sensor Suite
+
+Sensor Fusion
+
+Traffic Generator
+
+Scenario Editor
+
+Planner
+
+Network Builder
+
+Physics Engine
+
+Controller
+
+SUMO
+
+CARLA
+
+AUTOWARE
+
+Using SUMO's statistical capabilities, average speed, total
+travel time, and average travel time traffic efficiency metrics
+can be collected, providing data support for subsequent
+experimental analysis. During simulation, SUMO continuously
+records each vehicle's trajectory and time information. After
+the simulation ends, it calculates various traffic efficiency
+metrics using the recorded data through built-in algorithms.
+These metric data can be easily exported, facilitating further
+data analysis and visualization by researchers.
+
+Figure 1. Architecture of Joint Simulation Platform
+
+CARLA focuses on high-fidelity vehicle dynamics and
+sensor simulations. It accurately models vehicle behaviors,
+ensuring realistic movement in the simulation. Autoware
+functions as the autonomous driving algorithm platform,
+processing sensor data from CARLA to identify objects such as
+vehicles and pedestrians. Localization combines sensor data
+with map information to determine vehicle position. Based on
+this processed data, the planning module generates driving
+paths and speed plans, which the control module translates into
+vehicle control signals.
+
+D. Benefits of the Joint Simulation Platform
+Scholars have tried to build joint simulation platforms such
+as SUMO-CARLA or CARLA-Autoware [9]. However, these
+platforms are typically constructed in a Linux environment,
+which can be cumbersome for system setup and maintenance.
+We have successfully established a tripartite joint simulation
+platform integrating SUMO, CARLA, and Autoware under the
+Windows 11 environment, specifically utilizing the Windows
+Subsystem for Linux (WSL) within Windows 11 for Autoware
+installation. This setup provides researchers with a highly userfriendly simulation environment without the need for extensive
+code development. Additionally, since all three simulation
+tools are open-source, researchers can customize and develop
+their own code for more complex simulations.
+
+Data exchange between SUMO and CARLA occurs via the
+TraCI interface, ensuring real-time synchronization. SUMO
+sends traffic flow information to CARLA, which adjusts its
+simulation accordingly. Feedback regarding vehicle collisions
+or trajectory deviations is relayed back to SUMO to update
+traffic statistics. Communication between CARLA and
+Autoware employs ROS topics and services, allowing for
+efficient data processing and control signal transmission.
+
+Building a simulation platform in our approach offers
+numerous advantages. The key benefits are as follows:
+1) User-Friendly Interface. This provides an intuitive user
+interface that simplifies the setup and maintenance of the
+simulation platform. Users can easily set up the simulation
+environment without delving into the complex configurations
+of the Linux system. This ease of use reduces the learning
+
+C. Data interaction of the Joint Simulation Platform
+Data Interaction between SUMO and CARLA: SUMO and
+CARLA are connected via the TraCI interface, enabling realtime synchronization between the two. SUMO sends traffic
+flow information, such as the current IDs, positions, speeds,
+
+504
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 30,2026 at 02:20:46 UTC from IEEE Xplore. Restrictions apply.
+
+curve, allowing researchers to focus more on the simulation
+tasks themselves.
+
+III. EXPERIMENTAL DESIGN AND METHODS
+After setting up the co-simulation platform, we can begin
+various simulation attempts. In the environment of the
+proposed co-simulation platform, researchers can quickly
+launch a variety of experiments and verify their ideas without
+writing any code or with minimal coding. Next, we will apply
+this co-simulation platform to a multi-vehicle game scenario at
+an unsignalized intersection.
+
+2) Efficient Resource Management and Performance
+Optimization. The platform supports efficient resource
+management, enabling flexible allocation of CPU, memory,
+and storage resources to ensure the smooth operation of
+simulation tasks.
+3) Powerful Graphics Processing Capabilities. It supports
+high-end GPU cards and professional graphics acceleration
+cards, which can meet the demands for complex 3D model
+rendering and high-resolution texture loading. This capability is
+particularly important for simulation tools like CARLA that
+have high requirements for graphics rendering.
+
+A. Experimental Scenario
+The experimental scenario was designed to simulate a Tjunction located within the CARLA Town01 map, intentionally
+devoid of any traffic signals to replicate real-world
+unsignalized intersections. This choice of setting is crucial as
+unsignalized intersections present unique challenges for
+autonomous vehicles, primarily due to the lack of explicit
+traffic control and the need for vehicles to negotiate right-ofway among themselves. In this scenario, vehicles approach the
+intersection from multiple directions, creating complex
+interactions influenced by factors such as vehicle speed, arrival
+times, and driver behavior.
+
+4) Flexibility of Open-Source Software. Simulation tools
+such as SUMO, CARLA, and Autoware are all open-source,
+allowing users to customize and develop them according to
+their needs. In the Windows environment, the combination of
+this flexibility and ease of use provides researchers with
+powerful tool support.
+In summary, the proposed approach not only provides
+efficient resource management, powerful graphics processing
+capabilities, and a user-friendly interface but also enhances
+system flexibility and compatibility through the WSL feature.
+And the whole platform can be easily migrated from one
+machine to another using the import and export features of
+WSL. Fig. 2 illustrates the visual effects of the co-simulation
+platform during operation. The three open-source software
+tools have achieved synchronization of the simulation interface.
+
+To enhance the realism of the simulation, various traffic
+conditions were introduced, such as varying vehicle types,
+including passenger cars, buses, and trucks. Each vehicle type
+has distinct characteristics which are configured via SUMO.
+Additionally, the simulation included rainy environmental
+conditions which were set up by CARLA.
+B. Experimental Groups
+Two distinct experimental groups were established to
+evaluate the impact of V2X cooperation on traffic efficiency at
+the unsignalized intersection. The first group, designated as the
+non-cooperation group, consisted of vehicles that relied solely
+on their own onboard sensors and algorithms for decisionmaking. These vehicles were unable to communicate with each
+other or gain insights into the overall traffic state, which often
+led to inefficient responses during critical moments at the
+intersection. For example, when multiple vehicles approached
+the intersection simultaneously, they frequently encountered
+deadlock situations, severely hampering traffic flow.
+
+Vehicle in
+CARLA
+Vehicle in
+SUMO
+
+Conversely, the second group, referred to as the cooperation
+group, utilized V2X communication technology, enabling
+vehicles to share information regarding their positions, speeds,
+and intended maneuvers. This group was designed to
+demonstrate how enhanced communication could facilitate
+more efficient decision-making processes among vehicles,
+thereby reducing the likelihood of conflicts. The distinction
+between these groups was pivotal in assessing the advantages
+of V2X technology, as it allowed for direct comparisons of
+traffic outcomes under varying cooperative conditions. This
+experimental design aimed to provide a clear understanding of
+how V2X cooperation could enhance traffic flow and safety at
+unsignalized intersections, which is an intensive research focus
+[10][11].
+
+Vehicle in
+Autoware
+
+C. Experimental Setup
+The experimental setup was meticulously designed to
+ensure that each simulation run would yield reliable and
+meaningful data. Each simulation was conducted over a
+
+Figure 2. Visual effect of Joint Simulation Platform
+
+505
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 30,2026 at 02:20:46 UTC from IEEE Xplore. Restrictions apply.
+
+vehicle involved. This situation starkly highlighted the
+limitations of relying solely on onboard sensing and decisionmaking in complex traffic environments.
+
+duration of 180 seconds, a timeframe selected to capture a
+representative sample of vehicle interactions at the intersection.
+The number of vehicles in each simulation was systematically
+varied, ranging from 10 to 35, allowing for the examination of
+traffic density effects on performance metrics.
+CARLA
+SUMO
+1.20.0
+
+V. CONCLUSIONS
+This study successfully established a joint simulation
+platform utilizing SUMO, CARLA, and Autoware, enabling
+comprehensive analyses of multi-vehicle interactions at
+unsignalized intersections. The results confirm that V2X
+cooperation technology can effectively mitigate deadlock
+issues and enhance overall traffic efficiency. The joint
+simulation platform represents a robust tool for researching and
+optimizing autonomous driving systems, with potential
+applications in more complex traffic scenarios and algorithm
+validation. Future work may extend this platform to explore the
+performance of various autonomous driving algorithms in
+increasingly complex environments and investigate additional
+advanced technologies to further improve traffic efficiency and
+safety. In the future, by creating a comprehensive array of
+scenarios using the presented joint simulation platform, we can
+thoroughly evaluate the performance of autonomous driving
+algorithms in managing traffic conflicts, ultimately providing
+insights into their effectiveness in real-world applications.
+
+Autoware.Universe
+
+0.9.15
+CARLA
+
+Autoware.Universe
+
+0.9.15
+
+Figure 3. Diagram of One-SUMO-Two-CARLA
+
+We have connected a SUMO server (version 1.20.0) to two
+CARLA clients (version 0.9.15), and each CARLA client is
+linked to an Autoware instance as shown in Fig. 3. In this way,
+we can control the vehicles in Autoware to create two
+autonomous vehicles in CARLA. By carefully setting up the
+scenarios, we can position these two autonomous vehicles at a
+T-junction simultaneously, thereby creating a scenario where
+autonomous vehicles encounter each other at the intersection.
+
+REFERENCES
+
+The default configurations of Autoware and CARLA's
+built-in vehicle dynamics models were utilized to maintain
+consistency across simulations. These configurations included
+predefined parameters for vehicle acceleration, braking, and
+turning behaviors, ensuring that the vehicles behaved
+realistically during the experiments. Evaluation metrics were
+carefully chosen to assess traffic efficiency, including average
+speed, total travel time, and average travel time, all of which
+were collected using SUMO's statistical functions.
+
+[1]
+
+E. Yurtsever, J. Lambert, A. Carballo and K. Takeda, "A Survey of
+Autonomous Driving: Common Practices and Emerging Technologies,"
+in IEEE Access, vol. 8, pp. 58443-58469, 2020.
+[2] K. G. Lim, C. H. Lee, R. K. Y. Chin, K. B. Yeo, and K. T. K. Teo,
+“ SUMO enhancement for vehicular ad hoc network (VANET)
+simulation,” in Proc. IEEE 2nd Int. Conf. Autom. Control Intell. Syst.,
+2017, pp. 86–91.
+[3] D. Krajzewicz, J. Erdmann, M. Behrisch, and L. Bieker, “Recent
+Development and Applications of SUMO — Simulation of Urban
+Mobility,” Int. J. Adv. Syst. Meas., vol. 5, pp. 128–138, 2012.
+[4] A. Dosovitskiy, G. Ros, F. Codevilla, A. Lopez, and V. Koltun,
+“CARLA: An Open Urban Driving Simulator,” in Proc. 1st Annu.
+Conf. Robot Learn., pp. 1–16, 2017.
+[5] S. Kato et al., “Autoware on board: Enabling autonomous vehicles with
+embedded systems,” in Proc. ACM/IEEE 9th Int. Conf. Cyber-Phys.
+Syst., 2018, pp. 287–296.
+[6] S. Bachuwar, A. Bulsara, H. Dossaji, A. Gopinath, and et al.,
+“Integration of Autonomous Vehicle Frameworks for Software-in-theLoop Testing,” SAE Int. J. Adv. Curr. Prac. Mobil., vol. 2, no. 5, pp.
+2617–2622, 2020.
+[7] J. Zhou, Y. Zhang, S. Guo, and Y. Guo, “A Survey on Autonomous
+Driving System Simulators,” in 2022 IEEE Int. Symp. Softw. Reliab.
+Eng. Workshops (ISSREW), Oct. 2022 - Nov. 3, 2022.
+[8] L. Wang, Y. Guo, H. Li, and Y. Liu, “ Mixed Traffic Flow
+Characteristics Analysis Based on Simulation Approach, ” in Proc.
+SPIE 13064, Seventh Int. Conf. Traffic Eng. Transp. Syst. (ICTETS
+2023), 130641E, Feb. 20, 2024.
+[9] C. Y. Kuo and W. Liang, “Running Multiple Autoware-Powered
+Vehicles in Carla using Zenoh,” Autoware, 2023. [Online]. Available:
+https://autoware.org/running-multiple-autoware-powered-vehicles-incarla-using-zenoh/.
+[10] C. Jung, D. Lee, S. Lee, and D. H. Shim, “V2X-Communication-Aided
+Autonomous Driving: System Design and Experimental Validation,”
+Sensors, vol. 20, no. 10, pp. 2903, 2020.
+[11] Q. Ge, G. Sartoretti, J. Duan, S. E. Li, Y. Yin and S. Zheng, "Distributed
+Model Predictive Control of Connected Multi-Vehicle Systems at
+Unsignalized Intersections," 2022 IEEE International Conference on
+Unmanned Systems (ICUS), Guangzhou, China, 2022, pp. 1466-1472.
+
+IV. EXPERIMENTAL ANALYSIS
+What is important here is the fact that by using the
+proposed co-simulation platform, it is possible to conduct
+relatively detailed experimental analysis and quickly validate
+ideas without the need for extensive code development.
+A. Comparison of Traffic Efficiency
+The experimental results revealed notable differences in
+traffic efficiency between the two groups. In the absence of
+V2X cooperation, the frequency of deadlocks increased
+significantly as vehicle numbers rose.
+In contrast, with V2X cooperation, traffic remained
+relatively smooth even with the increased vehicles, highlighting
+V2X technology's potential to enhance traffic efficiency
+through improved vehicle coordination.
+B. Typical Scenario Analysis
+To further illustrate the benefits of V2X cooperation, a
+series of typical scenarios were constructed using our joint
+simulation platform, each reflecting common situations
+encountered at unsignalized intersections. One particularly
+telling scenario involved four autonomous vehicles attempting
+to enter the intersection simultaneously, which resulted in a
+deadlock in the non-cooperation group. The vehicles, lacking
+communication, were unable to negotiate right-of-way
+effectively, leading to an longer average waiting time for each
+
+506
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 30,2026 at 02:20:46 UTC from IEEE Xplore. Restrictions apply.
+
+

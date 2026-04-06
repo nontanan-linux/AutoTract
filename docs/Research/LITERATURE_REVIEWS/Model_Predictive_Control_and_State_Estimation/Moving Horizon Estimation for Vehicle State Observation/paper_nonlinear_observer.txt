@@ -1,0 +1,766 @@
+    644                                     IEEE/ASME TRANSACTIONS ON MECHATRONICS, VOL. 24, NO. 2, APRIL 2019
+
+
+
+
+            Tracking of Vehicle Motion on Highways and
+             Urban Roads Using a Nonlinear Observer
+                                      Woongsun Jeon , Ali Zemouche , and Rajesh Rajamani
+
+
+       Abstract—This paper focuses on the development and                             azimuth angles [1]–[5] to vehicles. With such sensors, radial
+    use of a nonlinear observer for tracking of vehicle motion                        distances and azimuth angles can be measured.
+    trajectories while using a radar sensor. Previous results on                         In the case of vehicles in urban traffic, including vehicles
+    vehicle tracking have typically used an interacting multiple
+    model filter that needs different models for different modes                      at traffic intersections, the radar-measured variables are inade-
+    of vehicle motion. This paper uses a single nonlinear vehicle                     quate in order to fully predict the trajectories of vehicles. Both
+    model that can be used for all modes of vehicle motion. Pre-                      lateral and longitudinal distances and orientation of the vehi-
+    vious nonlinear observer design results from the literature                       cles are needed in order to accurately predict vehicle motion
+    do not work for the nonlinear system under consideration
+                                                                                      and provide appropriate warnings or automated driving actu-
+    due to the wide range of operating conditions that need to
+    be accommodated. Hence, a new nonlinear observer design                           ation. Previous work in vehicle tracking has typically utilized
+    technique that utilizes better bounds on the coupled nonlin-                      interacting multiple model (IMM) filters for estimation of ve-
+    ear functions in the dynamics is developed. The exponential                       hicle trajectories [9]–[11]. The models used in the IMM filter
+    stability of the observer is established using Lyapunov tech-                     typically include a “straight line driving” model and a “con-
+    niques. The observer design with the developed technique
+                                                                                      stant turn rate” model. Each model can be used for its re-
+    is then implemented in both simulations and experiments.
+    Experimental results show that the observer can simulta-                          spective driving scenario and is not applicable for the other
+    neously and accurately estimate longitudinal position, lat-                       scenario.
+    eral position, and velocity and orientation variables for the                        This paper develops a vehicle tracking algorithm that uses a
+    vehicle from radar measurements. Results are presented                            single model to represent all possible vehicle motions involv-
+    both for tracking of vehicle maneuvers on highways and of
+                                                                                      ing both longitudinal and lateral maneuvers. By using a single
+    maneuvers on urban roads at traffic intersections where
+    turns and significant changes in vehicle orientation can                          vehicle model, stability of the state observer can be guaranteed
+    occur.                                                                            and the real-time computational effort in estimating trajectories
+                                                                                      of multiple vehicles on the road is reduced in comparison with
+       Index Terms—Nonlinear observer, vehicle motion estima-
+    tion, vehicle tracking.                                                           the IMM approach. The observer gains are obtained by offline
+                                                                                      computation while the IMM approach uses multiple models and
+                                I. INTRODUCTION                                       recomputes gains in real-time.
+                                                                                         Since the proposed vehicle model is nonlinear, an effective
+           EHICLE motion tracking is an important problem that
+    V      is frequently encountered in autonomous driving, as well
+    as in collision avoidance and adaptive cruise control (ACC)
+                                                                                      nonlinear observer design technique is required to ensure an
+                                                                                      exponentially stable observer. Two nonlinear observer design
+                                                                                      techniques from the literature, which are designed for bounded
+    applications [1]–[5]. There has been significant recent interest                  Jacobian systems, are first used in an attempt to obtain a stable
+    in the autonomous control of vehicles [6]–[8], [17]–[18], but the                 observer. However, their design procedures fail to yield stable
+    topic of estimating the trajectories of other vehicles on a road                  observer gains for this application, due to infeasibility of the
+    in order to track them or avoid conflicts with them has not been                  associated linear matrix inequalities (LMIs). A new nonlinear
+    sufficiently addressed. Collision avoidance and ACC systems                       observer design technique suitable for this application is there-
+    typically use radar or laser sensors for measuring distances and                  fore developed. The stability of the observer is proved, and
+                                                                                      an observer gain for the vehicle model application is obtained
+                                                                                      for a larger operating range than the previous observer design
+      Manuscript received June 11, 2018; revised October 9, 2018; accepted
+    December 31, 2018. Date of publication January 11, 2019; date of cur-             techniques from the literature. The advantage of the developed
+    rent version April 16, 2019. Recommended by Technical Editor X. Jing.             observer is the increased feasibility of a solution due to less
+    This work was supported in part by a research grant from the National             conservative LMIs in the observer design equation.
+    Science Foundation under NSF Grant PFI-1631133. (Corresponding au-
+    thor: Rajesh Rajamani.)                                                              The developed observer is used to track the lateral and longi-
+      W. Jeon and R. Rajamani are with the Department of Mechanical                   tudinal positions and orientation of a vehicle in both simulations
+    Engineering, University of Minnesota, Minneapolis, MN 55455 USA                   and experiments. A radar sensor that measures radial distance
+    (e-mail:, jeonx121@umn.edu; rajamani@umn.edu).
+      A. Zemouche is with the University of Lorraine, Lorraine 54400, France          and azimuth angle is used as the measurement unit. Vehicles
+    (e-mail:, ali.zemouche@univ-lorraine.fr).                                         maneuvers that include straight driving cars, a lane change ma-
+      Color versions of one or more of the figures in this paper are available        neuver, a double lane change maneuver, cross traffic driving at
+    online at http://ieeexplore.ieee.org.
+      Digital Object Identifier 10.1109/TMECH.2019.2892700                            a traffic intersection, and a left turn maneuver are considered in
+
+                        1083-4435 © 2019 IEEE. Personal use is permitted, but republication/redistribution requires IEEE permission.
+                             See http://www.ieee.org/publications standards/publications/rights/index.html for more information.
+
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 04:15:43 UTC from IEEE Xplore. Restrictions apply.
+   JEON et al.: TRACKING OF VEHICLE MOTION ON HIGHWAYS AND URBAN ROADS USING A NONLINEAR OBSERVER                                                              645
+
+
+
+   this paper. Thus, the observer works for both highway driving                        Theorem 1 [12]: If an observer gain matrix L can be chosen
+   and urban traffic that includes intersections.                                    such that
+      The outline of the rest of the paper is as follow. In Section II,                                       T
+                                                                                           P H̄ijm ax + H̄ijm ax P − C T LT P − PLC < 0
+   the proposed nonlinear observer design technique is presented.
+   In Section III, we propose a single vehicle model that can rep-                                           T
+                                                                                           P H̄ijm in + H̄ijm in P − C T LT P − PLC < 0
+   resent both longitudinal and lateral maneuvers, and discuss ve-
+   hicle motion tracking using the vehicle model and developed                              P >0                                                               (4)
+   observer. Then, in Sections IV and V, the proposed vehicle
+                                                                                        ∀i = 1, . . . , n, and ∀j = 1, . . . , n, where
+   motion tracking algorithm is validated in both simulations and
+                                                                                         1) hmij
+                                                                                                 ax
+                                                                                                    ≥ max(∂fi /∂xi ) and hm      ij
+                                                                                                                                    in
+                                                                                                                                         ≤ min(∂fi /∂xi );
+   experiments. Conclusions are presented in Section VI.
+                                                                                         2) Hijm ax = en (i)eTn (j)hmij
+                                                                                                                        ax
+                                                                                                                            and   H   m in
+                                                                                                                                      ij   = en (i)eTn (j)hm in
+                                                                                                                                                           ij ;
+                                                                                         3) ZH = n × n is the state scaling factor, n being dimension
+                   II. NONLINEAR OBSERVER DESIGN                                            of the state vector;
+   A. Problem Statement                                                                  4) H̄ijm ax = ZH Hijm ax and H̄ijm in = ZH Hijm in ;
+                                                                                     then, this choice of L leads to asymptotically stable estimates
+      Before introducing the vehicle tracking problem, we start by
+                                                                                     by the observer for the system.
+   proposing a new LMI-based nonlinear observer design method.
+                                                                                        Theorem 2 [13]: The observer estimation error converges ex-
+   This methodology provides less conservative LMI conditions
+                                                                                     ponentially toward zero if there exist matrices P = P T > 0 and
+   for observer design than those existing in the literature.
+                                                                                     R of appropriate dimensions such that the following LMIs are
+      We consider the class of nonlinear systems described by
+                                                                                     feasible:
+                                  ẋ = f (x, u)                                                   AT (ϑ) P + P A (ϑ) − C T R − RT C < 0
+                                  y = Cx                                     (1)                     ∀ϑ ∈ vH n , n                                             (5)
+   where x ∈ Rn is the state vector, u ∈ Rm is the input vector,                        where
+   and y ∈ Rp is the output vector. C ∈ Rp×n is a matrix of ap-                                                  
+                                                                                                                 n,n
+   propriate dimensions. f (x, u) : Rn × Rm → Rn is a vector of                                                                            ∂fi
+                                                                                                     A (ϑ) =              en (i) eTn (j)       (zi )           (6)
+   differentiable nonlinear functions.                                                                                                     ∂xj
+                                                                                                                 i,j =1
+      The following Luenberger-like observer will be studied as
+                                                                                     and the domain vH n , n is defined by
+                         ·                                                                                                                                
+                         x̂ = f (x̂, u) + L (y − C x̂)                       (2)       vH n , n = {ϑ = (ϑ11 , . . . , ϑ1n , . . . , ϑn n ) |ϑij ∈ hij , hij }
+                                                                                                                                                             (7)
+   where L is the observer gain matrix to be designed such that ex-
+   ponential convergence of the estimation error x̃ = x − x̂ toward
+   zero is obtained.                                                                        hij = min (∂fi /∂xj ) and hij = max (∂fi /∂xj ) .                  (8)
+                                                                                     When these LMIs are feasible, the observer gain L is given by
+   B. Existing Nonlinear Observer Design Methods                                     L = P −1 RT .
+      Previous researchers have developed nonlinear observer de-                        However, these methods do not work for the application of
+   sign techniques suitable for bounded Jacobian systems using                       vehicle motion tracking considered in this paper. Specifically,
+   the mean value theorem [12], [13]. These studies define and use                   the LMI toolbox in MATLAB fails to provide a feasible solution
+   Jacobian bounds based on element-wise minimum and max-                            for the multiple LMIs that need to be simultaneously satisfied in
+   imum values of the Jacobian. By considering the nonlinear                         both Theorems 1 and 2. It should be noted that an observer gain
+   system and observer described in (1) and (2), the following                       (and an associated P matrix) that satisfy multiple LMIs need to
+   results can be summarized from the existing methods in the                        be obtained in both methods. Hence, a new nonlinear observer
+   literature.                                                                       design method suitable for the vehicle tracking application is
+       Lemma 1: Differential mean value theorem using canonical                      presented herein.
+   basis [12], [13].
+      Let f (x) : Rn → Rn be a function continuous on [a, b] ∈ Rn                    C. Analysis of Domain of Jacobian Matrix
+   and differentiable on convex hull of the set (a, b) with Lipschitz                   In order to further motivate the new nonlinear observer design
+   continuous gradient. For s1 , s2 ∈ [a, b], there exists z ∈ (a, b)                method, we investigate the domain of the Jacobian matrix and
+   such that                                                                         the reason for failure of the observer design methods from [12]
+                                                                                     and [13].
+           f (s2 ) − f (s1 )                                                            From (4) in Theorem 1 and (8) in Theorem 2, it is obvious
+                                                   
+                       n,n                  ∂fi                                      that the element-wise minimum and maximum values of the
+              =                       T
+                              en (i) en (j)     (zi ) (s2 − s1 )             (3)     Jacobian are used to satisfy stability conditions of the observers.
+                       i,j =1               ∂xj
+                                                                                     However, this approach is likely to be conservative, especially
+   where en (i) = (0, . . . , 0, 1, 0, . . . , 0)T ∈ Rn is a vector of the           when there are coupled terms in the Jacobian matrix of the
+   canonical basis of Rn with 1 at ith component.                                    nonlinear function. For example, let us consider the following
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 04:15:43 UTC from IEEE Xplore. Restrictions apply.
+    646                                                                              IEEE/ASME TRANSACTIONS ON MECHATRONICS, VOL. 24, NO. 2, APRIL 2019
+
+
+
+                                                                                         Theorem 3: Consider the nonlinear system (1) and observer
+                                                                                      form (2). If there exist matrices P ≥ I and R of appropriate
+                                                                                      dimensions such that the following problem is solvable:
+
+                                                                                                                   minγ
+                                                                                                                   subject to                                  (12)
+                                                                                                                   P ≥I                                        (13)
+                                                                                                                         
+                                                                                                                     P RT
+                                                                                                                                  ≥0                           (14)
+                                                                                                                     R     γI
+
+
+    Fig. 1.    Illustration of domains from Jacobian of nonlinear function.                        A(ξ, u)T P + P A (ξ, u) − C T R − RT C
+    nonlinear system:                                                                                  + 2αP ≤ 0,
+                                       ẋ = f (x)                                                               ∀u ∈ ugrid , ∀ξ ∈ ξgrid                        (15)
+                                       y = Cx                                  (9)    where A(ξ, u) = ∂∂ fx (ξ, u), ξ ∈ Rn , then, the observer gain L is
+    where                                                                             given by
+                       ⎡               ⎤
+                           x3 cos x4                                                                                 L = P −1 RT                               (16)
+                      ⎢           ⎥              
+                      ⎢ x3 sin x4 ⎥
+              f (x) = ⎢           ⎥, C = 1 0 0 0 .                           (10)
+                      ⎢           ⎥       0 1 0 0                                     and with this value of the observer gain, the estimation error of
+                      ⎣     0     ⎦                                                   the observer (2) converges exponentially toward zero.
+                            0                                                            Proof: Let the Lyapunov function candidate for observer
+    This nonlinear system is similar to the vehicle tracking appli-                   design be defined as V = x̃T P x̃, where P = P T > 0 and
+    cation. The Jacobian matrix of the nonlinear function x3 cos x4                   P ∈ Rn ×n . For exponential stability, we will require that the
+    is                                                                                derivative of V satisfies the following differential inequality:
+                   ∂f1                            
+                       = 0 0 cos x4 −x3 sin x4 .               (11)                                                  V̇ ≤ −2αV                                 (17)
+                   ∂x
+       Using element-wise inequalities with the assumption 5 ≤                        where α is a positive constant. The inequality (17) implies the
+    x3 ≤ 15 and −π/3 ≤ x4 ≤ π/3, it can be concluded that the                         exponential stability condition [14]:
+    Jacobian of the nonlinear function is in a bounded domain de-
+    fined by vertices:                                                                              x (t) − x̂ (t)  ≤ κx (0) − x̂ (0) e−α t                (18)
+
+                   v1 = (0.5, 12.99) , v2 = (1, 12.99) ,                              where κ is a positive constant. From the Lyapunov function
+                   v3 = (1, −12.99) , v4 = (05, −12.99) .                             candidate, the derivative of V can be represented as
+                                                                                                                            
+    However, designing the observer to be stable over this entire                          V̇ = −x̃T (LC)T P + P (LC) x̃ + 2x̃T P δf        (19)
+    domain is challenging. In fact, some parts of the domain do
+    not need to be considered. For instance, the vertex v3 spans                      where δf = f (x, u) − f (x̂, u). The difference of the functions
+    from x4 = 0 for the cosine function and x4 = π/3 for the sine                     δf can be presented by using the integral form of the mean value
+    function in (11), which are contradictory to each other. The                      theorem [15] for vector functions:
+    sine and cosine functions are never going to be maximum at                                                                 
+                                                                                                                 
+    the same values of their identical arguments. Fig. 1 illustrates                                       1
+                                                                                                             ∂f 
+    both the bounded domain based on the vertices, and the actual                               δf =                        dη (x − x̂) .        (20)
+                                                                                                          0 ∂s s=x+η ( x̂−x)
+    domain that needs to be considered of the Jacobian. It is true
+    that the Jacobian always evolves within the bounded domain of                     Then, we can write
+    the vertices. However, it is possible that the bounded domain                                      ⎛ ⎧                         T
+    based on the vertices becomes too conservative as the Jacobian                                  1       ⎨ ∂f 
+    of the system has many coupled terms.                                             V̇ + 2αV =       ⎝ x̃T                   − LC P
+                                                                                                    0        ⎩ ∂s s=x−η (x−x̂)
+    D. Nonlinear Observer                                                                                                                                
+                                                                                                                  ∂f 
+                                                                                                        +P                         − LC + 2αP              x̃ dη.
+                                                                                                                  ∂s s=x−η (x−x̂)
+       In this section, we present a modified nonlinear observer
+    design method for the nonlinear system described in the previous
+    three sections.                                                                                                                                            (21)
+
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 04:15:43 UTC from IEEE Xplore. Restrictions apply.
+   JEON et al.: TRACKING OF VEHICLE MOTION ON HIGHWAYS AND URBAN ROADS USING A NONLINEAR OBSERVER                                                              647
+
+
+
+   Using the notation                                                                involved longitudinal motion variables (and sometimes addi-
+                                     Δ
+                                                                                     tional lateral position variables) of the vehicle. For instance, a
+                                   ξ = x − η (x − x̂)                       (22)     popular approach for radar-based vehicle tracking consists of
+                                     Δ   ∂f                                          an IMM filter with two models—a “constant velocity” model
+                          A (ξ, u) =        (ξ, u)                          (23)     and a “nearly coordinated turn” model [19]. The state vector is
+                                         ∂s
+                                                                                     assumed to be
+   equation (21) becomes
+                     1!                                                                                                                     
+                                                                                                           x= X          Y     v   θ       ω                 (31)
+      V̇ + 2αV =         x̃T [A (ξ, u) − LC]T P
+                          0
+                                                                                     where (X, Y ), v, θ, and ω are the target vehicle position in
+                         + P [A (ξ, u) − LC] + 2αP } x̃) dη.                (24)     Cartesian coordinates, speed, orientation, and turn rate in the
+   Since ξ varies with the value of x and x̂, A is an unknown and                    sensor body frame. The discrete-time state-space equation for
+   continuously time varying matrix. From (24), (17) is satisfied                    the constant velocity model is given by
+   when the following condition is satisfied:                                                                   ⎡                   ⎤
+                                                                                                                    X + vT cos θ
+     (A (ξ, u) − LC)T P + P (A (ξ, u) − LC) + 2αP ≤ 0. (25)                                                   ⎢ Y + vT sin θ ⎥
+                                                                                                              ⎢              ⎥
+                                                 T
+   By introducing a new variable R = L P , (25) can be expressed                                              ⎢              ⎥
+                                                                                                      xk +1 = ⎢
+                                                                                                              ⎢      v       ⎥ + wv ,k
+                                                                                                                             ⎥                               (32)
+   as                                                                                                         ⎢              ⎥
+                                                                                                              ⎣      θ       ⎦
+      A(ξ, u)T P + P A (ξ, u) − C T R − RT C + 2αP ≤ 0. (26)
+                                                                                                                          0            k
+      Since ξ and u vary infinitely in a given set, (26) gives us
+   infinitely many LMIs. This can be reduced to a finite number of                   where wv ,k is a process noise sequence represented by zero
+   LMIs using gridding techniques. We fix a finite subset of the ξ                   mean Gaussian noise. The discrete-time state-space equation
+   and u within its bounds such that                                                 for the nearly coordinated turn model is given by
+         ugrid ∈ {u1 , . . . , uN } and ξgrid ∈ {ξ1 , . . . , ξN } .        (27)
+                                                                                          xk +1
+   It is noted that the dimension of the grid is proportional to the                          ⎡       ωT              ⎤
+   number of varying variables in ξ and u. Also, the points of                                X + 2v
+                                                                                                  ω   sin 2 cos θ + ω2T
+                                                                                            ⎢                         ⎥
+   the finite subset need to be chosen sufficiently dense so that                           ⎢ Y + 2v sin ω T sin θ + ω T    ⎥
+                                                                                            ⎢     ω        2          2     ⎥
+   solving LMIs for the finite subset is equivalent to satisfying                           ⎢                               ⎥
+                                                                                           =⎢                v              ⎥ + wt,k                         (33)
+   the original stability condition. Therefore, the observer design                         ⎢                               ⎥
+                                                                                            ⎢                               ⎥
+   condition (15) can be obtained.                                                          ⎣            θ + ωT             ⎦
+      Unfortunately, the observer gain L can be arbitrarily large,                                                   ω                             k
+   if only the design condition (26) is utilized. Hence, we use
+   the following additional specification [16] for L. If (15) with                   where wt,k is a process noise sequence represented by zero
+   P = P T > 0 has a solution for P and R, the following size                        mean Gaussian noise.
+   condition must be satisfied for γ sufficiently large:                                It should be noted that the constant velocity model is ap-
+                                     √                                               plicable to straight line motion, and the coordinated turn model
+                               L ≤ γ.                           (28)
+                      √                                                              only applies while turning. Neither of the models can be used for
+   This means that γ is an upper bound on the norm of the                            both scenarios, and the coordinated turn model, in fact, becomes
+   gain L. Without loss of generality, we can assume that P ≥ I.                     singular when the rotation rate becomes zero.
+   Since L = P −1 RT and γ is sufficiently large, the condition (28)                    Another disadvantage of the above-mentioned approach is
+   becomes                                                                           that all the three degrees of freedom have independent unknown
+                    LT L ≤ LT P L = RP −1 RT ≤ γI.                          (29)     inputs—lateral, longitudinal, and orientation variables are all
+                                                                                     driven by unknown terms.
+   From this, we obtain                                                                 This paper proposes the use of a single nonlinear model that
+                                                                                     encompasses both straight line and turning motions. Consider-
+                              γI − RP −1 RT ≥ 0.                            (30)
+                                                                                     ing only planar motion for the vehicle, the motion of the vehicle
+   Using the Schur complement, (30) can be represented as (14).                     can be described by X, Y , and ψ, as shown in Fig. 2. X and Y
+                                                                                     are coordinates of longitudinal and lateral locations of the vehi-
+              III. VEHICLE MOTION TRACKING PROBLEM                                   cle with respect to the sensor (radar or LIDAR) location, and ψ
+                                                                                     is orientation angle of the vehicle with respect to the X axis, i.e.,
+   A. Proposed Vehicle Motion Model                                                  the orientation angle is with respect to the sensor (ego vehicle).
+      Previous models used for tracking of vehicle motion in ac-                     Assuming that the slip angles at the tires are zero (but the slip
+   tive safety or autonomous driving applications have primarily                     angle of the vehicle itself is not zero), the model equations can
+
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 04:15:43 UTC from IEEE Xplore. Restrictions apply.
+    648                                                                               IEEE/ASME TRANSACTIONS ON MECHATRONICS, VOL. 24, NO. 2, APRIL 2019
+
+
+
+                                                                                       known. This sum is assumed to be 2.8 m for all vehicles. While
+                                                                                       the actual length may have errors of 10%–15% from this value,
+                                                                                       this does not lead to much error in the orientation estimates.
+                                                                                       One reason for this is the dependence of Ẋ and Ẏ on the ψ in
+                                                                                       the dynamic model. This enables ψ to be estimated correctly.
+                                                                                          It should be noted that this model has two unknown inputs
+                                                                                       (steering angle δf and longitudinal acceleration a). Both of these
+                                                                                       unknown inputs can be assumed to be constants (or slowly
+                                                                                       changing) and equations with their derivates as zero can be
+                                                                                       appended to the dynamic model used for tracking.
+
+                                                                                       B. Observer Design for Vehicle Motion Tracking
+    Fig. 2.   Vehicle motion model.
+                                                                                         The nonlinear observer is designed by the method proposed in
+                                                                                       Section II-D with the nonlinear vehicle motion model (34)–(38).
+    be described by                                                                    First, note that
+                           Ẋ = V cos (ψ + β)                                  (34)                               ⎧                      ⎫
+                                                                                                                  ⎪
+                                                                                                                  ⎪
+                                                                                                                     V cos (ψ + β) ⎪
+                                                                                                                                         ⎪
+                                                                                                                  ⎪
+                                                                                                                  ⎪                      ⎪
+                           Ẏ = V sin (ψ + β)                                  (35)                               ⎨ V sin (ψ + β) ⎪      ⎬
+                                                                                                       f (x, u) =                          .      (41)
+                                V cos (β)                                                                         ⎪
+                                                                                                                  ⎪            a         ⎪
+                                                                                                                                         ⎪
+                                                                                                                  ⎪
+                                                                                                                  ⎪ V cos (β )           ⎪
+                                                                                                                                         ⎪
+                           ψ̇ =
+                                  lf + l r
+                                              tan (δf )                        (36)                               ⎩                      ⎭
+                                                                                                                      l f +l r tan (δf )
+                                                       
+                                    −1     lr tan (δf )                                Hence, A(ξ, u) in (15) can be computed from the Jacobian of
+                            β = tan                                            (37)
+                                             lf + l r                                  the vehicle motion model and is found to be
+    and                                                                                    A (ξ, u)
+                                       V̇ = a                                  (38)               ⎡                                                    ⎤
+                                                                                                      0   0    cos (ψ + β)         −V sin (ψ + β)
+    where V is the speed of the vehicle, β is the slip angle of the                            ⎢0                                  V cos (ψ + β) ⎥
+                                                                                               ⎢          0    sin (ψ + β)                       ⎥
+    vehicle. lf and lr are the distances from the center of gravity of                        =⎢
+                                                                                               ⎢0
+                                                                                                                                                 ⎥.
+                                                                                                                                                 ⎥             (42)
+    the vehicle to the front and rear wheelbases of the vehicle, δf                            ⎣          0           0                  0       ⎦
+    is steering angle of front wheel and a is the acceleration of the                                         cos(β )
+                                                                                                 0        0   l f +l r tan (δf )         0
+    vehicle. δf and a are unknown inputs. More understanding of
+    the nonlinear vehicle model can be found by reading [20].                          The Jacobian in (42) has three time-varying variables: V , δf , and
+       The location of the vehicle is assumed to be measured by                        ψ over which gridding is required. We need to define the oper-
+    using a radar or LIDAR sensor. Therefore, the output equations                     ating ranges of these variables. Then, a finite three-dimensional
+    can be written as                                                                  grid is constructed, consisting of the entire range of operating
+                                                                                     conditions. A(ξ, u) is evaluated at each grid point on this three-
+                                    X                                                  dimensional grid. Finally, we solve (12)–(16) for the observer
+                             y=         = Cx                      (39)
+                                    Y                                                  gain using the LMI toolbox in MATLAB, so as to obtain a single
+                                                                                       observer gain valid for all values of A(ξ, u).
+    where                                                                                 Preliminary results were presented by us on an observer for
+                                 
+                   1 0 0 0                                           T               vehicle motion on just highways in a conference publication
+          C=                          and x = X        Y     V    ψ        .   (40)    [21]. Since only highway driving was involved, the operating
+                   0 1 0 0
+                                                                                       range of ψ was limited. In this paper, we deal with both highway
+       Then, the form of the system and output equations mentioned                     and urban road driving involving a very large operating range
+    above is the same as the form of (1) used for the nonlinear                        for ψ and hence the need for a switched gain observer. It turns
+    observer development.                                                              out that a constant gain matrix cannot be used for the entire
+       It should be noted that the “zero slip angle at the tires” as-                  operating range 0 ≤ ψ ≤ 2π. However, stable observers can be
+    sumption could be avoided, and a model that assumes the tire                       designed for more limited operating ranges, if the 0 ≤ ψ ≤ 2π
+    force as a function of the slip angle could be utilized. How-                      region is divided into four subregions. Using the observer gains
+    ever, such a model becomes a function of a large number of tire                    obtained from these four subregions, a switched gain approach
+    and vehicle parameters. Since the vehicle that is encountered                      is needed to cover the full range 0 ≤ ψ ≤ 2π. It should be
+    and is being tracked is unknown, the values of these parameters                    noted that the new observer design technique developed in this
+    cannot be known. Hence, the above-mentioned model is more                          paper based on a grid still yields exponential stability for a much
+    appropriate, in spite of the zero-slip-at-tire assumption.                         larger operating range than the existing observer design methods
+       It should be noted that the sum lf + lr is constant for each                    [12], [13] described earlier. The observer design method using
+    vehicle, even if exact center of gravity of the vehicle is not                     Theorem 1 fails to provide an observer gain, and the observer
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 04:15:43 UTC from IEEE Xplore. Restrictions apply.
+   JEON et al.: TRACKING OF VEHICLE MOTION ON HIGHWAYS AND URBAN ROADS USING A NONLINEAR OBSERVER                                                              649
+
+
+
+                                                                                     regions may use four different values of the matrix P > 0 in
+                                                                                     their individual Lyapunov functions. The stability of the overall
+                                                                                     switched system can be guaranteed if the system satisfies a
+                                                                                     minimum dwell time constraint in each region, according to
+                                                                                     results from hybrid system theory [22]. The minimum dwell
+                                                                                     time in region j when switching from region i to region j needs
+                                                                                     to be greater than T, where T is the amount of time needed for
+                                                                                     Vj (x(t + T )) < Vi (x(t)). This minimum dwell time guarantees
+                                                                                     global asymptotic stability. This result can be understood as
+                                                                                     follows. In each individual region, the estimation error x̃ keeps
+                                                                                     decreasing due to the Lyapunov exponentially stable design. In
+                                                                                     switching between regions, the P matrix may be different in
+                                                                                     the two regions. However, if the system remains in the same
+                                                                                     region for a minimum dwell time, the error will become smaller
+                                                                                     than the initial value at the time the region was entered (due to
+                                                                                     local exponential stability). Thus, if the system is constrained to
+                                                                                     remain in one region for a minimum dwell time, the value of the
+                                                                                     Lyapunov function after the dwell time in region j is less than
+   Fig. 3.   Finite state machine for gain switching.                                its value in region i at the time the switch from i to j occurred.
+                                                                                     This guarantees overall asymptotic stability [22].
+                                                                                        In the case of the observer design application for the four
+   design method using Theorem 2 provides an observer gain for
+                                                                                     separate regions of ψ, the values of ψ at which the region is
+   a very limited operating range: −19◦ ≤ ψ ≤ 19◦ with 3 m/s ≤
+                                                                                     entered and at which it switches back are different (as shown
+   V ≤ 15 m/s, and −10◦ ≤ δf ≤ 10◦ .
+                                                                                     in Fig. 3). This hysteresis between entering and switching back
+      As a result, the proposed observer works for most vehicle
+                                                                                     ensures that the minimum dwell time constraint is met.
+   motions: straight driving, lane change, double lane change, and
+                                                                                        Initial conditions of the vehicle motion are decided based
+   cross traffic motions without using a switched gain approach.
+                                                                                     on an initial small number of measurements. Predominantly,
+   Only left and right turn vehicle motions are required to use a
+                                                                                     initial target vehicle orientation is one of four cases: 0◦ or 180◦
+   switched gain approach.
+                                                                                     when the target vehicle is driving longitudinally from the sensor
+                                                                                     orientation point of view, and 90◦ or 270◦ when the target vehicle
+   C. Switched Gain Approach                                                         is driving laterally from the sensor orientation point of view.
+      By using the proposed nonlinear observer design method in                      First, rough relative velocity between target vehicle and sensor
+   Theorem 3, four constant gain matrices L1 , L2 , L3 , and L4                      platform can be calculated based on initial couple of position
+   can be obtained for the use in the following operating ranges,                    measurements and its time information. By using the relative
+   respectively:                                                                     velocities (Vr,x , Vr,y ), an angle can be calculated as
+       1) −60◦ ≤ ψ ≤ 60◦ ;
+                                                                                                             ψr = tan−1 (Vr,y /Vr,x ).                       (43)
+       2) 30◦ ≤ ψ ≤ 150◦ ;
+       3) 120◦ ≤ ψ ≤ 240◦ ,                                                             From the calculated angle, it is possible to determine whether
+       4) 210◦ ≤ ψ ≤ 330◦ ;                                                          or not the vehicle constitutes cross traffic. By comparing with
+   with 3 m/s ≤ V ≤ 15 m/s, and −10◦ ≤ δf ≤ 10◦ . By using                           the velocity of sensor platform, the moving direction of target
+   proper initial target vehicle orientation and switching the gain                  vehicle is obtained and the vehicle orientation ψ0 is selected
+   properly, the observer can estimate vehicle motion for the entire                 among the four orientations. Therefore, initial target vehicle
+   operating range.                                                                  orientation can be determined without ambiguity.
+      Fig. 3 shows a finite state machine for gain switching. Each fi-                  This method provides initial conditions that are close enough
+   nite state is for a different operating range ψi,m in ≤ ψ ≤ ψi,m ax               to the true values to choose the correct initial state (gain) and to
+   and uses a different observer gain Li for i = 1, . . . , 4. Since                 make the observer converge quickly.
+   vehicle motion is nonholonomic, there are only two possi-                            In this paper, two methods A and B are proposed for the gain
+   ble options for switching from the current state. For exam-                       switching in the observer to estimate vehicle motion for the en-
+   ple, if initial orientation of the vehicle (heading angle) is                     tire range 0 ≤ ψ ≤ 2π. In practice, common maneuvers such as
+   within −60◦ ≤ ψ ≤ 60◦ , the vehicle cannot suddenly be ori-                       straight line motion and lane change motion do not need gain
+   ented in 120◦ ≤ ψ ≤ 240◦ without going through either 30◦ ≤                       switching. However, left or right turning motion at intersections
+   ψ ≤ 150◦ or 210◦ ≤ ψ ≤ 330◦ .                                                     requires gain switching. For instance, consider a typical left turn
+      The stability of the hybrid observer in Fig. 3 consisting of four              vehicle motion in which the orientation of the vehicle evolves
+   different constant observer gain regions needs to be considered.                  from 0◦ to 90◦ . When ψ exceeds 60◦ , gain switching should be
+   It should be noted that inside each region, a single observer                     conducted from L1 to L2 since L1 works only for the operating
+   gain is used and exponential stability is guaranteed using the                    range −60◦ ≤ ψ ≤ 60◦ . As we can see, the observer gain needs
+   Lyapunov function analysis of Theorem 3. However, the four                        to switch based on the value of ψ. However, ψ is not a directly
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 04:15:43 UTC from IEEE Xplore. Restrictions apply.
+    650                                                                             IEEE/ASME TRANSACTIONS ON MECHATRONICS, VOL. 24, NO. 2, APRIL 2019
+
+
+
+
+    Fig. 4. Illustration of how Method B distinguishes between (a) left turn
+    maneuver, and (b) lane change maneuver.
+
+
+
+    measurable variable. Therefore, it is important to develop meth-
+    ods that detect vehicle turn motion without knowing ψ. It should
+    be noted that lane change maneuvers should be distinguished
+    from turn maneuvers because a lane change maneuver has a
+    smaller orientation change and does not need gain switching.
+       Method A: The first method utilizes estimated orientation ψ̂
+    and lateral movement of target vehicle. State (gain) is switched
+    to next available region based on the operating range if
+        1) Lateral movement ΔY exceeds 5 m, and
+        2) ψ̂ is exceeding upper (or lower) bound of operating range
+            of ψ at the current state, as shown in Fig. 3.
+       The value of 5 m is used as a threshold because typical road
+    width and turning radius are of the order of 4 m and 5 m,
+    respectively. This method works well in practice since relatively                 Fig. 5. Vehicle motions. (a) Straight driving motion. (b) Lane change
+                                                                                      motion. (c) Double lane change motion. (d) Cross traffic motion. (e) Left
+    good initial condition can be obtained as described earlier and                   turn vehicle motion.
+    the initial condition makes estimates converge quickly to the true
+    values. Furthermore, each operating range for an observer gain
+    is overlapped with nearby regions by 30°. This overlap and the                    that the polygon from turning motion is convex and the poly-
+    proposed switching rule prevent repeated switching behavior.                      gon from lane change motion cannot be convex. Once lateral
+    For example, the value of ψ at which the switch from region                       movements are within the threshold 0.3 m for an adequate time
+    1 to 2 occurs is different from the value of ψ, at which the                      window, reference lateral position of the vehicle is updated for
+    reverse switch from region 2 to 1 occurs. The specific values                     next switching.
+    are specified in the transition rules for switching between the                      Finally, it should be noted that while the inputs of steering
+    different regions. Importantly, the overlap improves robustness                   angle and acceleration in the vehicle model were assumed to
+    of the switching against estimation error. A switched gain still                  be constant, the influence of nonzero inputs on estimation error
+    makes the observer stable if the true orientation is within the                   can be calculated using Lyapunov analysis [13]. A bounded
+    overlapped range. Once a vehicle is in a straight line motion                     nonzero input for an exponentially stable observer will result
+    mode, i.e., estimated orientation of the vehicle is near 0◦ , 90◦ ,               in a bounded estimation error, as shown in [13]. The bound
+    180◦ , or 270◦ , the reference lateral position of the vehicle is                 on the estimation error can be designed to be small by using a
+    updated for next switching.                                                       LMI-based H∞ design condition, as was done in [13].
+       Method B: Switching can be determined by only using mea-
+    sured information. The procedure is as follows.                                                         IV. SIMULATION RESULTS
+        1) Initiate collection of position measurements when ΔY                          The nonlinear observer for vehicle motion tracking, described
+            exceeds 0.3 m (point A in Fig. 4).                                        in the previous section, has first been evaluated using MATLAB
+        2) Store the measurement until ΔY exceeds 5 m (point B in                     simulations. Simulation studies are conducted for various sce-
+            Fig. 4), and then go to the next step.                                    narios of highway vehicle motion: straight driving, lane change,
+        3) Check the convexity of polygon drawn by the line AB and                    and double lane change motion, as shown in Fig. 5(a), (b), and
+            measurements (curve AB), as shown in Fig. 4.                              (c). Also, cross traffic and left turn vehicle at intersections, as
+        4) If the polygon is convex and the curve AB is on the                        shown in Fig. 5(d) and (e), are simulated, as scenarios specific
+            downstream side of the line, state (gain) is switched to                  local driving. lf and lr are assumed to be 1.35 and 1.45 m. A
+            next available state based on the turning direction, as                   sensor is assumed to be located at the origin of the coordinate
+            shown in Fig. 3.                                                          system in Fig. 5. The trajectories of the vehicle are generated by
+       Fig. 4 shows the difference between lane change motion and                     using the nonlinear vehicle motion model. Each trajectory and
+    turning motion based on the proposed method. It is obvious                        the inputs for the trajectories are shown in Figs. 6 and 7.
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 04:15:43 UTC from IEEE Xplore. Restrictions apply.
+   JEON et al.: TRACKING OF VEHICLE MOTION ON HIGHWAYS AND URBAN ROADS USING A NONLINEAR OBSERVER                                                              651
+
+
+
+
+   Fig. 6.   Simulation results. (a) Straight driving maneuver. (b) Lane change maneuver. (c) Double lane change maneuver. (d) Cross traffic maneuver.
+
+
+     The observer gains are calculated by using the four operating
+   conditions with the exponential stability parameter α = 0.3 :                                     ⎡                                                 ⎤
+                                                                                                             623.0134             5.5367 × 10−12
+                 ⎡                                      ⎤                                          ⎢                                      ⎥
+                       623.0134       −1.0612 × 10−12                                              ⎢ 2.4022 × 10−12                       ⎥
+                                                                                                                                     1069.0838
+                 ⎢                                      ⎥                                     L3 = ⎢
+                                                                                                   ⎢ −5388.3056
+                                                                                                                                          ⎥
+                 ⎢ 1.3971 × 10−12
+                 ⎢                        1069.0838     ⎥
+                                                        ⎥                                          ⎣                    −3.3334 × 10−11 ⎥ ⎦
+           L1 = ⎢                                       ⎥                                                          −12
+                 ⎢ 5388.3054          −5.5343   × 10−12 ⎥                                            −2.0986 × 10         −1528.5640
+                 ⎣                                      ⎦
+                                                                                                   ⎡                                    ⎤
+                         2.1559 × 10−12           1528.5641                                            1069.0850       −2.7240 × 10−14
+                     ⎡                                              ⎤                              ⎢                                    ⎥
+                                                                                                   ⎢ 1.4141 × 10−13       623.0136      ⎥
+                           1069.0849          −6.9367 × 10−10                                      ⎢
+                                                                                              L4 = ⎢                                    ⎥.                   (44)
+                  ⎢                                                 ⎥                              ⎣ 7.1552 × 10
+                                                                                                                 −12
+                                                                                                                        −5388.3049 ⎥    ⎦
+                  ⎢ 8.7541 × 10−11                 623.0136         ⎥
+             L2 = ⎢
+                  ⎢ 3.8624 × 10−9
+                                                                    ⎥
+                                                                    ⎥                                  1528.5668       −9.2341 × 10 −11
+                  ⎣                               5388.3040         ⎦
+                     −1528.5669                7.2656 × 10−10                          As described earlier, relatively good initial conditions can be
+                                                                                     obtained by using first few samples from sensor measurements.
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 04:15:43 UTC from IEEE Xplore. Restrictions apply.
+    652                                                                             IEEE/ASME TRANSACTIONS ON MECHATRONICS, VOL. 24, NO. 2, APRIL 2019
+
+
+
+
+    Fig. 7.   Simulation results of left turn maneuver.
+
+
+    However, in this simulation study, we intentionally use inaccu-
+    rate initial conditions for the velocity and orientation to show
+    the convergence of the observer.
+       The estimation results using the nonlinear observer with a
+                                                                                      Fig. 8. Simulation results of the performance in the presence of tire
+    single gain are shown in Fig. 6. Only small estimation errors are                 slip angles.
+    presented during transient periods. Also, Fig. 7 shows estima-
+    tion results of a left turn vehicle. The switched gain approach
+    is utilized to track vehicle motion over a large operating range.
+    Both methods A and B conduct gain switching properly and track
+    vehicle motion successfully. Overall, the proposed nonlinear ob-
+    server provides good performance for vehicle motion tracking.
+    The estimates of the vehicle motion converge to the true vehicle
+    motion, even with unknown steering and acceleration inputs.
+       Simulation studies in the presence of large tire slip angles
+    are also conducted. As shown in Fig. 8, two steering actions are
+    considered to evaluate the performance of the proposed observer
+                                                                                      Fig. 9.   (a) Delphi ESR. (b) Experimental setup using a tripod.
+    in the presence of large tire slip angles. A vehicle first changes
+    the orientation using a small steering action, and then suddenly
+    change the vehicle orientation to the opposite direction using                    3) Double lane change; 4) Cross traffic; and v) Left turn maneu-
+    a large steering action. Large tire slip angles (traction limited                 vers. The Delphi electronically scanning radar (ESR), shown in
+    event) occur due to the abrupt large steering action. In the sim-                 Fig. 9, is used for the experimental evaluation. The radar was
+    ulation studies, Dugoff’s tire model [20] is utilized. Simulation                 mounted on a tripod and measured all vehicle positions in the
+    results in Fig. 8 with a nonlinear tire force model show that                     experiment. The radar provides vehicle radial position informa-
+    while the observer continues to track lateral and longitudinal                    tion within 174 m of maximum range and 45° of maximum field
+    positions very accurately, the estimation of vehicle orientation                  of view [23]. A low-pass filter is used to smoothen the radar’s
+    experiences larger errors in the presence of large tire slip angles.              vehicle position data, before supplying it to the observer. Also,
+                                                                                      the radial velocity of the target can be obtained from the radar.
+                                                                                      However, we only use the velocity information as a reference
+                         V. EXPERIMENTAL RESULTS                                      to compare with estimates, for the validation of the proposed
+      Experiments are conducted to validate the proposed nonlinear                    nonlinear observer.
+    observer design in situations corresponding to all the five sce-                     The observer gains are obtained by using the four operating
+    narios in Fig. 5 as follows: 1) Straight driving; 2) Lane change;                 conditions with the exponential stability parameter α = 0.1.
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 04:15:43 UTC from IEEE Xplore. Restrictions apply.
+   JEON et al.: TRACKING OF VEHICLE MOTION ON HIGHWAYS AND URBAN ROADS USING A NONLINEAR OBSERVER                                                              653
+
+
+
+
+   Fig. 10. Experimental results. (a) Straight driving maneuver. (b) Lane change maneuver. (c) Double lane change maneuver. (d) Cross traffic
+   maneuver.
+
+
+   Initial conditions are calculated by using first two samples from                 by the radar can be used to evaluate the performance of the
+   the radar measurement. Figs. 10 and 11 show the experimental                      proposed observer. The estimated radial velocity of the target
+   results for the five scenarios. It is seen that the proposed non-                 vehicle can be computed by using estimates:
+   linear observer can estimate the vehicle motion based on radar                                                ! &            ! &
+   measurements, without knowing the steering and acceleration                                      ·   X̂ V̂ cos ψ̂ + Ŷ V̂ sin ψ̂
+   of the vehicle. The estimates from the experimental data pro-                                   r̂ =          '                  .          (45)
+                                                                                                                   X̂ 2 + Ŷ 2
+   vide very reasonable evolutions of the orientation of the vehicle,
+   which are quite similar as the orientation results from the simu-                 The error between the radial velocity and estimated radial ve-
+   lations. Also, the radial velocity of the target vehicle measured                 locity is shown in Figs. 10 and 11. Mostly, the error is less than
+
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 04:15:43 UTC from IEEE Xplore. Restrictions apply.
+    654                                                                             IEEE/ASME TRANSACTIONS ON MECHATRONICS, VOL. 24, NO. 2, APRIL 2019
+
+
+
+                                                                                         The developed observer successfully estimates vehicle mo-
+                                                                                      tion for a larger operating range than existing observer tech-
+                                                                                      niques from the literature. One disadvantage of the proposed
+                                                                                      method is the high computational effort in computing a gain
+                                                                                      using the gridding technique. However, it should be noted that
+                                                                                      this computation is done offline and not in real-time. Future
+                                                                                      work will include further development of the vehicle tracking
+                                                                                      observer design method to reduce the high offline computational
+                                                                                      burden in computing the observer gain.
+
+
+                                                                                                                         REFERENCES
+                                                                                       [1] G. R. Widmann et al., “Comparison of lidar-based and radar-based adap-
+                                                                                           tive cruise control systems,” SAE, Warrendale, PA, USA, Tech. Paper
+                                                                                           2000-01-0345, 2000.
+                                                                                       [2] R. Abou-Jaoude, “ACC radar sensor technology, test requirements, and
+                                                                                           test solutions,” IEEE Trans. Intell. Transp. Syst., vol. 4, no. 3, pp. 115–122,
+                                                                                           Sep. 2003.
+                                                                                       [3] A. Petrovskaya and S. Thrun, “Model based vehicle detection and tracking
+                                                                                           for autonomous urban driving,” Autonomous Robots, vol. 26, no. 2/3,
+                                                                                           pp. 123–139, Apr. 2009.
+                                                                                       [4] C. Urmson et al., “Autonomous driving in urban environments: Boss and
+                                                                                           the urban challenge,” J. Field Robot., vol. 25, no. 8, pp. 425–466, Aug.
+    Fig. 11.   Experimental results of left turn maneuver.                                 2008.
+                                                                                       [5] A. Mukhtar, L. Xia, and T. B. Tang, “Vehicle detection techniques for
+                                                                                           collision avoidance systems: A review,” IEEE Trans. Intell. Transp. Syst.,
+                                   TABLE I                                                 vol. 16, no. 5, pp. 2318–2338, Oct. 2015.
+                       ERROR OF RADIAL VELOCITY ESTIMATE                               [6] E. Kayacan, H. Ramon, and W. Saeys, “Robust trajectory tracking
+                                                                                           error model-based predictive control for unmanned ground vehicles,”
+                                                                                           IEEE/ASME Trans. Mechatronics, vol. 21, no. 2, pp. 806–814, Apr. 2016.
+                                                                                       [7] H. An, J. Liu, C. Wang, and L. Wu, “Approximate back-stepping fault tol-
+                                                                                           erant control of the flexible air-breathing hypersonic vehicle,” IEEE/ASME
+                                                                                           Trans. Mechatronics, vol. 21, no. 3, pp. 1680–1691, Jun. 2016.
+                                                                                       [8] C. Shen, Y. Shi, and B. Buckham, “Integrated path planning and tracking
+                                                                                           control of an AUV: A unified receding horizon optimization approach,”
+                                                                                           IEEE/ASME Trans. Mechatronics, vol. 22, no. 3, pp. 1163–1173, Jun.
+                                                                                           2017.
+                                                                                       [9] W. Jeon and R. Rajamani, “Rear vehicle tracking on a bicycle using active
+                                                                                           sensor orientation control,” IEEE Trans. Intell. Transp. Syst., vol. 19, no. 8,
+                                                                                           pp. 2638–2649, Aug. 2018.
+    1 m/s. Detailed values of the maximum and root mean square                        [10] N. Kaempchen, K. Weiss, M. Schaefer, and K. C. J. Dietmayer, “IMM
+                                                                                           object tracking for high dynamic driving maneuvers,” in Proc. IEEE Intell.
+    error (RMSE) are illustrated in Table I.                                               Veh. Symp., 2004, pp. 825–830.
+                                                                                      [11] Y. Kang, C. Roh, S. B. Suh, and B. Song, “A lidar-based decision-making
+                                VI. CONCLUSION                                             method for road boundary detection using multiple kalman filters,” IEEE
+                                                                                           Trans. Ind. Electron., vol. 59, no. 11, pp. 4360–4368, Nov. 2012.
+       A vehicle tracking algorithm that uses a single model to rep-                  [12] G. Phanomchoeng, R. Rajamani, and D. Piyabongkarn, “Nonlinear ob-
+                                                                                           server for bounded jacobian systems, with applications to automotive slip
+    resent all possible vehicle motions is presented in this paper. By                     angle estimation,” IEEE Trans. Autom. Control, vol. 56, no. 5, pp. 1163–
+    using a single vehicle model, nonlinear observer design tech-                          1170, May 2011.
+    niques can be utilized. The developed nonlinear observer guar-                    [13] A. Zemouche, M. Boutayeb, and G. I. Bara, “Observers for a class of
+                                                                                           Lipschitz systems with extension to H performance analysis,” Syst.
+    antees stability of the estimates over large operating regions and                     Control Lett., vol. 57, no. 1, pp. 18–27, 2008.
+    requires less real-time computational effort in estimating trajec-                [14] H. K. Khalil, Nonlinear Systems, 3rd ed. Upper Saddle River, NJ, USA:
+    tories of multiple vehicles on the road, compared to a traditional                     Prentice-Hall, 2002.
+                                                                                      [15] J. M. Ortega and W. C. Rheinboldt, Iterative Solution of Nonlinear Equa-
+    IMM filter.                                                                            tions in Several Variables. Philadelphia, PA, USA: SIAM, 2000.
+       The developed observer is used to track vehicle motion in-                     [16] B. Açıkmeşe and M. Corless, “Observers for systems with nonlinearities
+    cluding the lateral and longitudinal positions, velocity, and yaw                      satisfying incremental quadratic constraints,” Automatica, vol. 47, no. 7,
+                                                                                           pp. 1339–1348, Jul. 2011.
+    orientation of a vehicle. Simulation results were presented to                    [17] R. Wang, C. Hu, F. Yan, and M. Chadli, “Composite nonlinear feed-
+    show the performance of the developed observer in the appli-                           back control for path following of four-wheel independently actuated
+    cation of vehicle motion tracking. Experimental results were                           autonomous ground vehicles,” IEEE Trans. Intell. Transp. Syst., vol. 17,
+                                                                                           no. 7, pp. 2063–2074, Jul. 2016.
+    also presented using a radar sensor that measures polar distance                  [18] S. K. Kommuri, M. Defoort, H. R. Karimi, and K. C. Veluvolu, “A robust
+    and azimuth angle as the measurement unit. Both simulations                            observer-based sensor fault-tolerant control for PMSM in electric vehi-
+    and experiments show excellent results in vehicle motion track-                        cles,” IEEE Trans. Ind. Electron., vol. 63, no. 12, pp. 7671–7681, Dec.
+                                                                                           2016.
+    ing on vehicle maneuvers including straight driving cars, a lane                  [19] X. Rong Li and V. P. Jilkov, “Survey of maneuvering target tracking. Part
+    change maneuver, a double lane change maneuver, a cross traffic                        I. Dynamic models,” IEEE Trans. Aerosp. Electron. Syst., vol. 39, no. 4,
+    maneuver, and a left turn maneuver.                                                    pp. 1333–1364, Oct. 2003.
+
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 04:15:43 UTC from IEEE Xplore. Restrictions apply.
+   JEON et al.: TRACKING OF VEHICLE MOTION ON HIGHWAYS AND URBAN ROADS USING A NONLINEAR OBSERVER                                                              655
+
+
+
+   [20] R. Rajamani, Vehicle Dynamics and Control. New York, NY, USA:                                         Rajesh Rajamani received the B.Tech. de-
+        Springer, 2011.                                                                                       gree from the Indian Institute of Technology
+   [21] W. Jeon, A. Zemouche, and R. Rajamani, “Nonlinear observer for vehicle                                at Madras, Chennai, India, in 1989, and the
+        motion tracking,” in Proc. Amer. Control Conf., Milwaukee, WI, USA,                                   M.S. and Ph.D. degrees from the University of
+        2018, pp. 825–830.                                                                                    California at Berkeley, Berkeley, CA, USA, in
+   [22] P. Colaneri, J. C. Geromel, and A. Astolfi, “Stabilization of continuous-                             1991 and 1993, respectively, all in Mechanical
+        time switched nonlinear systems,” Syst. Control Lett., vol. 57, pp. 95–103,                           Engineering.
+        2008.                                                                                                    He is currently a Professor of mechanical
+   [23] Delphi. ESR. [Online]. Available: https://www.delphi.com/manufacturers/                               engineering with the University of Minnesota,
+        auto/safety/active/electronically-scanning-radar. Accessed on: Sep. 2017.                             Minneapolis, MN, USA. Dr. Rajamani has co-
+                                                                                                              authored more than 135 journal papers and is
+                             Woongsun Jeon received the B.S. and M.S.                 a co-inventor on 13 patents/patent applications. He is the author of
+                             degrees in mechanical engineering from Yon-              Vehicle Dynamics and Control (Springer Verlag, 2011). His active re-
+                             sei University, Seoul, South Korea in 2010 and           search interests include sensors and estimation systems for mechanical
+                             2012, respectively. He is currently working to-          engineering applications.
+                             ward the Ph.D. degree in mechanical engineer-               Dr. Rajamani has served as the Chair of the IEEE Technical Commit-
+                             ing at the University of Minnesota, Twin Cities,         tee on Automotive Control and on the editorial boards of the IEEE TRANS-
+                             Minneapolis, MN, USA.                                    ACTIONS ON CONTROL SYSTEMS TECHNOLOGY, the IEEE/ASME TRANSAC-
+                                His research interests include sensing, esti-         TIONS ON MECHATRONICS, and the IEEE Control Systems Magazine. He is
+                             mation, and control systems.                             a Fellow of ASME and has been a recipient of the CAREER award from
+                                                                                      the National Science Foundation, the 2001 Outstanding Paper award
+                                                                                      from the journal IEEE TRANSACTIONS ON CONTROL SYSTEMS TECHNOL-
+                                                                                      OGY, the Ralph Teetor Award from SAE, and the 2007 O. Hugo Schuck
+                           Ali Zemouche received the Ph.D. degree in au-              Award from the American Automatic Control Council.
+                           tomatic control from the University Louis Pas-
+                           teur, Strasbourg, France, in 2007, where he held
+                           the postdoctorate degree in automatic control
+                           from October 2007 to August 2008.
+                                He has been Associate Professor with
+                           the Centre de Recherche en Automatique de
+                           Nancy (CRAN UMR CNRS 7039), Université
+                           de Lorraine, France, since September 2008. He
+                           held an academic position with Inria—Saclay
+                           (EPI DISCO) from September 2016 to August
+   2017. His research activities include nonlinear systems, state observers,
+   observer-based control, time-delay systems, robust control, and appli-
+   cation to real-world models.
+      Dr. Zemouche is currently an Associate Editor of the SIAM Journal
+   of Control and Optimization, the European Journal of Control, Cogent
+   Engineering, and DESIGNS (MDPI Journal). He is also a member of the
+   Conference Editorial Board of IEEE Control Systems Society and IFAC
+   TC2.3 (Nonlinear Control Systems).
+
+
+
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 04:15:43 UTC from IEEE Xplore. Restrictions apply.
+

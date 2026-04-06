@@ -1,0 +1,1458 @@
+sensors
+Article
+
+A Non-linear Model Predictive Control Based on
+Grey-Wolf Optimization Using Least-Square Support
+Vector Machine for Product Concentration Control in
+L -Lysine Fermentation
+Bo Wang 1 , Muhammad Shahzad 1, *
+and Saad Uddin 2
+1
+2
+
+*
+
+, Xianglin Zhu 1
+
+and Khalil Ur Rehman 1
+
+School of Electrical and Information Engineering, Jiangsu University, Zhenjiang 212013, China;
+wangbo@ujs.edu.cn (B.W.); zxl4390@126.com (X.Z.); 5102180315@stmail.ujs.edu.cn (K.U.R.)
+School of Mechanical Engineering, Jiangsu University, Zhenjiang 212013, China;
+5102180314@stmail.ujs.edu.cn
+Correspondence: 5102180312@stmail.ujs.edu.cn
+
+Received: 16 April 2020; Accepted: 4 June 2020; Published: 11 June 2020
+
+
+
+
+Abstract: L-Lysine is produced by a complex non-linear fermentation process. A non-linear model
+predictive control (NMPC) scheme is proposed to control product concentration in real time for
+enhancing production. However, product concentration cannot be directly measured in real time.
+Least-square support vector machine (LSSVM) is used to predict product concentration in real
+time. Grey-Wolf Optimization (GWO) algorithm is used to optimize the key model parameters
+(penalty factor and kernel width) of LSSVM for increasing its prediction accuracy (GWO-LSSVM).
+The proposed optimal prediction model is used as a process model in the non-linear model predictive
+control to predict product concentration. GWO is also used to solve the non-convex optimization
+problem in non-linear model predictive control (GWO-NMPC) for calculating optimal future inputs.
+The proposed GWO-based prediction model (GWO-LSSVM) and non-linear model predictive control
+(GWO-NMPC) are compared with the Particle Swarm Optimization (PSO)-based prediction model
+(PSO-LSSVM) and non-linear model predictive control (PSO-NMPC) to validate their effectiveness.
+The comparative results show that the prediction accuracy, adaptability, real-time tracking ability,
+overall error and control precision of GWO-based predictive control is better compared to PSO-based
+predictive control.
+Keywords: model predictive control; machine learning; grey-wolf optimization;least-square support
+vector machine; L-Lysine fermentation
+
+1. Introduction
+The invention and advancement of modern computationally fast microprocessors have paved the
+path for Model Predictive Control (MPC). Recently, MPC has become one of the efficient predictive
+control algorithms in large scale applications such as aerospace systems [1], plastic industry [2],
+wastewater treatment plant [3], power electronics industry [4] and many others. It can handle
+multi-process variables and incorporate practical constraints on these variables. The basic elements
+of MPC are: process model, cost function and optimization algorithm. The process model plays
+a key role in the performance of MPC. It should encompass the precise dynamics of the process.
+In most applications, linearized models are used in MPC. However, practical processes exhibit severe
+non-linearity that cannot be captured by linear models. In addition, these linear models cannot
+cover a wide range of operating conditions. Artificial intelligence-based models are famous for their
+Sensors 2020, 20, 3335; doi:10.3390/s20113335
+
+www.mdpi.com/journal/sensors
+
+Sensors 2020, 20, 3335
+
+2 of 17
+
+self-learning and non-linear modeling ability, and have attracted many researchers to model these
+non-linear behaviors such as artificial neural network (ANN) and support vector machine (SVM) [5,6].
+L -Lysine is the second most produced amino acid in the world. An estimated global market of
+L-Lysine is 2.2 million tons per year, which is growing at the rate of 10% per year [7]. It is mainly used
+in food, animal feed, pharmaceuticals and cosmetics industries. This increasing demand in global
+market compels industries to look for alternatives to enhance the productivity instead of expanding
+the physical capacity of plants, which is expensive and time consuming. One of the best ways to
+boost the productivity is to monitor and control product concentration. An excessive increase of
+product in reactor causes osmotic stress or catabolic repression for bacteria during cultivation [8].
+Temperature, pH, initial substrate concentration, air flow rate and agitation rate are five paramount
+factors to enhance and control product concentration [9]. However, L-Lysine fermentation is a highly
+non-linear process and product concentration cannot be directly measured in real time using physical
+sensors in the fermentation process. Some costly off-line analysis methods such as dry weight method,
+ninhydrin colorimetric method and optical density method are used to measure product concentration,
+but these methods have limitations, such as large time delay and high infection rate. Therefore, off-line
+lab analyzers cannot meet the requirements of real-time control of the fermentation process with these
+limitations. To solve the above mentioned problems, machine-learning-based prediction models [10]
+have been effectively used by the researchers [11].
+Machine-learning-based prediction models construct inferential mathematical models by making
+use of easily measurable variables (for example, pH, temperature and dissolved oxygen) obtained
+from physical sensors and predict the unmeasurable key variables (product concentration) [12].
+The successful implementation of these prediction models has revolutionized the fermentation industry.
+Researchers have introduced many data-driven prediction models to model fermentation process
+for different objectives. ANN is exploited to design a prediction model for bioethanol production by
+defining optimal number of hidden layers and hidden units [13]. However, if the specific structure of
+network is not known, ANN loses its generalization ability to model non-linear regression problems
+and suffers from overfitting problem [14]. SVM, which is based on structural risk minimization
+problem, has successfully resolved the aforementioned problem using simple statistical learning theory.
+It is used to solve many industrial applications, such as a modelling method based on SVM is proposed
+for Glutamic acid fermentation to predict product concentration [15]. Unfortunately, huge time cost for
+training and curse of dimensionality limits usefulness of SVM in many applications [16]. Least-square
+support vector machine (LSSVM) alleviates this problem by converting convex Quadratic Programming
+(QP) problem in SVM to a system of linear equations. In this way, LSSVM provides fast training speed
+and efficiently finds global optimum solution if the parameters are selected carefully [17].
+In this study, LSSVM is selected as a prediction model to measure product concentration of
+L -Lysine fermentation process. To improve the prediction accuracy and robustness of LSSVM,
+two model parameters, namely kernel width ‘σ’ and regularization factor ‘g’ must be optimized.
+A very large value of penalty parameter ‘g’ would lead to remarkably high accuracy on training
+data but less accuracy on test data, while less value makes the model less functional resulting in
+poor performance. In addition, an excessively large value of kernel width control factor ‘σ’ inflicts
+overfitting problem and small value results in under-learning problem [18]. Xinhua and Ming [19]
+hybridized Particle Swarm Optimization (PSO) algorithm and LSSVM, and proposed a PSO-LSSVM
+model to predict the deformation on surrounding rocks of underground caverns. Zhu [20] used
+PSO-LSSVM to measure key variables on-line in fermentation process. The comparative studies
+show that Grey-Wolf Optimization (GWO) algorithm has overall best performance in terms of search
+efficiency and convergence speed for finding a global optimum solution as compared to PSO, ABC,
+FFA, CS, BA, FPA, GSA, DE, EP and ES [21,22]. Hence, in this work, GWO is used to get optimum
+parameters of proposed LSSVM prediction model. It is notable to mention “No Free Lunch” (NFL)
+theorem here, which proves that an optimization algorithm works well in some specific optimization
+
+Sensors 2020, 20, 3335
+
+3 of 17
+
+problems, but same algorithm is not successful in other set of optimization problems [23]. In our case,
+GWO provides best results that fulfill our requirements.
+Many studies proposed different machine-learning-based prediction models for MPC to predict
+future outputs. A generalized predictive control (GPC) scheme is proposed to control concentration of
+bacteria by using a linearized PSO-LSSVM model [24]. However, linear models show limited control
+performance because industrial fermentation processes generally exhibit complex and severe non-linear
+behavior. Furthermore, if a non-linear model is used, the optimization problem becomes a non-convex
+problem, which is solved by using Non-linear Programming (NP) method. Conventionally, NP is
+involved in computationally expensive step of determining the hessian matrix and its inverse [25]. In
+addition, these solutions are highly dependent on the selection of initial point value and can easily
+fall in local optimal region (solution) [26]. The biggest challenge in designing an NMPC is to find
+an algorithm that minimizes a cost function in real time. The cost function is usually non-convex,
+high-dimensional with complex and non-linear constraints [27].
+This work employs a novel derivative-free approach to solve non-linear and non-convex rolling
+optimization problem in NMPC to control product concentration of L-Lysine fermentation process.
+To the best of our knowledge, GWO has not been applied to solve rolling optimization problem in
+NMPC for control problems in fermentation process. GWO has fast convergence speed, involves
+lesser operators in computations and requires a few adjustable parameters [28]. These properties
+make GWO an ideal candidate to solve a non-linear, non-convex optimization problem of NMPC
+in real time. Furthermore, the performance of NMPC is highly dependent on the accuracy of the
+prediction model. Thus, constructing an accurate prediction model is a crucial step. The proposed
+non-linear GWO-LSSVM prediction model is employed in NMPC for prediction of future output values.
+In addition, GWO is imposed to solve rolling optimization problem in NMPC as Chen [29] designed
+a NMPC based on PSO to control greenhouse temperature. In this way, a non-linear MPC is designed
+which easily incorporates a non-linear prediction model and solves a non-convex optimization problem
+in real time. The final results of GWO-LSSVM prediction model and non-linear GWO-NMPC control
+algorithm are compared with PSO-LSSVM and PSO-NMPC, respectively. The results show that
+the predicted values by GWO-LSSVM are very close to actual values as compared to PSO-LSSVM,
+and product concentration follows an optimal trajectory by employing real-time GWO-NMPC control
+strategy. Moreover, the results of GWO-NMPC surpass PSO-NMPC in terms of error tracking and
+adaptability.
+The rest of the paper is structured as: Section 2 consists of materials and methods, which explains
+MPC basics, LSSVM model, GWO algorithm, proposed GWO-LSSVM prediction model, GWO-NMPC
+algorithm and experimental setup. Section 3 includes results and discussion. The paper is concluded
+in Section 4.
+2. Material and Methods
+2.1. Model Predictive Control (MPC)
+Predictive control does not correspond to a particular control methodology but more precisely
+an abundant variety of control schemes, which exploits process model to obtain future control
+inputs that will force the system response to follow a desired response [30]. To accomplish the
+above mentioned objective, it minimizes a user defined objective function to obtain optimal future
+control inputs over a predefined prediction horizon ( Npred ) and control horizon ( Ncon ). Several MPC
+algorithms are different from each other because of the prediction models used to simulate the actual
+process and objective function that is used to solve the optimization problem. The basic structure of
+MPC is shown in Figure 1. The future control inputs are calculated by minimizing the error between
+
+Sensors 2020, 20, 3335
+
+4 of 17
+
+the predicted output and a reference by solving an optimization problem. The general expression for
+an objective expression is as follows:
+Npred
+
+J ( Npred , Ncon , u) = ∑ Qout ( j)(y pred ( j + t|t) − yre f ( j + t)2
+∆u
+
+j =1
+
+(1)
+
+Ncon
+
++ ∑ Rin ( j)(∆u( j + t − 1))2
+j =1
+
+subjected to constraints:
+umin ≤ u ≤ umax
+∆umin ≤ ∆u ≤ ∆umax
+
+(2)
+
+ymin ≤ y ≤ ymax
+where u, ∆u, y pred , yre f , Rin , Qout represent input, input increment, predicted output, desired
+reference, input penalization factor, error coefficient, respectively, and umin , umax , ∆umin , ∆umax ,
+ymin , ymax denote lower and upper bounds on control input, control increment, and control output,
+respectively. The steps included in MPC are:
+1.
+2.
+3.
+4.
+
+Calculate output at the current time and calculate future outputs up to the prediction horizon
+Npred .
+Construct an objective function using predicted and reference values over a prediction and control
+horizon.
+op op
+op
+Minimize objective function to calculate optimal values of future inputs U op = u0 , u1 , . . . , u Ncon−1 .
+op
+
+Apply the first predicted input u0 and discard all other future input values. Repeat the whole
+process at next sampling time t + 1.
+Past Inputs and Outputs
+
+Reference
+
+Future
+
++
+
+Optimization
+
+-
+
+Control
+Inputs
+
+Prediction
+Model
+
+Objective Function
+
+Constraints
+Predicted Output
+
+Figure 1. The Basic Structure of MPC.
+
+2.2. Least-Square Support Vector Machine (LSSVM)
+To solve the computational complexity problem of SVM [31], Suykens proposed LSSVM [32].
+In LSSVM, an equality constraint is introduced instead of inequality in SVM and a complex QP
+optimization problem is converted into the equations of linear system. In this way, the model
+decomposition and prediction problems can be solved efficiently. The basic principle is as follows:
+Given l sample points for training, {( xi , yi )|i = 1, . . . , l }, xi ∈ Rn is an input vector and yi ∈ R
+represents corresponding outputs. The approximation function in LSSVM is defined as:
+y ( xi ) = ω T ϕ ( xi ) + b
+
+(3)
+
+Sensors 2020, 20, 3335
+
+5 of 17
+
+The optimization problem for regression is as follows:
+min J (ω, ξ ) =
+ω,ξ,b
+
+1 T
+g l
+ω ω + ∑ ξ2
+2
+2 i =1
+
+(4)
+
+T
+
+yi ( xi ) = ω ϕ( xi ) + b + ξ, i = 1, . . . , l
+
+s.t.
+
+where ω is a weight vector, g ∈ R+ is penalty parameter, ξ i is an error variable, b is the
+deviation and ϕ(·) is mapping to a high-dimensional space. Lagrange method is used to optimize
+the above problems:
+Ł(ω, ξ, b, α) =
+
+l
+1 T
+g l
+ω ω + ∑ ξ 2 − ∑ αi ( ω T ϕ ( xi ) + b + ξ i − yi )
+2
+2 i =1
+i =1
+
+(5)
+
+where αi is a Lagrange multiplier. According to Karush–Kuhn–Tucker (KKT) conditions, the transformation
+to the linear equation is as follows [17]:
+0
+1l
+
+1lT
+K + g−1 Il
+
+!
+
+b
+α
+
+!
+
+=
+
+0
+y
+
+!
+(6)
+
+where y = [y1 , y2 , . . . , yl ] T , 1l = [1, . . . , 1] T , Il is lt h ordered unit matrix, α = [α1 , . . . , αl ] T and K is the
+kernel function matrix that satisfy Mercer’s conditions:
+K = ϕ( xi ) T ϕ( x j ), (i, j) = 1, . . . , l
+
+(7)
+
+In this paper, radial basis function is chosen as the kernel function because of its excellent
+performance and generalization ability, which is given as follows [33]:
+K = K ( x, xi ) = exp
+
+−| x − xi |2
+2σ2
+
+(8)
+
+here σ is the kernel function width. Finally, the function of LSSVM is estimated as:
+l
+
+y( x ) = ∑ αi K ( x, xi ) + b
+
+(9)
+
+i =1
+
+The prediction accuracy and generalization ability of LSSVM regression model strongly depends
+upon the penalty parameter ‘g’ and kernel width ‘σ’. So, these two parameters need to be optimized.
+2.3. Grey-Wolf Optimization (GWO)
+Mirajlili et al. proposed the GWO algorithm which imitates the social behavior of a grey wolf
+pack [22]. The grey wolves are divided into four categories namely alpha, beta, delta and omega. Alpha
+represents highest category and consists of leaders of the whole pack. Alpha wolves are responsible for
+making daily life decisions like hunting a prey, moving forward or stopping, sleep time and place. Beta
+group facilitates the alpha group in formulating these strategies and implementing commands on other
+lower categories. The third delta class is dedicated for fulfillment of above commands and controls
+omega. The lowest rank omega mainly obeys all instructions by superior departments. The hunting
+plan comprises of three steps: identifying and chasing the prey; encircling and harassing prey until it
+stops resilience; attacking on prey.
+During the optimization process, it is assumed that the size of the grey wolf population is
+n, in an unknown d-dimensional search space. The position of grey wolves is denoted by Xwi =
+[ xi1 , xi2 , . . . , xid ]. Alpha is considered to be the best fittest solution and its position is denoted by Xα .
+
+Sensors 2020, 20, 3335
+
+6 of 17
+
+Then, beta and delta are ranked as second, third best solutions and their locations are represented by
+X β and Xδ , respectively. The remaining solutions represent omega class of pack.
+The encircling strategy of the hunting process is mathematically modeled by the following equations:
+
+~ ~X p (t) − ~Xw (t)|
+~ = |C.
+D
+
+(10)
+
+~ D
+~Xw (t + 1) = ~X p (t) − A.
+~
+
+(11)
+
+~ C
+~ are coefficient vectors, ~X p and ~Xw denote the position of
+where t indicates the current iteration, A,
+~
+~
+the prey and wolf, respectively. A and C vectors are calculated as follows:
+~ = 2~a.~r1 −~a
+A
+
+(12)
+
+~ = 2.~r2
+C
+
+(13)
+
+where with an increase in number of iterations, ~a decreases linearly from 2 to 0. ~r1 and ~r2 are random
+numbers in range [0, 1]. The hunting process is performed under the guidance of alpha. Beta and delta
+might also facilitate alpha in trapping a prey. So top three departments (alpha, beta, delta) have the best
+information (best solution) about the prey. These best solutions found so far are saved iteratively and
+other search agents (omega) are forced to follow and update positions according to these best positions.
+The mathematical equations that encapsulate all the above scenario are as follows:
+
+~ 1 .~Xα − ~X |
+~ α = |C
+D
+
+(14)
+
+~ 2 .~Xβ − ~X |
+~ β = |C
+D
+
+(15)
+
+~ 3 .~Xδ − ~X |
+~ δ = |C
+D
+
+(16)
+
+~ 1 .D
+~X1 = ~Xα − A
+~α
+
+(17)
+
+~ 2 .D
+~X2 = ~Xβ − A
+~β
+
+(18)
+
+~ 3 .D
+~X3 = ~Xδ − A
+~δ
+
+(19)
+
+~
+~
+~
+~X (t + 1) = X1 + X2 + X3
+3
+
+(20)
+
+2.4. GWO-LSSVM Prediction Model
+The parameters ‘g’ and ‘σ’ of the LSSVM model play a critical role in the prediction accuracy.
+A very large value of penalty parameter ‘g’ would lead to remarkably high accuracy on training data
+but less accuracy on test data, while low value of ‘g’ makes the model less functional which results in
+poor performance [18]. In addition, an excessively large value of kernel factor ‘σ’ inflicts overfitting
+problem and small value results in under-learning problem. The kernel width ‘σ’ defines the effect of
+a single training example on other examples. Hence, there is a need to choose the values of LSSVM
+model parameters ‘g’ and ‘σ’ carefully. Researchers have used different optimization algorithms to
+select the optimum values of critical parameters of regression models, such as the PSO algorithm [24].
+In this study, an efficient metaheuristic GWO algorithm is proposed to find best suitable parameters of
+LSSVM prediction model as shown in Figure 2. The steps of GWO-LSSVM are as follows:
+Step 1: Prepare train, test, cross-validation data and perform pre-processing (normalization). Define
+number of search agents, maximum iterations, dimension of parameters to be optimized,
+lower and upper bounds.
+~ and C.
+~ Train LSSVM model
+Step 2: Randomly initialize alpha, beta, delta and omega positions, and ~a, A,
+on training data using these positions as ‘g’ and ‘σ’ value.
+
+Sensors 2020, 20, 3335
+
+7 of 17
+
+Step 3: Calculate fitness value of each search agent position. The fitness value corresponds to
+prediction accuracy of trained model on cross-validation data, which is calculated using
+user defined fitness function. In this study, RMSE is used as a fitness function given in
+Equation (22).
+~ C
+~ and ~a using Equations (12) and (13).
+Step 4: Update the positions using Equations (14)–(20) and A,
+Step 5: Calculate again the fitness value of all updated positions.
+Step 6: Rank and store the best solution obtained so far using fitness value. Repeat from step (4) to
+step (6) until maximum cycles are reached.
+Step 7: Train again LSSVM model with best solution obtained from above steps and check the
+prediction accuracy on new test data to verify again model functionality.
+
+Start
+
+Prepare modelling data and perform
+preprocessing (Normalization)
+
+Collect new test data
+on-line
+
+Initialize population, and other parameters of
+GWO algorithm
+
+Pre-processing
+
+Calculate fitness value of each search agent
+
+Train LSSVM Model
+
+t=1
+t < max cycles
+
+No
+
+Optimized
+Solution
+
+LSSVM prediction
+
+Yes
+Update positions and other parameters.
+
+Post-processing
+
+Calculate fitness values of updated positions
+
+Prediction Results
+
+Rank and store the best solution obtained so far.
+t = t +1
+
+End
+
+Figure 2. GWO-LSSVM prediction model.
+
+2.5. GWO-NMPC Control Algorithm
+The proposed GWO-LSSVM prediction model is employed in NMPC for prediction of future
+output values. Furthermore, the optimization problem in NMPC is solved by using GWO algorithm.
+Hence, a GWO-based non-linear MPC control strategy is used to achieve the objective of this study.
+GWO can incorporate the constraints on input, input increment and output value. The fitness function
+in GWO is replaced by the defined objective function. In this case, the position of the pack in GWO
+denotes the future control increments (penalty factor and kernel width in case of LSSVM optimization).
+GWO algorithm optimizes the objective function and finds optimum values of control increment ∆u.
+The steps of GWO-NMPC are as follows:
+Step 1: Control input variables, output variable and reference trajectory are defined.
+Step 2: The constraints on inputs, input increments and outputs are defined.
+
+Sensors 2020, 20, 3335
+
+8 of 17
+
+Step 3: The control objective is accomplished by using an objective function as in Equation (1).
+Step 4: In objective function, the predicted output ‘y pred ’ is estimated by using proposed GWO-LSSVM
+model.
+Step 5: For each sampling interval, GWO optimizes the objective function and calculates the optimum
+values of control input increment ∆u.
+Step 6: The future control inputs are calculated by using following equation:
+u(t + 1) = u(t) + ∆u(t + 1)
+
+(21)
+
+where t, u, ∆u represent current sampling time, control input and control increment,
+respectively.
+Step 7: Finally, calculated input is applied to the process and output feedback strategy is employed.
+The final GWO-based non-linear MPC using a GWO-LSSVM prediction model control scheme
+for controlling the product concentration in L-Lysine fermentation process is shown in Figure 3.
+The prediction error is corrected on-line using output feedback.
+yref
+
+Desired Reference
+Output
+
++
+
+GWO-NMPC
+
+Fermentation
+process
+
+y
+
+-
+
+GWO-LSSVM
+prediction model
+
++
+
+ypred
+-
+
+Figure 3. GWO-LSSVM-NMPC to control L-Lysine product concentration.
+
+2.6. Experimental Setup
+The experiment of L-Lysine fed-batch fermentation was carried out at the control system platform
+of Jiangsu University. The RT-100L-Y fermenter model was used to perform this experiment. To make
+the experiment close to the actual production process, the experimental process was designed
+as follows:
+1.
+
+In a 30 L mechanical stirring fermenter, fed-batch fermentation was conducted. The environmental
+parameters and physical parameters in the fermentation process were collected in real time
+by a digital measurement and control system composed of ARM development platform,
+and transmitted to the industrial control computer in the control room via a serial communication
+line. The time period for every batch was 72-h and the sampling time period was 15 min.
+The auxiliary inputs (such as temperature T, pH, agitation speed rate u1 , dissolved oxygen Do ,
+air flow rate u2 and acceleration rate of ammonia flow u3 ) were collected in real time. The key
+variable product concentration ‘P’ was sampled after every 2-h and tested in laboratory off-line.
+After this, the key biochemical variable was transformed from 2-h sampled data to 15 min
+sampled data (consistent with the number of auxiliary inputs data) in MATLAB using the “spline”
+interpolation function interp1 (https://www.mathworks.com/help/matlab/ref/interp1.html).
+P was determined by the modified ninhydrin colorimetric method, i.e., 2 ml of the supernatant and
+4 ml of the ninhydrin reagent were mixed and heated in boiling water for 20 min. The absorbance
+at 475 mm was measured by a spectrophotometer after cooling and obtained by checking the
+standard L-Lysine curve. These inputs represent the inputs ‘x’ in Equations (3)–(9). In addition,
+
+Sensors 2020, 20, 3335
+
+2.
+
+9 of 17
+
+the product concentration ‘P’ represents the output ‘y’ in Equations (3)–(9). A non-linear mapping
+function is estimated using LSSVM between these inputs and output.
+Ten batches were used for testing the modeling competence of the GWO-LSSVM method.
+The initial conditions between batches were set differently and the feeding strategy was also
+changed to enhance the differences between batches. The pressure of the fermentation tank was
+set to 0 v 0.25 MPa, the temperature of fermentation was adjusted to 0 v 50 ◦ C ± 0.5 ◦ C and the
+dissolved oxygen electrode was calibrated for the reference reading when the stirring motor was
+rotating at 400 rpm.
+
+2.7. Performance Evaluation Metrics
+To evaluate the accuracy of prediction model, statistical measures such as Root mean square error
+(RMSE), Mean absolute error (MAE) and Mean absolute percentage error (MAPE) are used.
+v
+u T
+u1
+RMSE(Vactual , Vpred ) = t ∑ (Vactual − Vpred )2
+T i =1
+MAE(Vactual , Vpred ) =
+
+1 T
+|Vactual − Vpred |
+T i∑
+=1
+
+(22)
+
+(23)
+
+T
+
+∑ |Vactual − Vpred |
+
+MAPE(Vactual , Vpred ) =
+
+1 i =1
+T
+
+Vactual
+
+(24)
+
+where Vpred , Vactual and T represent predicted, actual and total number of output values, respectively.
+3. Results and Discussion
+At first, the data are normalized in the range [−1 1]. Six batches are selected randomly to train the
+GWO-LSSVM model. Further two batches are selected for cross-validation step (off-line training and
+correction of model). After off-line validation of prediction model, the model is tested using optimized
+values of LSSVM parameters on two new batches of data to estimate the product concentration on-line.
+To find the optimum values of parameters of LSSVM, the parameters of GWO are adjusted as search
+agents Nmax = 30, maximum iteration Iter = 100, dimension dim = 2, lower bound lb = [1, 0.001] and
+upper bound ub = [10, 000, 0.1].
+3.1. GWO-LSSVM Results Analysis
+LSSVM parameters are optimized using GWO optimization. The wolf’s position in 2-dimensional
+search space (2D = number of LSSVM parameters to be optimized) represents LSSVM parameter
+values. The best position of alpha wolf denotes optimal parameters of LSSVM. RMSE is used as
+an objective function given in Equation (22). It defines the fitness of the solution (best position).
+The parameter values that minimize this objective function are selected as optimal solution which
+represent best position of alpha wolf. After selecting the optimal parameters obtained through GWO,
+LSSVM prediction model is established using these optimal parameters (GWO-LSSVM).
+The proposed GWO-LSSVM is exploited as a prediction model and results are compared with
+PSO-LSSVM to show the effectiveness of GWO-LSSVM prediction model. PSO-LSSVM is the widely
+used prediction method in biological fermentation processes. For example, PSO-LSSVM is used to
+predict inulinase concentration in Pichia pastoris fermentation process [34]. Zhu [20] used PSO-LSSVM
+to measure key variables in Penicillin fermentation process. The actual and predicted curves by
+proposed GWO-LSSVM and PSO-LSSVM are shown in Figure 4a. The results clearly show that the
+GWO-LSSVM prediction model is capturing the future variation trends accurately. Furthermore,
+the difference between actual and predicted value is plotted in Figure 4b to visualize error more
+
+Sensors 2020, 20, 3335
+
+10 of 17
+
+clearly. We can see that the amplitude of error spikes for GWO-LSSVM is much lower than that of
+PSO-LSSVM. In addition, three statistical performance evaluation metrics are presented in Table 1.
+The RMSE value of GWO-LSSVM is approximately 61 % less than PSO-LSSVM. Similarly, the difference
+in the values of MAE and MAPE is approximately 77 % and 43 %, respectively. It is evident from the
+results of these statistical measures that GWO-LSSVM perform better than PSO-LSSVM. Although
+PSO has been very successful in many applications, it is more vulnerable to getting stuck at local
+minimum. According to NFL theorem, there is no single existing optimization algorithm that would
+be applicable in all kind of optimization problems. In each optimization problem, the optimization
+algorithm encounters a different unknown search space. The success of optimization algorithms
+depends upon the basic strategy of mathematical models that tries to avoid the local optimal
+solutions. In our case, the GWO-based LSSVM prediction model is more competent as compared
+to PSO-LSSVM. The prediction error is negligible and almost all error values lie in range [−0.1 0.1],
+which is satisfying the controller requirement employed to control the product concentration. Thus,
+the proposed GWO-LSSVM prediction model is the best choice to be used as a process model in current
+non-linear MPC.
+45
+
+Product concentration (g-L-1)
+
+40
+35
+30
+25
+
+Actual
+GWO-LSSVM
+PSO-LSSVM
+
+20
+15
+
+38
+36
+
+10
+
+34
+
+5
+52
+
+54
+
+56
+
+58
+
+60
+
+0
+0
+
+10
+
+20
+
+30
+
+40
+
+50
+
+60
+
+70
+
+80
+
+Time (h)
+
+(a) Estimation
+1.5
+
+Product concentration error
+
+1
+
+0.5
+
+0
+
+-0.5
+
+-1
+
+-1.5
+GWO-LSSVM
+PSO-LSSVM
+
+-2
+0
+
+10
+
+20
+
+30
+
+40
+
+50
+
+60
+
+70
+
+80
+
+Time (h)
+
+(b) Estimation error
+Figure 4. Product concentration prediction and error curve.
+Table 1. RMSE, MAE and MAPE comparison.
+Model
+
+RMSE
+
+MAE
+
+MAPE
+
+GWO-LSSVM
+PSO-LSSVM
+
+0.136918
+0.355483
+
+0.047230
+0.212182
+
+0.703616
+1.244831
+
+Sensors 2020, 20, 3335
+
+11 of 17
+
+3.2. GWO-NMPC Results Analysis
+The proposed non-linear MPC uses the search efficiency, local and global search ability of GWO
+for manipulating the input variables to optimize the future behavior of product concentration in
+L -Lysine’s fermentation process. Dissolved Oxygen ‘Do ’ and ‘pH’ have a strong influence on product
+concentration. Thus, by monitoring the product concentration and according to its required optimum
+growth, Do and pH are manipulated using agitation rate ‘u1 ’, airflow rate ‘u2 ’ and ammonia flow rate
+‘u3 ’. Hence, three manipulated input variables are agitation rate ‘u1 ’, airflow rate ‘u2 ’, ammonia flow
+rate ‘u3 ’. The controlled output ‘y’ is product concentration. The initial substrate concentration and
+temperature values are 150 g L−1 and 32 ◦ C, respectively. The objective function in Equation (1) is
+used as a fitness function of GWO, such as RMSE is used in the optimization problem of the LSSVM
+parameters. The error coefficient and input penalization coefficient are usually selected as a constant
+value. In this work, the value of error coefficient is selected as Qout = 1 and input penalization
+coefficient is Rin = 0.001. The constraints on inputs, input increments and output are defined as:
+
+
+
+316 ≤ u1 ≤ 345
+0.1 ≤ u2 ≤ 1.6
+
+
+51 ≤ u ≤ 110
+
+(25)
+
+3
+
+
+
+
+−15 ≤ ∆u1 ≤ +15
+
+−1 ≤ ∆u2 ≤ +1
+
+
+−30 ≤ ∆u ≤ +30
+
+(26)
+
+0 ≤ y ≤ 45
+
+(27)
+
+3
+
+The initial inputs are selected as U10 = 326, U20 = 0.1 and U30 = 88. These initial input values are
+used to calculate the first future optimal input values according to Equation (21). The prediction and
+control horizon are defined as Npred = Ncon = 1. These parameter values are selected after extensive
+simulations. The increase in prediction and control horizon values have no significant difference on
+performance in our problem. Furthermore, our requirement is satisfied with these minimum horizon
+values. The computational cost increases with the increase in value of these horizons. However,
+these values can be increased that depends on the objective of controlling process to acquire desired
+response. GWO-LSSVM prediction model predicts the future output value ‘y pred ’ in defined objective
+function as in Equation (1). As GWO-LSSVM prediction model is non-linear, and objective function
+consists of non-linear constraints on manipulated inputs (agitation speed rate u1 , air flow rate u2 and
+acceleration rate of ammonia flow u3 ), so the optimization problem to solve this objective function
+for optimal future inputs (u1 , u2 and u3 ) becomes a non-convex and non-linear optimization problem.
+Now, GWO solves this optimization problem to find the future optimal values of these manipulated
+inputs at each sampling time. Here, a 3-dimensional search space is defined (3D = number of optimal
+future inputs to be determined). The wolves position in 3 dim space represents future optimal increment
+in input values (∆u1 , ∆u2 and ∆u3 ). The optimal future input increments that minimize the defined
+objective function (best alpha wolf position) are calculated in advance at each sampling instant for
+next sampling time. These optimal increments in inputs are used to determine the optimum values
+of future input rates using Equation (21). Then, these optimized input rates are applied to acquire
+the desired response. At next sampling point, the whole process is repeated for upcoming sampling
+instant to achieve the required objective.
+3.2.1. Hypothetical Case Study
+The proposed GWO-based predictive control scheme is compared with the PSO-based predictive
+control method. GWO-LSSVM is used as a prediction model, in proposed NMPC, to predict product
+concentration such as PSO-LSSVM is exploited as a prediction model in a predictive control method to
+
+Sensors 2020, 20, 3335
+
+12 of 17
+
+predict and control bacteria concentration [24]. Similarly, PSO is used in a study to solve the rolling
+optimization problem in a predictive control scheme to control substrate concentration and LSSVM is
+used as a prediction model [35].
+Initially, a hypothetical reference signal with sharp periodic step changes is applied to validate the
+robustness and adaptability of GWO-NMPC for the first 44 hours, as shown in Figure 5. The simulation
+results are compared with PSO-NMPC. Although this kind of phenomenon is not realistic in
+fermentation process because fermentation is a slow time varying process, yet it proves the robustness
+and adaptability of the proposed control scheme. The corresponding manipulated input variables are
+shown in Figure 6a–c.
+
+Product concentration controlled curve (g-L-1)
+
+35
+
+30
+Reference
+GWO-NMPC
+PSO-NMPC
+
+25
+
+20
+
+15
+
+10
+
+5
+
+0
+0
+
+5
+
+10
+
+15
+
+20
+
+25
+
+30
+
+35
+
+40
+
+45
+
+Time (h)
+
+Figure 5. GWO-NMPC controlled product concentration output with hypothetical reference.
+345
+
+1.6
+GWO Agitation rate
+PSO Agitation rate
+
+1.5
+
+340
+
+GWO Air flow rate
+PSO Air flow rate
+
+Control input 2 (vvm)
+
+335
+
+330
+
+325
+
+1.3
+1.2
+1.1
+1
+0.9
+0.8
+
+320
+
+0.7
+315
+0
+
+5
+
+10
+
+15
+
+20
+
+25
+
+30
+
+35
+
+40
+
+45
+
+0
+
+5
+
+Time (h)
+
+10
+
+15
+
+20
+
+25
+
+30
+
+Time (h)
+
+(a) Agitation rate u1
+
+(b) Airflow rate u2 .
+110
+GWO Ammonia flow rate
+PSO Ammonia flow rate
+
+100
+
+Control input 3 (ml\h)
+
+Control input 1 (rpm)
+
+1.4
+
+90
+
+80
+
+70
+
+60
+
+50
+0
+
+5
+
+10
+
+15
+
+20
+
+25
+
+30
+
+35
+
+40
+
+45
+
+Time (h)
+
+(c) Ammonia flow rate u3
+Figure 6. GWO-NMPC controlled inputs with hypothetical reference.
+
+35
+
+40
+
+45
+
+Sensors 2020, 20, 3335
+
+13 of 17
+
+3.2.2. Real Case Study
+
+Product concentration controlled curve (g-L-1)
+
+An optimal selected trajectory as a reference is applied and the results are shown in Figure 7.
+The corresponding manipulated inputs are shown in Figures 8–10. We can see that the proposed
+method enforced the desired response and process follows this optimal trajectory accurately. GWO
+possesses fast convergence speed, excellent local, and global search ability. GWO is successful in
+handling non-linear constraints to solve a non-convex optimization problem for optimal future input
+values in real time and provides best global solution as compared to PSO. In addition, GWO-NMPC
+outperforms PSO-NMPC in terms of prediction accuracy, control precision and near-to-accurate
+tracking ability. The overall error in GWO-NMPC is negligible as compared to PSO-NMPC. The success
+of NMPC highly depends upon accuracy of process model used for output prediction. GWO-LSSVM
+encompasses precise dynamics and non-linear behavior between inputs and output of the L-Lysine
+fermentation process. This results in efficient performance of the proposed GWO-NMPC. Due to such
+optimal and controlled conditions, the osmotic stress or catabolic repression of bacteria is avoided
+successfully, and the final yield is increased by 25 % approximately. Therefore, it shows that the
+machine-learning-based prediction models and predictive control schemes are effective for control and
+optimization of complex non-linear industrial processes.
+
+Figure 7. GWO-NMPC controlled product concentration output with optimal reference.
+334
+332
+
+Control input 1 (rpm)
+
+330
+328
+326
+324
+322
+320
+
+GWO Agitation rate
+PSO Agitation rate
+
+318
+0
+
+10
+
+20
+
+30
+
+40
+
+50
+
+60
+
+70
+
+80
+
+Time (h)
+
+Figure 8. GWO-NMPC controlled agitation rate u1 with optimal reference.
+
+Sensors 2020, 20, 3335
+
+14 of 17
+
+1.8
+GWO Air flow rate
+PSO Air flow rate
+
+Control input 2 (vvm)
+
+1.6
+
+1.4
+
+1.2
+
+1
+
+0.8
+
+0.6
+0
+
+10
+
+20
+
+30
+
+40
+
+50
+
+60
+
+70
+
+80
+
+Time (h)
+
+Figure 9. GWO-NMPC controlled airflow rate u2 with optimal reference.
+85
+GWO Ammonia flow rate
+PSO Ammonia flow rate
+
+Control input 3 (ml\h)
+
+80
+
+75
+
+70
+
+65
+
+60
+
+55
+
+50
+0
+
+10
+
+20
+
+30
+
+40
+
+50
+
+60
+
+70
+
+80
+
+Time (h)
+
+Figure 10. GWO-NMPC controlled ammonia flow rate u3 with optimal reference.
+
+4. Conclusions
+A non-linear MPC by exploiting a machine learning-based prediction model is proposed to control
+product concentration in real time. LSSVM prediction model, which requires very few input and
+output samples for training, is deployed in NMPC. The traditional experience and trail-error-based
+method to select optimal value of LSSVM parameters is replaced by employing a novel metaheuristic
+GWO algorithm. Thus, real-time identification problem is solved by proposed GWO-LSSVM prediction
+model and it eliminates the need for an accurate kinetics mathematical model. Furthermore, to cope
+with the non-linear, non-convex and complex constraints-based optimization problem in NMPC,
+a gradient free approach is proposed. A novel GWO-based algorithm is established to compute
+optimum future input values by minimizing a cost function in real time. The proposed GWO-NMPC
+control scheme provides an efficient way to deal with complex, non-linear and dynamic systems.
+In future, we are interested to extend this work to control and optimize further key variables in
+fermentation process by designing multi-input and multi-output models.
+
+Sensors 2020, 20, 3335
+
+15 of 17
+
+Author Contributions: Conceptualization, M.S.; methodology, M.S.; software, M.S.; validation, M.S. and
+B.W.; formal analysis, M.S.; investigation, M.S., and K.U.R.; resources, B.W.; data curation, B.W. and M.S.;
+writing—original draft preparation, M.S.; writing—review and editing, B.W., and S.U.; visualization, M.S. and
+B.W.; supervision, B.W. and X.Z.; project administration, B.W.; funding acquisition, B.W. and X.Z. All authors
+have read and agreed to the published version of the manuscript.
+Funding: This research was carried out by the support of The Key R&D Program in Zhenjiang City: R&D
+on soft-sensing and control of key parameters for microbial fermentation (SH2017002), The National Science
+Research Foundation of CHINA (41376175), The Natural Science Foundation of Jiangsu Province (BK20140568,
+BK20151345) and a project funded by the priority academic program development of Jiangsu higher education
+institutions (PAPD).
+Acknowledgments: We are thankful to National key discipline of agricultural electrification and automation,
+Jiangsu province superior discipline of Jiangsu university agricultural engineering for their technical support of
+our experiment. We are also thankful to the anonymous reviewers whose comments helped improve and clarify
+this manuscript.
+Conflicts of Interest: The authors declare no conflict of interest.
+
+Abbreviations
+The following abbreviations are used in this manuscript:
+NMPC
+SVM
+LSSVM
+GWO
+PSO
+ANN
+QP
+ABC
+CS
+FFA
+BA
+FPA
+GSA
+DE
+EP
+ES
+NFL
+GPC
+NP
+KKT
+NP
+RMSE
+MAE
+MAPE
+ml
+mm
+rpm
+MPa
+vvm
+
+Non-linear Model Predictive Control
+Support Vector Machine
+Least-Square SVM
+Grey-Wolf Optimization
+Particle Swarm Optimization
+Artificial Neural Network
+Quadratic Programming
+Artificial Bee Colony
+Cuckoo Search
+Firefly Algorithm
+Bat Algorithm
+Flower Pollination Algorithm
+Gravitational Search Algorithm
+Differential Evolution
+Evolutionary Programming
+Evolution strategy
+No Free Lunch
+Generalized Predictive Control
+Non-linear Programming
+Karush–Kuhn–Tucker conditions
+Non-linear Programming
+Root Mean Square Error
+Mean Absolute Error
+Mean Absolute Percentage Error
+Milliliter
+Millimeter
+Revolutions per minute
+Megapascal
+Volume per Unit per Minute
+
+References
+1.
+2.
+
+Eren, U.; Prach, A.; Koçer, B.B.; Raković, S.V.; Kayacan, E.; Açıkmeşe, B. Model predictive control in
+aerospace systems: Current state and opportunities. J. Guid. Control Dyn. 2017, 40, 1541–1566. [CrossRef]
+Muhammad, D.; Ahmad, Z.; Aziz, N. Low density polyethylene tubular reactor control using state space
+model predictive control. Chem. Eng. Commun. 2019, 1–17. [CrossRef]
+
+Sensors 2020, 20, 3335
+
+3.
+
+4.
+5.
+
+6.
+7.
+8.
+
+9.
+
+10.
+11.
+
+12.
+13.
+
+14.
+
+15.
+16.
+
+17.
+
+18.
+
+19.
+20.
+21.
+22.
+23.
+
+16 of 17
+
+Wang, X.; Ratnaweera, H.; Holm, J.A.; Olsbu, V. Statistical monitoring and dynamic simulation of
+a wastewater treatment plant: A combined approach to achieve model predictive control. J. Environ.
+Manag. 2017, 193, 1–7. [CrossRef] [PubMed]
+Vazquez, S.; Rodriguez, J.; Rivera, M.; Franquelo, L.G.; Norambuena, M. Model predictive control for power
+converters and drives: Advances and trends. IEEE Trans. Ind. Electron. 2016, 64, 935–947. [CrossRef]
+Afram, A.; Janabi-Sharifi, F.; Fung, A.S.; Raahemifar, K. Artificial neural network (ANN) based model
+predictive control (MPC) and optimization of HVAC systems: A state of the art review and case study of
+a residential HVAC system. Energy Build. 2017, 141, 96–113. [CrossRef]
+Wang, D.; Shen, J.; Zhu, S.; Jiang, G. Model predictive control for chlorine dosing of drinking water treatment
+based on support vector machine model. Desalin. Water Treat. 2020, 173, 133–141. [CrossRef]
+Yokota, A.; Ikeda, M. Amino Acid Fermentation; Springer: Tokyo, Japan, 2017.
+Félix, F.K.d.C.; Letti, L.A.J.; Vinícius de Melo Pereira, G.; Bonfim, P.G.B.; Soccol, V.T.; Soccol, C.R. L-Lysine
+production improvement: A review of the state of the art and patent landscape focusing on strain development
+and fermentation technologies. Crit. Rev. Biotechnol. 2019, 39, 1031–1055. [CrossRef] [PubMed]
+Razak, M.A.; Viswanath, B. Optimization of fermentation upstream parameters and immobilization of
+Corynebacterium glutamicum MH 20-22 B cells to enhance the production of L-Lysine. 3 Biotech 2015,
+5, 531–540. [CrossRef]
+Gustavsson, R. Development of Soft Sensors for Monitoring and Control of Bioprocesses; Linköping University
+Electronic Press :Linköping, Sweden, 2018.
+Ahuja, K.; Pani, A.K. Software sensor development for product concentration monitoring in fed-batch
+fermentation process using dynamic principal component regression.
+In Proceedings of the 2018
+International Conference on Soft-computing and Network Security (ICSNS), Coimbatore, India, 14–16
+February 2018; pp. 1–6.
+Yuan, X.; Li, L.; Wang, Y. Nonlinear dynamic soft sensor modeling with supervised long short-term memory
+network. IEEE Trans. Ind. Inform. 2020,16, 3168–3176.. [CrossRef]
+Grahovac, J.; Jokić, A.; Dodić, J.; Vučurović, D.; Dodić, S. Modelling and prediction of bioethanol production
+from intermediates and byproduct of sugar beet processing using neural networks. Renew. Energy 2016,
+85, 953–958. [CrossRef]
+Datta, A.; Augustin, M.; Gupta, N.; Viswamurthy, S.; Gaddikeri, K.M.; Sundaram, R. Impact Localization
+and Severity Estimation on Composite Structure Using Fiber Bragg Grating Sensors by Least Square Support
+Vector Regression. IEEE Sens. J. 2019, 19, 4463–4470. [CrossRef]
+Wang, G.; Xu, B.; Jiang, W. SVM modeling for glutamic acid fermentation process. In Proceedings of the
+2016 Chinese Control and Decision Conference (CCDC),Yinchuan, China, 28–30 May2016; pp. 5551–5555.
+Zhang, Y.; Le, J.; Liao, X.; Zheng, F.; Li, Y. A novel combination forecasting model for wind power integrating
+least square support vector machine, deep belief network, singular spectrum analysis and locality-sensitive
+hashing. Energy 2019, 168, 558–572. [CrossRef]
+Luo, C.; Huang, C.; Cao, J.; Lu, J.; Huang, W.; Guo, J.; Wei, Y. Short-term traffic flow prediction based on least
+square support vector machine with hybrid optimization algorithm. Neural Process. Lett. 2019, 50, 2305–2322.
+[CrossRef]
+Robles-Rodriguez, C.E.; Bideaux, C.; Roux, G.; Molina-Jouve, C.; Aceves-Lara, C.A. Soft-sensors for lipid
+fermentation variables based on PSO Support Vector Machine (PSO-SVM). In Distributed Computing and
+Artificial Intelligence, Proceedings of the 13th International Conference, Salamanca, Spain, 28–30 March 2020;
+Springer: Berlin, Germany, 2016; pp. 175–183.
+Xue, X.; Xiao, M. Deformation evaluation on surrounding rocks of underground caverns based on
+PSO-LSSVM. Tunn. Undergr. Space Technol. 2017, 69, 171–181. [CrossRef]
+Zhu, X.; Rehman, K.U.; Wang, B.; Shahzad, M. Modern Soft-Sensing Modeling Methods for Fermentation
+Processes. Sensors 2020, 20, 1771. [CrossRef]
+Saad, A.E.H.; Dong, Z.; Karimi, M. A comparative study on recently-introduced nature-based global
+optimization methods in complex mechanical system design. Algorithms 2017, 10, 120. [CrossRef]
+Mirjalili, S.; Mirjalili, S.M.; Lewis, A. Grey wolf optimizer. Adv. Eng. Softw. 2014, 69, 46–61. [CrossRef]
+Wolpert, D.H.; Macready, W.G. No free lunch theorems for optimization. IEEE Trans. Evol. Comput. 1997,
+1, 67–82. [CrossRef]
+
+Sensors 2020, 20, 3335
+
+24.
+25.
+
+26.
+27.
+28.
+
+29.
+30.
+31.
+32.
+33.
+
+34.
+
+35.
+
+17 of 17
+
+Zhu, X.; Zhu, Z. The generalized predictive control of bacteria concentration in marine lysozyme fermentation
+process. Food Sci. Nutr. 2018, 6, 2459–2465. [CrossRef]
+Nisha, M.G.; Prince, M.J.R.; Jones, A.J. Neural Network Predictive Control of Systems with Faster Dynamics
+using PSO. In Proceedings of the 2019 International Conference on Recent Advances in Energy-Efficient
+Computing and Communication (ICRAECC), Nagercoil, India, 7–8 March 2019; pp. 1–4.
+Ait Sahed, O.; Kara, K.; Hadjili, M.L. Constrained fuzzy predictive control using particle swarm optimization.
+Appl. Comput. Intell. Soft Comput. 2015. [CrossRef]
+Su, T.J.; Tsou, T.Y.; Vu, H.Q.; Shyr, W.J. Model Predictive Control Design Based on Particle Swarm
+Optimization. J. Converg. Inf. Technol. 2015, 10, 70.
+Suthar, S.; Vishwakarma, D. A Fast Converging MPPT Control Technique (GWO) for PV Systems Adaptive
+to Fast Changing Irradiation and Partial Shading Conditions. Available online: https://d1wqtxts1xzle7.
+cloudfront.net/60428554/IRJET-V6I650220190829-75962-1sorde7.pdf (accessed on 8 June 2020).
+Chen, L.; Du, S.; He, Y.; Liang, M.; Xu, D. Robust model predictive control for greenhouse temperature based
+on particle swarm optimization. Inf. Process. Agric. 2018, 5, 329–338. [CrossRef]
+Kouvaritakis, B.; Cannon, M. Model Predictive Control; Springer International Publishing: Cham,
+Switzerland, 2016.
+Vapnik, V. The Nature of Statistical Learning Theory; Springer Science & Business Media: New York, NY,
+USA, 2013.
+Suykens, J.A.; Vandewalle, J. Least squares support vector machine classifiers. Neural Process. Lett. 1999,
+9, 293–300. [CrossRef]
+Azimi, H.; Bonakdari, H.; Ebtehaj, I. Design of radial basis function-based support vector regression in
+predicting the discharge coefficient of a side weir in a trapezoidal channel. Appl. Water Sci. 2019, 9, 78.
+[CrossRef]
+Wang, X.; Guo, T.; Hao, W.; Guo, Q. Predicting Model based on LS-SVM for Inulinase Concentration during
+Pichia Pastoris’ Fermentation Process. In Proceedings of the 2019 Chinese Control Conference (CCC),
+Guangzhou, China, 27–30 July 2019; pp. 1531–1536.
+Huang, L.; Wang, Z.; Ji, X. LS-SVM Generalized Predictive Control Based on PSO and Its Application
+of Fermentation Control. In Proceedings of the 2015 Chinese Intelligent Systems Conference; Springer:
+Berlin/Heidelberg, Germany, 2016; pp. 605–613.
+c 2020 by the authors. Licensee MDPI, Basel, Switzerland. This article is an open access
+article distributed under the terms and conditions of the Creative Commons Attribution
+(CC BY) license (http://creativecommons.org/licenses/by/4.0/).
+
+

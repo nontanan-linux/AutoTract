@@ -1,0 +1,3806 @@
+DESIGN AND IMPLEMENTATION OF A NAVIGATION
+FRAMEWORK FOR STEERING CONTROLLED MOBILE
+ROBOTS
+
+MR. NATTAPONG PROMKAEW
+
+A THESIS FOR THE DEGREE OF MASTER OF ENGINEERING
+KHON KAEN UNIVERSITY
+2025
+
+DESIGN AND IMPLEMENTATION OF A NAVIGATION
+FRAMEWORK FOR STEERING CONTROLLED MOBILE
+ROBOTS
+
+MR. NATTAPONG PROMKAEW
+
+A THESIS SUBMITTED IN PARTIAL FULFILLMENT OF THE
+REQUIREMENTS FOR THE DEGREE OF MASTER OF ENGINERING
+IN AGRICULTURAL ENGINEERING
+GRADUATE SCHOOL KHON KAEN UNIVERSITY
+2025
+
+THESIS APPROVAL
+KHON KAEN UNIVERSITY
+FOR
+MASTER OF ENGINEERING
+IN AGRICULTURAL ENGINEERING
+
+Thesis Title:
+
+Design and implementation of a navigation framework for steering
+controlled mobile robots
+
+Author:
+
+Mr. Nattapong Promkaew
+
+Thesis Examination Committee:
+Prof. Dr. Thongchai Rohitatisha Srinophakun
+
+Chairperson
+
+Asst. Prof. Dr. Nitikorn Junhuathon
+
+Member
+
+Asst. Prof. Dr. Arthit Phuphaphud
+
+Member
+
+Assoc. Prof. Dr. Somboon Sukpancharoen
+
+Member
+
+……………………………………………….
+
+Advisor
+
+Thesis Advisors:
+(Assoc. Prof. Dr. Somboon Sukpancharoen)
+……………………………………
+
+………………………………………….
+
+(Prof. Dr. Kiatichai Faksri)
+
+(Assoc. Prof. Dr. Ratchaphon Suntivarakorn)
+
+Dean, Graduate School
+
+Dean, Faculty of Engineering
+
+Copyright of Khon Kaen University
+
+ณัฐพงศ์ พรหมแก้ว. 2568. การออกแบบและพัฒนาระบบโครงสร้างการนาทางสาหรับหุ่นยนต์
+เคลื่อนที่ที่ควบคุมด้วยระบบพวงมาลัย. วิทยานิพนธ์ปริญญาวิศวกรรมศาสตรมหาบัณฑิต สาขาวิชา
+วิศวกรรมเกษตร บัณฑิตวิทยาลัย มหาวิทยาลัยขอนแก่น.
+อาจารย์ที่ปรึกษาวิทยานิพนธ์: รศ. ดร. สมบูรณ์ สุขพรรณเจริญ
+บทคัดย่อ
+การน าทางอย่างแม่นย าในสภาพแวดล้อมกลางแจ้งจ าเป็นต้องอาศัยการผสานข้อมูลจาก
+เซนเซอร์หลายชนิดเพื่อเพิ่มประสิทธิภาพของการระบุตาแหน่งและการติดตามเส้นทางการเคลื่ อนที่
+งานวิจ ัยนี้นาเสนอการปรับปรุงอัลกอริธึม Pure Pursuit (PP) โดยพัฒนาเป็นเวอร์ชันใหม่ที่เรียกว่า
+Pure Pursuit with Dynamic Steering Control (PP-DSC) ซึ ่ ง สามารถปรั บ ระยะมองล่ ว งหน้ า
+(lookahead distance) และความเร็ ว ของหุ ่ น ยนต์ ไ ด้ แ บบปรั บ ตามค่ า มุ ม เลี ้ ย วแบบไดนามิ ก
+อัลกอริธึมนี้ถูกติดตั้งบนหุ่นยนต์เคลื่ อนที่อ ัต โนมัต ิแบบสี่ล้ อเลี้ยว ( steering-type AMR) โดยใช้
+แพลตฟอร์ม Robot Operating System 2 (ROS 2) รุ่น Jazzy ข้อมูลเชิงเวลาจริงถูกหลอมรวมจาก
+ระบบก าหนดต าแหน่งผ่านดาวเทียมแบบ GNSS-RTK ร่วมกับชุด ตรวจวัด ความเร่งและการหมุ น
+(IMU) และตัวเข้ารหัสล้อ (wheel encoders) เพื่อเพิ่มความแม่นยาในการระบุตาแหน่ง การทดลอง
+ด าเนินการบนเส้นทางรูปแบบตรง วงกลม และเลขแปด (figure-eight) ที่ความเร็วระหว่าง 1.0 ถึง
+5.0 เมตรต่อวินาที ผลการทดลองแสดงให้เห็นว่า PP-DSC สามารถลดค่าเบี่ยงเบนด้านข้างเฉลี่ยได้
+เหลือเพียง 0.05 เมตรในเส้นทางตรง และต่ากว่า 0.08 เมตรในเส้นทางโค้ง ในขณะที่อัลกอริธึม PP
+มาตรฐานมีค่าเบี่ยงเบนสูงสุดถึง 0.44 เมตร ผลการวิจัยยืนยันว่า PP-DSC ช่วยเพิ่มความแม่ นย าใน
+การติดตามเส้นทางและเสถียรภาพของการเคลื่อนที่ โดยเฉพาะอย่างยิ่งในช่วงที่มีการเปลี่ยนทิศ
+ทางการเคลื่อนที่อย่างต่อเนื่อง จึงเหมาะสมอย่างยิ่งสาหรับการนาทางอัตโนมัติแบบเรี ยลไทม์ ภายใต้
+สภาพเส้นทางและพลศาสตร์การเคลื่อนที่ที่หลากหลาย
+
+Nattapong Promkaew. 2025. Design and Implementation of a Navigation
+Framework for Steering Controlled Mobile Robots. Master of Engineering Thesis
+in Agricultural Engineering, Graduate School, Khon Kaen University.
+Thesis Advisor: Assoc. prof. Dr. Somboon Sukpancharoen
+
+ABSTRACT
+Accurate navigation in outdoor environments requires integrating multiple
+sensor sources to improve localization and trajectory tracking performance. This study
+proposes a modified version of the Pure Pursuit (PP) algorithm, called Pure Pursuit with
+Dynamic Steering Control (PP-DSC), which adaptively adjusts both the lookahead
+distance and velocity based on the steering angle. The algorithm was deployed on a
+four-wheeled steering-type autonomous mobile robot (AMR) using the Robot
+Operating System 2 (ROS 2) Jazzy framework. Real-time data were fused from the
+Global Navigation Satellite System with Real-Time Kinematic corrections (GNSSRTK), an Inertial Measurement Unit (IMU), and wheel encoders to enhance
+localization accuracy. Experiments were conducted on straight, circular, and figureeight trajectories at speeds ranging from 1.0 to 5.0 meters per second. Results showed
+that PP-DSC reduced the mean lateral deviation to 0.05 meters on straight paths and
+below 0.08 meters on curved paths, whereas the standard PP algorithm exhibited
+maximum deviations up to 0.44 meters. The findings confirm that PP-DSC improves
+trajectory tracking accuracy and motion stability, particularly during directional
+transitions, making it well-suited for real-time autonomous navigation under varied
+terrain and motion dynamics.
+
+This dissertation is humbly dedicated to my respected
+parents, benefactor, friends, and advisor, who have
+consistently provided support, affection, and assistance to
+me, motivating me to believe that I could successfully
+complete this dissertation.
+
+ACKNOWLEDGEMENTS
+
+I would like to express my sincere gratitude to Assoc. Prof. Dr. Somboon
+Sukpancharoen, my thesis advisor, for his invaluable guidance, insightful comments,
+and attention to detail throughout every stage of this research. His unwavering support
+and profound expertise have played a crucial role in the successful completion of this
+thesis. I am deeply grateful for his mentorship, generosity, and the inspiration he has
+provided along this journey.
+I also wish to thank the Faculty of Engineering, Khon Kaen University, for
+providing the scholarship and essential research equipment that made this study
+possible. I am equally grateful to all faculty and staff members whose assistance and
+support have contributed significantly to my academic progress during my graduate
+studies.
+My heartfelt appreciation is extended to Gensurv Co., Ltd., and Dr. Pasan
+Kulvanich, an expert in autonomous mobile robotics, for their continued
+encouragement and professional support. Their contributions have been instrumental in
+shaping the direction of this research and have provided me with valuable and
+memorable experiences.
+
+Nattapong Promkaew
+
+TABLE OF CONTENTS
+
+Page
+ABSTRACT (IN THAI)
+
+i
+
+ABSTRACT (IN ENGLISH)
+
+ii
+
+DEDICATION
+
+iii
+
+ACKNOWLEDGEMENTS
+
+iv
+
+LIST OF TABLES
+
+vii
+
+LIST OF FIGURES
+
+viii
+
+CHAPTER I INTRODUCTION
+
+1
+
+1.1 Introduction and background
+
+1
+
+1.2 Objective of the research
+
+5
+
+1.3 Scope and limitation of the study
+
+5
+
+1.4 Expected benefits
+
+5
+
+CHAPTER II LITERATURE REVIEWS
+
+6
+
+2.1 Literature related to agricultural robot
+
+6
+
+2.2 Literature related to autonomous mobile robot
+
+12
+
+2.3 Literature related to global Navigation Satellite System (GNSS)
+
+13
+
+CHAPTER III RESEARCH METHODOLOGY
+
+20
+
+3.1 Robot Vehicle Design
+
+21
+
+3.2 Navigation System Design of the robot
+
+23
+
+3.3 Software design
+
+26
+
+3.4 GNSS-IMU fusion Position Principle
+
+27
+
+3.5 IMU-Based Heading Angle Measurement
+
+29
+
+3.6 Trajectory-Tracking Control System
+
+30
+
+3.7 Development and Implementation of Algorithms
+
+36
+
+3.8 Implementation procedure
+
+38
+
+CHAPTER IV RESULTS AND DISCUSSION
+
+48
+
+4.1 Experiment Setting
+
+48
+
+4.2 Performance comparison of path tracking algorithms
+
+49
+
+TABLE OF CONTENTS (Cont.)
+
+Page
+4.3 Speed Adaptation Behavior
+
+52
+
+4.4 Localization Accuracy
+
+56
+
+CHAPTER V CONCLUSION
+
+63
+
+REFFERENCES
+
+65
+
+VITAE
+
+72
+
+LIST OF TABLES
+
+Page
+Table 1
+
+Fruit grading information.
+
+11
+
+Table 2
+
+Descriptive statistics from spectra between 200 and 600 MHz
+
+12
+
+Table 3
+
+Piksi multi evaluation kit main parts
+
+16
+
+Table 4
+
+Main parameter of robot.
+
+22
+
+Table 5
+
+Algorithm parameter configuration
+
+44
+
+Table 6
+
+Summary of experimental conditions
+
+49
+
+Table 7
+
+Performance comparison of PP-DSC and PP algorithms on
+
+52
+
+various path types
+Table 8
+
+Comparison of speed performance and smoothness for PP-
+
+56
+
+DSC and PP algorithms
+Table 9
+
+Deviation metrics for PP and PP-DSC algorithms across
+
+58
+
+different path types
+Table 10
+
+Summary of observations from PP-DSC field testing
+
+59
+
+Table 11
+
+Quantitative error comparison between PP and PP-DSC
+
+60
+
+LIST OF FIGURES
+
+Page
+Figure 1
+
+Robots in agriculture adapted from traditional vehicles
+
+7
+
+Figure 2
+
+Cloud computing modules/containers
+
+7
+
+Figure 3
+
+View of the DARob with its main systems
+
+9
+
+Figure 4
+
+Thorvald II agricultural robotic system
+
+10
+
+Figure 5
+
+G1–G4 fruits, indicating variation in color of fruits picked
+
+11
+
+Figure 6
+
+Applications of mobile robot
+
+13
+
+Figure 7
+
+GNSS working principle
+
+14
+
+Figure 8
+
+Photograph of the harvesting route in each field
+
+15
+
+Figure 9
+
+Crawler vehicle model
+
+15
+
+Figure 10
+
+Key components of the Piksi Multi Evaluation Kit for base
+
+16
+
+station and rover setup
+Figure 11
+
+Final assembly of the enclosure mounted on the robot chassis
+
+18
+
+Figure 12
+
+Hardware components of robotic vehicles
+
+21
+
+Figure 13
+
+Power and communication layout of the AMR
+
+23
+
+Figure 14
+
+Integrated GNSS-RTK-based navigation system
+
+24
+
+Figure 15
+
+Functional flow of GNSS-based navigation using a PP
+
+26
+
+controller.
+Figure 16
+
+Mobile robot odometry model
+
+30
+
+Figure 17
+
+Kinematic structure of a car-like vehicle
+
+32
+
+Figure 18
+
+Geometric representation of the PP path tracking
+
+33
+
+Figure 19
+
+Diagram illustrates the effects of varying look-ahead
+
+34
+
+distances.
+
+LIST OF FIGURES (Cont.)
+
+Page
+Figure 20
+
+Pure pursuit tracking model and adaptive lookahead surface
+
+38
+
+Figure 21
+
+Steering-adaptive lookahead concept and surface plot
+
+41
+
+Figure 22
+
+Diagram illustrating the components of an autonomous
+
+45
+
+driving system
+Figure 23
+
+Flowchart of the Path Planning and Tracking Process for an
+
+46
+
+Autonomous Robot
+Figure 24
+
+Field Test Location for Navigation Algorithms
+
+47
+
+Figure 25
+
+Test Trajectories for Robot Navigation
+
+47
+
+Figure 26
+
+Experimental platform and GNSS-RTK base station setup
+
+48
+
+Figure 27
+
+PP-DSC vs PP performance on test trajectories
+
+51
+
+Figure 28
+
+RMSE performance of PP-DSC and PP across test
+
+51
+
+trajectories.
+Figure 29
+
+Steering angle distributions along different trajectory types
+
+53
+
+Figure 30
+
+Velocity, lookahead distance, and steering angle on
+
+54
+
+different
+Figure 31
+
+Steering angle histogram
+
+55
+
+Figure 32
+
+Path tracking comparison with zoomed-in segments
+
+56
+
+Figure 33
+
+Radar chart of localization deviation metrics for PP and PP-
+
+58
+
+DSC algorithms.
+Figure 34
+
+Localization deviation comparison highlighting the
+
+61
+
+consistency of PP-DSC across path types.
+Figure 35
+
+Surface plot of the relationship between linear velocity,
+angular velocity, and turning radius in autonomous robot
+navigation
+
+62
+
+CHAPTER I
+INTRODUCTION
+
+1.1
+
+Introduction and background
+A robot is a programmable machine capable of performing various tasks
+
+through predetermined movements, and its operations are pre-planned to execute
+specific functions. In the context of agricultural mobile robots, the ability to
+autonomously navigate in diverse environments is crucial. Navigation involves
+directing the robot's movement from one point to another, employing various sensors
+suitable for different environments such as indoor and outdoor settings. Various
+navigation techniques, including artificial intelligence, are employed. Robot navigation
+refers to a mobile robot's capability to determine its own location, map a path to a target
+location, and efficiently plan routes. Effective path planning relies on a combination of
+localization and resolving the robot's current state and the target location within the
+same coordinates. Mapping involves notations describing the robot's position with
+reference to its surroundings. The movement of the robot from one point to another is
+facilitated by navigation, where the robot autonomously decides its current position and
+maps a path to the target location. The efficiency of path planning depends on the sensor
+systems applied to the robot, considering different environmental conditions. For
+instance, utilizing Light Detection and Ranging (LiDAR) in open spaces may not be as
+suitable as Global Positioning System (GPS) and Real-time kinematic positioning
+(RTK) due to the vast and unobstructed nature of the environment.
+The field of robotics in agriculture is a widely researched area nowadays due to
+its potential in developing automated systems suitable for agricultural tasks and
+addressing challenges in farming practices. This includes issues like labor shortages,
+increased labor costs, and the need for precision in agricultural operations. The
+objective of research in this field is to develop autonomous machinery systems that can
+work independently without human control, achieving higher precision and efficiency
+[1–4]. Various operational aspects need attention, covering elements like localization,
+navigation, sensing, actuation, and communication.
+
+2
+
+The operation of the robot requires the use of various sensors, including satellite
+positioning systems, laser sensors, and inertial measurement units (IMU). The
+utilization of LiDAR sensors is highly popular in the navigation of robotic systems due
+to their accuracy and diverse measurement range. However, there are still many
+limitations in the use of LiDAR sensors, such as the distance between objects and the
+sensor [5,6].
+In the contemporary context, there might be instances of employing the Pixhawk
+control board for certain tasks, but it is perceived to lack flexibility in development.
+Therefore, it is envisaged to utilize The Robot Operating System (ROS2), which is a
+versatile and open-source platform crafted to assist in the development of robotic
+applications [7]. ROS encompasses an extensive array of functionalities, such as
+hardware abstraction, device drivers, libraries, visualizers, message-passing, and
+package management. This system parallels other robot frameworks like Player,
+YARP, Orocos, CARMEN, Orca, MOOS, and Microsoft Robotics Studio in terms of
+capabilities.
+The primary aim of ROS2 is to promote the reuse of code in the field of robotics
+research and development. This objective has led to its swift adoption by a multitude
+of research institutions and companies as their preferred framework for development.
+ROS2 finds its application across a diverse spectrum of robotic domains, including
+aerial
+
+and ground
+
+robots,
+
+humanoids,
+
+and underwater
+
+vehicles.
+
+Notable
+
+implementations involve humanoid robots such as PR-2 and REEM-C, ground robots
+like the Clear Path platforms, and various aerial platforms developed by Ascending
+Technologies.
+Moreover, ROS2 provides substantial support for a wide range of popular
+robotic sensors, including Inertial Measurement Units, GPS receivers, cameras, and
+lasers. These sensors are all readily accessible through extensive driver support. Despite
+its foundation in Linux and the absence of guarantees for hard real-time system
+properties, ROS2 is proficient in managing soft real-time applications and seamlessly
+integrates with other prominent open-source libraries, including OpenCV, Point Cloud
+Library, and the Gazebo simulator.
+The runtime architecture of ROS2 is characterized by a peer-to-peer network of
+processes, which may be distributed across multiple machines. These processes
+
+3
+
+communicate using a variety of methods, including asynchronous, synchronous, and
+data storage communications, all underpinned by ROS2 robust communication
+infrastructure.
+In contemporary agricultural applications, robots have become increasingly
+employed to perform repetitive and hazardous tasks across a diverse range of indoor
+and outdoor environments [8,9]. Despite their growing adoption, achieving reliable
+autonomous navigation remains a substantial challenge, particularly in complex
+settings such as greenhouses where Global Positioning System (GPS) signals may be
+unavailable [10]. To successfully traverse from a designated origin to a defined
+destination, agricultural robots must integrate several essential capabilities, including
+robust localization, environmental mapping, effective path planning, and obstacle
+avoidance [11]. Among these, the ability to accurately establish their position and
+generate a globally consistent real-time map of the surroundings is paramount for
+enhancing overall performance. Consequently, there is a critical need for an efficient
+and precise real-time localization and mapping method to meet the stringent demands
+of autonomous navigation in agricultural environments [12].
+In response to these limitations, the research community has increasingly turned
+to sensor fusion strategies to enhance robust localization. By integrating Global
+Navigation Satellite System Real-Time Kinematic (GNSS-RTK) data, which offers
+centimeter-level precision under ideal conditions, with additional sensor modalities,
+researchers have achieved more reliable and accurate navigation [13]. Inertial
+Measurement Units (IMUs) provide continuous orientation, angular velocity, and
+acceleration data, thereby mitigating reliance on intermittent external references. Visual
+odometry, leveraging camera-derived feature tracking, further augments positioning
+estimates in environments where GNSS signals may be weak or unstable. Beyond these
+modalities, Light Detection and Ranging (LiDAR) sensing introduces rich threedimensional spatial information, ensuring continuous localization performance even
+during temporary GNSS outages [14,15].
+Recent studies have proposed a variety of approaches to improve localization
+and tracking accuracy in autonomous systems. These include the integration of GNSSRTK with MEMS-IMU for better tilt compensation[16]. , improvements in planting
+
+4
+
+precision through sensor fusion[17]., and the application of Pure Pursuit with both fixed
+and dynamic lookahead adjustments[18-19]. Some methods incorporate fuzzy control
+[20] or advanced model-based controllers[21] to reduce lateral deviation, particularly
+in curved or variable environments. Across these works, dynamic lookahead techniques
+that adjust based on vehicle speed or path curvature have shown significant error
+reduction, making them especially effective for autonomous agricultural vehicles and
+unmanned ground systems operating in real-world scenarios.
+Furthermore, research has demonstrated that combining GNSS-RTK,
+microelectromechanical systems (MEMS)-based IMUs, and stereo visual odometry
+significantly enhances localization robustness in complex agricultural environments
+[22]. Similarly, using IMUs, differential GPS, and visual odometry within an Extended
+Kalman Filter (EKF) framework has shown reliable performance where standalone
+GNSS signals are insufficient [23,24]. These techniques are particularly critical in
+regions like Japan, where aging agricultural workforces, labor shortages, and increased
+accident risks demand autonomous solutions with robust localization capabilities. The
+relevance of these sensor integration strategies also extends beyond agriculture.
+Autonomous ground vehicles, unmanned aerial systems, and service robots operating
+in industrial or urban environments also benefit from sensor redundancy and data
+fusion. When paired with advanced path planning algorithms (e.g., A-Star) and
+trajectory-tracking controllers (e.g., Pure Pursuit), these systems deliver improved
+positional accuracy and robustness in dynamic environments [25]. These approaches
+help mitigate localization drift and ensure safer and more reliable autonomy in realworld applications [26].
+This paper is organized as follows: Section 2 provides a detailed discussion of
+the system design, including hardware and software components, data communication
+protocols, and the implementation of navigation algorithms, with a focus on improving
+the Pure Pursuit algorithm for higher-speed operation. Section 3 presents the
+experimental results conducted in three types of paths: line path, loop path, and figureeight path. The evaluation is based on data collected from GNSS-RTK, IMU, and
+encoder sensors to assess tracking accuracy. Section 4 concludes by comparing the
+performance of the proposed system with the traditional Pure Pursuit algorithm.
+
+5
+
+1.2
+
+Objective of the research
+1.2.1 To design and implement an advanced control system that enables precise
+
+positioning and maneuvering of robotic units.
+1.2.2 To develop a navigation system for dynamic and wide-open environmental
+conditions.
+1.3
+
+Scope and limitation of the study
+1.3.1 Scope of the research
+1.3.1.1 The system operates effectively in open field environments with
+smooth surfaces and no sky obstructions.
+1.3.1.2 The control system achieves a positioning error within ±10
+centimeters along the X-axis and ±15 degrees in Yaw (rotation around the Y-axis)
+by integrating sensor data from the Inertial Measurement Unit (IMU), Global
+Navigation Satellite System (GNSS), and Real-Time Kinematics (RTK).
+1.3.1.3 The aim is to conduct a comparative analysis of the precision in
+path-tracking efficacy, encompassing the traversal of linear trajectories,
+navigation along curvilinear paths, and execution of figure-eight formations.
+1.3.1.4 The display component can illustrate the position of the robot.
+1.3.2 Limitation of the research
+1.3.2.1 Areas with GPS signal obstructions or dense cloud cover.
+1.3.2.2 The transmission of robot positional data to the display unit should
+be conducted within the same network infrastructure
+1.3.2.3 The robot cannot circumvent obstacles while operating in
+
+autonomous mode.
+1.4
+
+Expected benefits
+1.4.1 Acquired a robot capable of operating independently in vast open field
+
+areas.
+1.4.2 Acquired a control and display system for the operational control of the
+robot.
+1.4.3 Acquired pertinent knowledge in robot navigation and positional
+identification, with the potential for further development in the future.
+
+CHAPTER II
+LITERATURE REVIEWS
+
+This chapter discusses a review of the literature and related research used in
+the research, including:
+2.1 Literature related to agricultural robot.
+2.2 Literature related to autonomous mobile robot.
+2.3 Literature related to global navigation satellite system (GNSS)
+2.1
+
+Literature related to agricultural robot
+2.1.1 Exploiting the Internet Resources for Autonomous Robots in Agriculture
+The incorporation of autonomous robots into agricultural practices
+
+represents a pivotal development in the evolution of modern farming. In their 2018
+paper, Exploiting the Internet Resources for Autonomous Robots in Agriculture,
+examine this progression, emphasizing the role of Internet technologies such as the
+Internet of Things (IoT) and cloud computing in augmenting the functionality of these
+robots [27]. The paper highlights various applications, including the development of a
+cost-effective, safe, and environmentally friendly pesticide spraying system and the
+deployment of autonomous orchard vehicles in the USA for tasks like mowing, pruning,
+training, spraying, blossoming, fruit thinning, harvesting, and sensing [28].In Europe,
+the RHEA fleet (see Figure 1) ,comprising three tractors that collaborate in pesticide
+application, is another notable example of this technological advancement.
+Additionally, specialized robotic systems like LadyBird in Australia and Vibro Crop
+Robotti in Europe demonstrate further innovations [29]. LadyBird, equipped with
+thermal and infrared detection systems, hyperspectral cameras, stereovision cameras,
+LIDAR, and GPS, is designed for crop evaluation. The Vibro Crop Robotti emphasizes
+meticulous seed planting and the mechanical purification of row crops. It utilizes
+computing systems that vary from centralized to basic distributed designs, facilitating
+the control of a small selection of sensors and the operation of fundamental farming
+implements.
+
+7
+
+Figure 1 (a) Robots in agriculture adapted from traditional vehicles;
+(b) Agricultural robots transformed from standard vehicles. [30]
+
+The integration of advanced Internet technologies is revolutionizing
+agricultural robotics. This integration involves using cloud services for data storage (see
+Figure 1), scalability, and data analytics. These technological advancements enable
+robots to perform more efficiently and accurately, leading to improved agricultural
+practices [31].
+
+Figure 2 Cloud computing modules/containers [32].
+A practical application of this integration is demonstrated through an
+innovative weeding application using laser technology. This case study exemplifies the
+
+8
+
+potential of Internet-integrated robotics in agriculture, showing how they can
+effectively tackle specific farming tasks with enhanced precision.
+The architecture proposed in the paper is based on the ROS2 and
+FIWARE (Future Internet WARE). ROS2 facilitates effective communication among
+robot subsystems, while FIWARE accelerates the development of smart solutions. This
+combination is pivotal in realizing the full potential of Internet resources in agricultural
+robotics.
+The study's analysis of transfer speed, latency, and processing time
+indicates a positive outcome for the use of ROS2 and FIWARE. This integration not
+only benefits developers by simplifying the development process but also promises to
+bring significant advancements in agricultural practices.
+The integration of Internet resources in agricultural robots signifies a leap
+forward in precision agriculture. It enhances the efficiency, accuracy, and sustainability
+of farming practices, paving the way for a more technologically advanced agricultural
+future.
+2.1.2 Low-Cost Robot for Agricultural Image Data Acquisition
+The paper "Low-Cost Robot for Agricultural Image Data Acquisition"
+[32] presents a comprehensive study on the development and application of a low-cost
+autonomous robot, named DARob, for image data acquisition in agriculture. This essay
+will review the key aspects of the paper, integrating insights and findings from the
+literature cited within the document.
+The core contribution of the paper is the design and construction of
+DARob, a low-cost and efficient solution for agricultural image data acquisition. The
+robot is built with economical components, costing around $8 5 0 , making it a feasible
+option for research groups and applications in developing countries. Its modular design
+facilitates easy transportation and adaptability to different crop types and sizes.
+DARob's capability for automatic operation and remote control enhances the
+repeatability and accuracy of data collection, crucial for precision agriculture.
+
+9
+
+Figure 3 View of the DARob with its main systems [33].
+The emergence of agricultural robotics, as investigated by [34-35], and
+additional researchers, has brought a paradigm shift in agricultural methodologies.
+Robots like DARob are tailored for specialized agricultural tasks such as weed
+management, crop surveillance, and precision farming, proving to be more effective
+than traditional practices. The integration of cutting-edge sensor technologies and
+artificial intelligence into these robotic systems has remarkably improved their
+performance, a development underscored in the works of [36-37]. Notwithstanding the
+substantial advancements in agricultural robotics, the implementation of these
+technologies encounters notable challenges, primarily due to their high cost and
+complexity. DARob, which is notable for its cost-effective design, seeks to address
+these concerns. However, as acknowledged by its creators, DARob confronts specific
+limitations such as limited battery autonomy and difficulties in navigating muddy
+terrains. These particular challenges are indicative of broader issues prevalent in the
+domain of agricultural robotics, as delineated in the research conducted by [38-39],
+highlighting the imperative for continued research and development in this field.
+The integration of DARob into the realm of precision agriculture marks a
+significant progression. The scholarly work delineates DARob's capability in acquiring
+high-resolution image data, which proves essential for the segmentation of crops and
+
+10
+
+weeds, an integral aspect of proficient agricultural administration. This functionality is
+in concordance with the findings of academics like [40-41]. These scholars underscore
+the imperative of acquiring accurate data for efficacious crop management and
+elucidate the enhancement of these processes through the application of machine
+learning techniques.
+2.1.3 Electromagnetic Sensing for Non-Destructive Real-Time Fruit Ripeness
+Detection: Case-Study for Automated Strawberry Picking
+This study focuses on developing a tool for real-time analysis of strawberry
+ripeness using the Thorvald II robotic system, adaptable to various agricultural needs.
+The robot (Figure 4), equipped with advanced navigation and localization tools, has
+shown promise in applying UV light to strawberries for mildew research [42].
+Additionally, microwave spectroscopy is explored for its potential in non-destructive,
+hygienic food analysis [43], aiming to enhance the efficiency of robotic agricultural
+applications. This technology's versatility has been recognized in various sectors,
+including healthcare and construction, for its non-invasive evaluation capabilities.
+
+Figure 4 Thorvald II agricultural robotic system [43].
+
+During the harvest season in Drøbak, Norway, in June 2018, Nobel
+strawberries were selected for picking. The selection process utilized a visual grading
+system, categorizing strawberries from grades 1 to 4, as detailed in a specific table 1.
+Since the collection occurred early in the season, no over-ripe fruits were noted, and
+grade 5 strawberries were obtained by allowing grade 4 fruits to further ripen at room
+
+11
+
+temperature for about three days post-harvest. This resulted in a minor weight loss for
+grade 5 strawberries, attributed to drying, approximately 1g per fruit or 6% from their
+initial weight. The color variation across the grades was documented in figure 5, with
+the count and total weight of strawberries per grade recorded before measurement.
+
+Table 1 Fruit grading information.
+Total
+Grade
+
+Grade Description *
+
+(G)
+
+n
+
+Grade
+Weight
+(g)
+
+Mean Fruit
+Weight
+(g)
+
+1
+
+Green; entirely not ripe
+
+24
+
+224
+
+9.3
+
+2
+
+Partially ripened with less than 50% of
+
+15
+
+226
+
+15.1
+
+11
+
+249
+
+13.5
+
+14
+
+241
+
+17.2
+
+14
+
+227
+
+16.2
+
+the fruit's surface area showing red
+coloration.
+3
+
+More than 50% of the fruit's surface is
+red, indicating its nearing ripeness, yet it
+still displays considerable green areas.
+
+4
+
+Fully ripe; the entire surface of the fruit
+has turned red.
+
+5
+
+Excessively ripe; characterized by a deep
+red hue and a noticeable increase in
+softness. Group 4 fruits underwent a 3day period at 20°C to reach this over-ripe
+condition.
+
+Figure 5 G1–G4 fruits, indicating variation in color of fruits picked [43].
+
+12
+
+The examination of spectral data within the 200 – 600 MHz frequency range
+revealed distinct signal differentiation. Consequently, the analysis concentrated on this
+frequency spectrum. A Z-score filtering process excluded approximately 9% of the
+collected data, with aggregated signal amplitudes and their standard deviations detailed
+in a specific table 2 The analysis enabled the formulation of a linear correlation,
+achieving an adjusted R2 value of 0.788. Regression analysis yielded a p-value of
+0.0283, underscoring the statistical significance of these findings, given the threshold
+of p < 0.05.
+
+Table 2 Descriptive statistics from spectra between 200 and 600 MHz [43].
+Mean signal
+
+Total Measure-
+
+Total z-Score
+
+Ments
+
+Rejections
+
+1
+
+63
+
+3
+
+−0.664
+
+0.422
+
+2
+
+45
+
+5
+
+−1.11
+
+0.576
+
+3
+
+33
+
+3
+
+−1.16
+
+0.917
+
+4
+
+42
+
+3
+
+-1.17
+
+0.866
+
+5
+
+42
+
+9
+
+-1.54
+
+0.640
+
+Air **
+
+21
+
+0
+
+0.000443
+
+0.0125
+
+Total
+
+246
+
+23
+
+-
+
+-
+
+Grade
+
+Amplitude
+(dBm)
+
+Standard
+Deviation
+
+** Air measurements serve as control data to verify the proper functioning of the sensor
+and system. They also help identify any unexpected variations in system performance,
+which could be attributed to factors like drift or sensor contamination.
+
+2.2 Literature related to autonomous mobile robot.
+2.2.1 Autonomous mobile robot
+The introductory section of the paper addresses the intricacies faced by
+autonomous mobile robots in navigating unpredictable environments, highlighting the
+critical necessity for continuous navigation and obstacle avoidance. These robots
+employ a spectrum of sensors, including floor plans, sonar sensing, and Inertial
+Measurement Units (IMUs) [44]. to maneuver both indoor and outdoor settings.
+Achieving tasks without human intervention demands a diverse range of environmental
+
+13
+
+sensors, integrated within the robot or externally positioned, contributing to the
+system's intricate design owing to the requisite utilization of multiple sensors. The
+paper critically evaluates these challenges and presents an in-depth analysis of devices,
+sensors, and fusion methodologies aimed at resolving concerns regarding localization,
+estimation, and navigation, while offering recommendations for further research to
+enhance the efficacy of autonomous mobile robots.
+
+Figure 6 Applications of mobile robot [44].
+2.3 Literature related to global Navigation Satellite System (GNSS)
+2.3.1 Robot positioning and navigation technology is based on Integration of the
+Global Navigation Satellite System and real-time kinematics
+The essay comprehensively examines the enhancement of robotic
+positioning and navigation by amalgamating Global Navigation Satellite System
+(GNSS) and Real-Time Kinematics (RTK) technologies (see figure 7), with a specific
+focus on surmounting the challenges faced in outdoor environments, where
+conventional visual Simultaneous Localization and Mapping (SLAM) systems are
+often inadequate. It underscores the criticality of precise and dependable navigational
+capabilities for mobile robots across diverse applications. The essay delves into the
+limitations inherent to current methodologies and articulates the advantages conferred
+by the synergy of GNSS-RTK and visual SLAM. This integrative approach is shown
+to significantly elevate accuracy and versatility, as evidenced by empirical data analysis
+and case studies. The discourse culminates in an exploration of the prospective future
+enhancements and the expansive applications of this hybrid system in autonomous
+robotics, highlighting its pivotal role in augmenting operational efficacy and scope [45].
+
+14
+
+Figure 7 GNSS working principle [45].
+2.3.2 Automatic travelling of agricultural support robot for a fruit farm Verification
+of effectiveness of real-time kinematic-global navigation satellite system and developed
+a simulator for specification design.
+The essay reviews a study by Hiraoka et al. on integrating Real-Time
+Kinematic-Global Navigation Satellite System (RTK-GNSS) technology into
+agricultural robots for fruit farms ( see figure 8). It highlights the need for such
+technology due to labor shortages and safety concerns in agriculture, specifically in
+Japanese orchards. The study compared the effectiveness of RTK-GNSS against StandAlone (SA)-GNSS in real orchard settings, revealing that RTK-GNSS significantly
+outperforms SA-GNSS in terms of accuracy and stability. This improved precision,
+demonstrated through both field tests and simulations, indicates that RTK-GNSS is
+highly beneficial for navigating agricultural robots, ensuring more precise and safe
+operations between tree rows. The findings suggest that RTK-GNSS can revolutionize
+fruit farm automation, offering a substantial advancement in agricultural technology
+and reducing the reliance on manual labor. The essay incorporates specific citations and
+references to the study by [46]., providing a comprehensive overview of its
+contributions to agricultural robotics.
+
+15
+
+Figure 8 Photograph of the harvesting route in each field [46].
+
+Figure 9 Crawler vehicle model [46].
+2.3.2. Autonomous Navigation of an Agricultural Robot Using RTK GPS and
+Pixhawk
+The summary provided already encapsulates the essential points in a formal
+and concise manner, appropriate for academic or professional contexts. It addresses the
+significant threat Potato Virus Y (PVY) poses to crops [47], the limitations of current
+methods for dealing with PVY, and introduces an innovative solution involving Global
+Positioning System (GPS) guided Autonomous Ground Vehicles (AGVs) with robotic
+arms. This solution, leveraging advanced remote sensing technologies and Real-Time
+Kinematic (RTK) systems, aims to improve the accuracy and efficiency of combating
+PVY spread in potato fields, illustrating a forward-thinking approach to agricultural
+challenges [48-50].
+
+16
+
+The integration of an RTK GPS system with magnetometers furnishes the
+robot with precise positional and directional data. The control logic is managed by a
+Pixhawk microprocessor, which corrects navigational errors by adjusting the wheel
+speeds to align the robot's actual position and heading with the intended targets. The
+choice of the Piksi Multi Evaluation Kit for the RTK GPS, featuring a highperformance Xilinx Zynq 7020 chipset with dual-core ARM Cortex processors, enables
+rapid RTK calculations, achieving an RTK fix swiftly. This system is highlighted for
+its cost-effectiveness in comparison to alternative RTK GPS options. Both the base
+station and rover unit are comprised of four key components, as detailed in the
+referenced table 3 and figure 10.
+
+Table 3 Piksi multi evaluation kit main parts [33].
+Item
+
+Name
+
+Quantity
+
+1
+
+Evaluation board
+
+2
+
+2
+
+Lithium-ion battery
+
+2
+
+3
+
+Free Wave radio modem
+
+2
+
+4
+
+Survey grade GNSS antenna
+
+2
+
+Figure 10 Key components of the Piksi Multi Evaluation Kit for base station and
+rover setup [50].
+
+17
+
+Prior to deploying the actual Autonomous Ground Vehicle (AGV), its
+components underwent preliminary testing utilizing radios supplied by Swift
+Navigation. The procedure involved configuring the Piksi Multi for RTK mode by
+programming the base station and rover radios for mutual communication.
+Subsequently, the components listed in Table 1 were interconnected as depicted in
+Figure. 11 The setup included connecting a survey-grade GNSS antenna and a Free
+Wave radio modem to the evaluation board, which was powered alongside the radio
+modem by a lithium-ion battery. A USB cable was used to connect the evaluation board
+to a computer. Swift Navigation facilitates this process by offering complimentary
+software, Swift Console, which aids in configuring and interfacing with the Piksi Multi.
+For the evaluation phase, radios operating at frequencies of 900 MHz or 2.4 GHz were
+utilized to assess the GNSS receivers' performance.
+The creation of a protective enclosure for the robot's electrical components
+was crucial to shield them from mud, water, and environmental factors due to its
+operational setting. Given the prototype nature of the robot, ensuring easy access to
+these components for maintenance or modifications was a key design consideration.
+The design process commenced in Solid Works, followed by the fabrication of acrylic
+sheets through laser cutting and assembly using Weldon #4 acrylic glue
+(Dichloromethane). Acrylic was chosen for its simplicity in laser cutting, widespread
+availability, and ability to fit tightly, which improved the protective qualities of the
+enclosure against environmental factors. The design included precise holes for cable
+and antenna access, while joints were strengthened with high-temperature resistant hot
+glue. After assembly, the enclosure was coated in white spray paint to reduce heat
+absorption from sunlight, thus enhancing the regulation of its internal temperature.
+(Figure. 11)
+
+18
+
+Figure 11 Final assembly of the enclosure mounted on the robot chassis [50].
+The enclosure is secured with four bolts, allowing it to be easily removed
+while keeping the components attached, facilitating simply connect/disconnect
+operations via access holes. Furthermore, a separate acrylic plate, also laser-cut, serves
+as the mounting platform for the electrical components, designed for easy removal for
+maintenance or debugging purposes. The design includes a beneficial aspect for
+magnetometer calibration, where the bottom plate can stay affixed to the enclosure but
+be elevated from the chassis, streamlining the calibration procedure.
+Piksi Multi Accuracy - The RTK GPS system, specifically the Piksi Multi,
+demonstrated accuracy within the advertised range of less than or equal to 10
+centimeters, verified against National Geodetic Marker sites to an actual precision of
+5.6 centimeters. Verification posed challenges due to the scarcity of locations with
+precisely known GPS coordinates. Two main approaches were evaluated: the direct
+survey of a location and the utilization of a pre-surveyed geodetic marker. The latter,
+accessed via the National Geodetic Survey Data Explorer, although more difficult due
+to access issues on private properties, proved effective. The selected marker was located
+at Pocatello Regional Airport. During the experiment, evaluation boards from Swift
+Navigation were utilized, situating the base station's Piksi on one geodetic marker and
+the rover's Piksi on another, with a distance of several hundred meters between them.
+After collecting 50 GPS fixes and converting them into the UTM 12N coordinate
+
+19
+
+system, the average positional error was calculated to be 5.6 centimeters, using
+Pythagorean's theorem to compare the estimated and actual locations. Testing was
+constrained by location difficulties and limited time permitted by airport security.
+Autonomous Navigation Via Waypoints - The autonomous navigation
+system performed adequately, although issues were noted with the AGV's ability to
+maintain its heading, causing occasional disorientation. This issue was considered
+minor and could likely be resolved by employing better-quality magnetometers or
+achieving more accurate calibration. While the accuracy of autonomous navigation was
+not tested against geodetic markers due to prior confirmation, challenges associated
+with the waypoint radius parameter were identified, suggesting the need for refinement.
+A proposed solution involves integrating a trigger event for enhanced precision in
+navigation, especially when approaching targeted waypoints within a 1-meter radius.
+Obstacle Avoidance - In the experiment, SiK telemetry radios were replaced
+with a direct USB connection. This setup allowed for accurate distance measurements
+between the LIDAR and a frontal obstacle on the AGV, aligning with the readings in
+Mission Planner. However, obstacle avoidance capabilities were not tested using the
+telemetry connection. Future evaluations are planned to incorporate telemetry
+connections for comprehensive testing.
+
+CHAPTER III
+RESEARCH METHODOLOGY
+
+Materials
+1.Hardware
+- Personal computer
+- Mobile robot
+2.Software
+- Robot Operating System2 (ROS2)
+- Visual Studio Code
+Methodology
+The present study is dedicated to the engineering of a navigation system
+designed for robotic deployment in extensive agricultural landscapes. This includes an
+empirical demonstration of the robots' navigational capabilities. The research
+methodology is delineated in a sequential and structured manner, partitioned into four
+main sections:
+3.1 Robot Vehicle Design
+3.2 Navigation System Design of the robot
+3.3 Software design
+3.4 GNSS-IMU fusion Position Principle
+3.5 IMU-Based Heading Angle Measurement
+3.6 Trajectory-Tracking Control System
+3.7 Development and Implementation of Algorithms
+3.8 Implementation procedure
+
+21
+
+3.1 Robot Vehicle Design
+3.1.1 Hardware Integration
+
+Figure 12 Hardware components of robotic vehicles.
+
+This study employs a mobile robot featuring an aluminum profile chassis, an
+industrial-grade onboard computer, GNSS antennas, a high-precision receiver, and
+brushless DC motors. The chassis of the robot measures 600 mm in width and 1000
+mm in length. The GNSS system incorporates an internal IMU and supports RTK
+positioning with an accuracy of up to 1.5 centimeters, delivering complete differential
+data compliant with the Radio Technical Commission for Maritime Services (RTCM)
+standards. Driven by a high-performance MEMS-based inertial device, the GNSS-RTK
+module ensures precise and reliable differential positioning. Additionally, the robot is
+equipped with a local wireless communication system that facilitates real-time control
+between the ground station and the mobile platform. This communication system
+supports full-duplex transmission, real-time channel monitoring, and adjustable
+transmission power, thereby ensuring reliable operation under diverse outdoor
+conditions. The comprehensive hardware architecture of the robot is depicted in Figure
+12 and summarized in Table 4.
+
+22
+
+Table 4 Main parameter of robot.
+Parameter
+
+Unit
+
+Value
+
+Dimensions
+
+mm
+
+600*1000*110
+
+Dimensions + Antenna
+
+mm
+
+600*1480*110
+
+Wheel
+
+mm
+
+113
+
+Wheelbase
+
+mm
+
+613.5
+
+Max speed
+
+m/s
+
+1.0-5.0
+
+Power supply
+
+volt
+
+24
+
+The electrical system of the autonomous mobile robot is systematically
+organized to ensure stable and efficient operation. Power is initially supplied by a
+24VDC battery, which is regulated and distributed to various subsystems through
+voltage converters. These converters maintain consistent voltage levels, providing
+stable power to critical modules.
+The motor controllers receive the regulated power and are responsible for
+managing the speed and direction of the robot’s brushless DC motors. Simultaneously,
+the IMU and GNSS-RTK modules, also powered through the regulated supply,
+continuously acquire real-time navigation data to support precise localization and path
+tracking.
+In parallel, the wireless communication modules utilize the same power
+infrastructure to establish a real-time connection between the robot and the ground
+station, enabling remote control and seamless data exchange.
+The overall structure of the electrical system, detailing the power flow from
+the battery through each subsystem and the interconnection between components, is
+illustrated in Figure 13.
+
+23
+
+Figure 13 Power and communication layout of the AMR.
+3.2 Navigation System Design of the robot
+The robot’s navigation system is designed using a high-precision architecture
+centered on GNSS-RTK technology to ensure accurate and reliable localization in
+outdoor environments. As depicted in Figure 4, the system is structured around four
+principal components: the GNSS-RTK base station, the position unit, the processing
+unit, and the control unit.
+The GNSS-RTK base station, comprising a GNSS antenna and a wireless
+transmission module, serves as the source of differential correction data. This correction
+data is transmitted to the position unit, which consists of a wireless receiver and a GNSS
+module. By combining satellite signals with the received corrections, the position unit
+achieves centimeter-level positioning accuracy.
+The processing unit, based on an industrial-grade computer, fuses data from the
+GNSS and an onboard IMU to enhance localization performance, particularly in areas
+with limited satellite visibility. It transmits motion commands to the control unit via the
+Controller Area Network (CAN) bus protocol, ensuring low-latency and reliable realtime communication.
+The control unit, which includes brushless DC (BLDC) motors, motor controllers,
+and encoder sensors, executes the received commands and provides real-time feedback
+to support closed-loop control of the robot’s motion.
+This integrated system design enables precise, stable, and responsive navigation,
+making it highly suitable for applications such as autonomous agricultural machinery
+
+24
+
+and field robotics. Furthermore, the adoption of standardized communication protocols
+and modular hardware components enhances the system's reliability, scalability, and
+adaptability across diverse operational scenarios [51–52].
+
+Figure 14 Integrated GNSS-RTK-based navigation system.
+
+The software system responsible for controlling the autonomous mobile
+platform is implemented on an embedded computing platform operating under the
+Linux operating system. It employs the Robot Operating System (ROS) as the core
+integration middleware for managing autonomous positioning and navigation, as
+depicted in Figure 16. This platform continuously acquires data from multiple onboard
+sensors, including a Global Navigation Satellite System (GNSS) receiver, an Inertial
+Measurement Unit (IMU), and wheel encoders. Together, these sensors provide critical
+information regarding the robot’s positioning, orientation, and motion, which are
+essential for real-time localization and motion control.
+The robot is equipped with satellite-based self-positioning sensors (GNSS) and
+an IMU, both of which continuously publish data streams within the ROS ecosystem.
+The IMU plays a crucial role in determining the robot’s heading by providing
+orientation data necessary for maintaining accurate directional control, while the wheel
+encoders supplement motion information by reporting linear and angular velocities. All
+sensor data streams are collected, processed, and integrated by a sensor fusion module,
+
+25
+
+which performs real-time analysis to ensure reliable localization and navigation
+performance [11–12].
+Processing and fusing the sensor data, the software system generates motion
+control commands aligned with the navigation objectives. These commands are
+transmitted to the motion control module, responsible for activating the drive system,
+which includes the left and right brushless DC motors along with the steering
+mechanism. Following receipt of the commands, the drive controller initiates
+movement by adjusting the steering and motor operations, guiding the robot along the
+desired trajectory.
+The architecture of the software system is meticulously designed to ensure
+seamless coordination among sensing, processing, and actuation components.
+Leveraging the flexibility and robustness of Linux and ROS, the system distributes its
+functionalities across multiple ROS nodes dedicated to sensor data acquisition, control
+signal generation, and inter-component communication.
+As illustrated in Figure 15, a planning module is utilized to generate the target
+path, which is subsequently tracked by the Pure Pursuit controller. The integration of
+GNSS and IMU data enables the robot to navigate with high accuracy, allowing it to
+adapt effectively to varying environmental conditions. The comprehensive system
+architecture is depicted in both Figure 15 and Figure 16, demonstrating the interactions
+among system modules that collectively support autonomous and precise robot
+operation [13–14].
+
+26
+
+Figure 15 Functional flow of GNSS-based navigation using a PP controller.
+3.3 Software design
+3.3.1 Robot Operating System2 (ROS2)
+Robot Operating System 2 (ROS 2) Jazzy is a modern robotics development
+framework that builds upon the foundation established by ROS 1, introducing major
+advancements in communication architecture, real-time capabilities, modularity, and
+security. In the domain of mobile agricultural robotics, ROS 2 Jazzy significantly
+enhances the development of autonomous systems by offering robust support for multinode, distributed, and scalable communication architectures. This capability is enabled
+through its adoption of the Data Distribution Service (DDS) middleware, which ensures
+low-latency and high-reliability message delivery. Such performance is particularly
+important in dynamic environments, such as open agricultural fields.
+In addition, ROS 2 Jazzy integrates more effectively with simulation tools
+like Gazebo and provides enhanced visualization capabilities through RViz2. These
+tools are highly beneficial for testing navigation algorithms, including Pure Pursuit.
+Recent improvements in ROS 2 Jazzy also include the integration of Zenoh-based
+middleware, which is optimized for low-bandwidth networks, and enhancements in
+handling large ROSBag datasets. These features facilitate efficient recording and
+replaying of robot state information during field trials.
+
+27
+
+With these advancements, ROS 2 Jazzy is particularly well-suited for
+applications that demand real-time responsiveness, system flexibility, and modular
+design in challenging outdoor environments. The literature emphasizes that ROS 2
+Jazzy represents a major milestone in the evolution of the ROS ecosystem. It
+successfully addresses previous limitations in scalability, security, and robustness, thus
+enabling more reliable and resilient autonomous operations under demanding field
+conditions [22].
+3.3.2 Comprehensive Development Framework
+Visual Studio Code (VS Code) version 1.75, developed by Microsoft, is a
+lightweight yet versatile source code editor that supports multiple programming
+languages, including C, C++, and Python. It offers features such as intelligent code
+completion, an integrated debugger, and built-in version control, which collectively
+enhance the efficiency of software development processes.
+Its seamless integration with Python 3 facilitates rapid implementation and
+testing of algorithms, thereby improving both computational accuracy and overall
+workflow productivity. Due to its flexibility and extensibility, VS Code is well-suited
+for developing and maintaining complex algorithmic systems in research and
+engineering applications.
+3.4 GNSS-RTK and IMU fusion Position Principle
+3.4.1 Global Navigation Satellite System Real-Time Kinematic (GNSS RTK)
+Global Navigation Satellite System (GNSS) and Real-Time Kinematic
+(RTK) positioning technologies have significantly advanced the field of precision
+agriculture, particularly in mobile robotic systems. GNSS-RTK enables centimeterlevel positioning accuracy, which is essential for autonomous operations such as
+seeding, fertilizing, and mapping agricultural fields. This level of precision reduces
+redundancy, minimizes input waste, and enhances resource efficiency and yield
+outcomes. Moreover, GNSS-RTK enhances the reliability of robotic operations under
+varying environmental conditions, including changes in weather and lighting, thus
+improving overall system productivity.
+To apply GNSS data within a Cartesian coordinate system suitable for robotic
+navigation, it is necessary to convert geodetic coordinates (latitude and longitude) into
+the Universal Transverse Mercator (UTM) coordinate system. The UTM system
+
+28
+
+provides a two-dimensional, metric-based map projection of the Earth’s surface,
+simplifying calculations related to distance and direction, which are critical for accurate
+motion control[15].
+In UTM coordinates, a location is specified using a zone number, hemisphere,
+and a pair of easting and northing values. Each zone spans 6° of longitude, with a central
+meridian assigned and a false easting of 500,000 meters to prevent negative coordinate
+values. For example, an easting of 400,000 meters corresponds to a position roughly
+100 kilometers west of the central meridian. In the northern hemisphere, northing
+values start at 0 at the equator and increase up to approximately 9.3 million meters at
+84°N, whereas in the southern hemisphere, northings begin at 10 million meters and
+decrease southward[22].
+The coordinate transformation process is based on the World Geodetic System
+1984 (WGS 84), which models the Earth as an oblate spheroid with a semi-major axis
+of 𝛼 = 6,378.137 meters and an inverse flattening of
+
+1
+𝑓
+
+= 298.25722356. The globe is
+
+divided into 60 longitudinal zones, each with its own central meridian (λ₀).
+The transformation from geodetic coordinates to UTM involves several
+computational steps. The UTM easting (E) and northing (N) are calculated using the
+following equations, which include a false easting (𝐸0 ), false northing (𝑁 0 ), and a
+central scale factor (𝑘 0 ), typically set to 0.9996. Intermediate values 𝜉′ and 𝜂 ′ are
+derived from the trigonometric transformations of latitude (𝜑) and the difference
+between the longitude (𝜆) and the central meridian.
+To convert from geodetic coordinates (𝜙, 𝜆) to UTM coordinates (𝐸, 𝑁), the
+transformation given in Eqs. (1) and (2):
+𝐸 = 𝐸0 + 𝑘0 ⋅ 𝐴 ⋅ (η′ + ∑3𝑗=1 α𝑗 cos(2𝑗ξ′ ) sinh(2𝑗η′ )),
+
+(1)
+
+𝑁 = 𝑁0 + 𝑘0 ⋅ 𝐴 ⋅ (ξ′ + ∑3𝑗=1 α𝑗 sin(2𝑗ξ′ ) cosh(2𝑗η′ )),
+
+(2)
+
+In these Eqs. (1) and (2), 𝐸 and 𝑁 are the resulting UTM easting and northing
+coordinates, respectively. The terms 𝐸0 and 𝑁0 represent the false easting and false
+northing used to shift the origin of the UTM grid. The scaling constant 𝑘0 is the central
+scale factor (typically 0.9996), used to minimize distortion along the central meridian.
+The variable 𝐴 is a scaling parameter dependent on the ellipsoid geometry, and 𝛼𝑗 are
+coefficients derived from a Fourier series expansion related to the shape of the ellipsoid.
+
+29
+
+The terms 𝜉′ and 𝜂 ′ , required in Eqs. (1) and (2), are intermediate coordinates
+computed from geodetic latitude and longitude, as defined in Eqs. (3) and (4):
+ξ′ = tan−1 (
+
+𝑡
+
+),
+
+(3)
+
+sin(λ−λ )
+
+(4)
+
+cos(λ−λ0 )
+
+η′ = tanh−1 ( √1+𝑡 20 ),
+
+Here, 𝑡 = tan(𝜙) represents the tangent of the geodetic latitude, and 𝜆0 is the
+longitude of the central meridian for the corresponding UTM zone. The function
+tanh−1(∅) denotes the inverse hyperbolic tangent, and the use of trigonometric and
+hyperbolic functions accounts for the Earth’s curvature during projection.
+The constants required for these calculations include the eccentricity 𝑒 of the
+ellipsoid, which is derived from its semi-major axis 𝑎 and semi-minor axis 𝑏, as shown
+in Eq. (5):
+𝑏2
+
+𝑒2 = 1 − 2 ,
+𝑎
+
+𝑎
+
+𝐴 = (1−𝑒 2 )1/4’
+
+(5)
+(6)
+
+Where 𝑒 2 represents the squared eccentricity of the ellipsoid, quantifying its deviation
+from a perfect sphere. The semi-minor axis 𝑏 can be obtained from the inverse
+flattening factor. These definitions ensure precise modeling of Earth’s geometry for
+accurate coordinate transformation.
+By applying for Eqs. (1) – (6), GNSS geodetic data can be accurately
+transformed into metric UTM coordinates suitable for robotic applications. This
+transformation forms the foundation for fusing GNSS data with inertial measurements
+from an IMU, allowing for robust and continuous localization even in areas where
+satellite visibility is compromised.
+3.5 IMU-Based Heading Angle Measurement
+The calculation of the rotation or heading of mobile robots is a critical aspect of
+autonomous navigation and robotic system design. Accurate determination of a robot’s
+orientation is essential for executing tasks such as path planning, obstacle avoidance,
+and precise maneuvering within dynamic environments. Inertial Measurement Units
+(IMUs) play a fundamental role in this process. These sensors, which typically consist
+of gyroscopes and accelerometers, are employed to measure both rotational movements
+and linear accelerations of mobile robots. The gyroscope measures the rate of rotation
+
+30
+
+around the robot’s axes, while the accelerometer captures linear acceleration along
+these axes. By integrating the data from these two types of sensors, the robot’s
+orientation over time can be accurately calculated.
+The heading angle 𝜃(𝑡) at a given time can be estimated by integrating the angular
+velocity 𝜔(𝑡) measured by the gyroscope. The basic equation for updating the heading
+is expressed Eq. (7):
+𝜃(𝑡) = 𝜃(𝑡 − 1) + 𝜔(𝑡) ∙ ∆𝑡,
+
+(7)
+
+Here, 𝜃(𝑡) is the current heading angle, 𝜃(𝑡 − 1) is the previous heading, 𝜔(𝑡) is the
+angular velocity at time 𝑡 , and 𝛥𝑡 is the time interval between measurements [53]. By
+continuously applying Eq. (7), the robot’s heading can be tracked over time. An
+illustration of the robot’s heading and rotational motion is shown in Figure 16.
+
+Figure 16 Mobile robot odometry model.
+
+3.6 Trajectory-Tracking Control System
+3.6.1 Car-Like Kinematic Model of the Robotic Vehicle
+The car-like kinematic model provides a fundamental framework for
+representing the motion of four-wheeled, steering-type mobile robots, particularly those
+with automobile-like configurations. This model is extensively utilized in autonomous
+navigation systems because of its simplicity and its ability to accurately predict motion
+trajectories while adhering to nonholonomic constraints [54–55]. It serves as the
+foundational basis for many trajectories tracking algorithms, including the widely used
+Pure Pursuit method, where the geometric relationships between steering angles,
+
+31
+
+vehicle velocities, and curvature radii are critical for calculating the target point and
+generating appropriate control commands.
+In the context of Pure Pursuit, the car-like kinematic model enables the robot to
+dynamically adjust its steering based on the relative position of a lookahead point along
+the planned path. By leveraging the mathematical relationship between the curvature of
+the desired path and the required steering angle, the robot is able to continuously update
+its heading and maintain smooth and accurate path following. The simplicity and
+efficiency of this model make it particularly well-suited for real-time applications in
+outdoor environments, where fast response and adaptability to path deviations are
+essential.
+Furthermore, because the car-like kinematic model captures the nonholonomic
+motion constraints inherent to wheeled robots, it provides a realistic and reliable
+foundation for designing navigation and control strategies. These characteristics are
+especially important in agricultural, field robotics, and other outdoor scenarios, where
+unpredictable terrain and environmental disturbances necessitate robust and precise
+control mechanisms to ensure stable and effective autonomous operation.
+As illustrated in Figure 17, the vehicle's configuration is defined with respect to
+the rear axle center (𝑥, 𝑦), its heading angle (𝜃), and the front-wheel steering angle (𝜙).
+The wheelbase (𝐿) refers to the distance between the front and rear axles. The forward
+velocity is denoted (𝑣1 ), and the steering rate is represented by (𝑣2 ), which collectively
+influences the robot's motion over time. The position of the front axle (𝑥𝑓 , 𝑦𝑓 ) is derived
+geometrically from the rear axle, and a designated target point (𝑃) on the reference
+trajectory is used for tracking control. The distance between the front axle and this
+target point is denoted (𝑅), which acts as the dynamic lookahead parameter in
+trajectory-following algorithms.
+
+32
+
+Figure 17 Kinematic structure of a car-like vehicle.
+In discrete time, the robot's motion is governed by Eqs. (8) and (9), which
+update the x and y coordinates based on the current velocity and heading angle. The
+orientation update is derived from Eq. (10), which relates the turning curvature to the
+steering angle:
+𝑥(𝑡 + 1) = 𝑥(𝑡) + 𝑣(𝑡) ⋅ cos(θ(𝑡)) ⋅ Δ𝑡,
+
+(8)
+
+𝑦(𝑡 + 1) = 𝑦(𝑡) + 𝑣(𝑡) ⋅ sin(θ(𝑡)) ⋅ Δ𝑡,
+
+(9)
+
+θ(𝑡 + 1) = θ(𝑡) +
+
+𝑣(𝑡)
+𝐿
+
+⋅ tan(δ(𝑡)) ⋅ Δ𝑡,
+
+(10)
+
+To support real-time control and simulation, the model can also be reformulated in
+continuous-time state-space form as shown in Eq. (11), where the forward velocity 𝑣1
+and steering rate 𝑣2 serve as control inputs:
+cos 𝜃
+𝑥̇
+0
+𝑦̇
+sin 𝜃
+0
+[ ̇ ] = tan 𝜃 𝑣1 + [0] 𝑣2
+𝜃
+𝐿
+1
+∅̇
+[ 0 ]
+
+(11)
+
+Here, 𝑣1 represents the forward linear velocity, while 𝑣2 corresponds to the steering
+rate. The time step 𝛥𝑡 governs the resolution of discrete-time updates, enabling realtime implementation on robotic platforms.
+3.6.2 Pure Pursuit algorithm
+The Pure Pursuit (PP) algorithm is a geometric-based path-tracking method
+that is widely utilized in mobile robotic systems because of its simplicity and
+effectiveness. The fundamental principle of the algorithm is to identify a goal point
+
+33
+
+located ahead along the reference trajectory and to compute a circular arc that connects
+the vehicle’s current position to this target point. Based on this arc, the algorithm
+determines the appropriate front-wheel steering angle required for the vehicle to follow
+the desired path. As illustrated in Figure 18, the center of the vehicle’s rear axle, denoted
+as (𝑥, 𝑦), is used as the reference point for motion control, while the lookahead point is
+represented by ( 𝑥𝑙 , 𝑦𝑙 ). A critical parameter in the Pure Pursuit algorithm is the
+lookahead distance 𝐿𝑑 , which defines how far ahead along the path the goal point is
+selected. The value of 𝐿𝑑 has a significant influence on the robot's steering behavior
+and trajectory smoothness. A shorter lookahead distance results in more aggressive
+steering commands, allowing the robot to respond quickly to path deviations but
+potentially causing oscillations and instability at higher speeds. Conversely, a longer
+lookahead distance generates smoother steering trajectories and improved stability,
+although it may reduce the system’s ability to track sharp turns accurately. Therefore,
+selecting an appropriate 𝐿𝑑 is crucial for balancing responsiveness and stability, and
+in some implementations, 𝐿𝑑 is dynamically adjusted based on the vehicle’s velocity
+and operating conditions to optimize path-following performance.
+
+Figure 18 Geometric representation of the PP path tracking.
+
+34
+
+The Euclidean distance between the current vehicle position and the target
+point defines the lookahead distance 𝑙𝑑, as formulated in Eq. (12):
+𝑙𝑑 = √(𝑥 − 𝑥𝑙 )2 + (𝑦 − 𝑦𝑙 )2 ,
+
+(12)
+
+From the geometric relationships in the figure, the intermediate distances 𝐿1 and 𝐿2 ,
+which connect auxiliary points 𝐵 , 𝐶 , and 𝐴 , are derived using the radius of the
+curvature 𝑅 and turning angle 𝜃, as shown in Eq. (13):
+{
+
+𝐿1 =−𝑅(1−𝑐𝑜𝑠(𝜃))
+𝐿2 =−𝑅𝑠𝑖𝑛(𝜃)
+
+,
+
+(13)
+
+Using the Pythagorean identity, the relationship between these distances yields:
+𝐿21 + 𝐿22 = 𝑙𝑑2 ,
+
+(14)
+
+In practice, the value of 𝐿1 can be alternatively expressed based on the vehicle’s current
+lateral offset and steering angle 𝜔 as shown in Eq. (15):
+𝜋
+
+𝜋
+
+2
+
+2
+
+𝐿1 = −𝑥 cos (𝜔 − ) + √𝑙𝑑2 − 𝑥 2 sin (𝜔 − ) ,
+
+(15)
+
+Figure 19 Diagram illustrates the effects of varying look-ahead distances.
+The instantaneous turning radius 𝑅 is directly related to the steering angle 𝛿𝑈 by Eq.
+(16):
+𝑅 =
+
+𝐿
+𝑡𝑎𝑛 (𝛿𝑈 )
+
+,
+
+Substituting Eqs. (15) and (16) into Eq. (14) and rearranging, we obtain:
+
+(16)
+
+35
+
+2𝑅 × 𝐿1 = 𝑙𝑑2 ,
+
+(17)
+
+Solving the 𝛿𝑈 , the final expression is given in Eq. (18):
+2
+2𝐿(𝑥𝑠𝑖𝑛 𝜙 +√𝑙𝑑
+−𝑥 2 𝑐𝑜𝑠 𝜙 )
+
+𝛿𝑈 = arctan (
+
+2
+𝑙𝑑
+
+),
+
+(18)
+
+From this, the path curvature 𝛾𝑈 can be calculated using Eq. (19):
+𝛾𝑈 =
+
+𝑡𝑎𝑛 𝛿𝑈
+𝐿
+
+=
+
+2 −𝑥 2 𝑐𝑜𝑠 𝜙 )
+2(𝑥𝑠𝑖𝑛 𝜙 +√𝑙𝑑
+2
+𝑙𝑑
+
+,
+
+(19)
+
+As indicated by Eqs. (18) and (19), the lookahead distance 𝑙𝑑 plays a critical role in
+regulating both the steering angle 𝛿𝑢 and the turning curvature 𝛾𝑢 . Larger values of 𝑙𝑑
+result in smaller steering angles, leading to smoother but slower directional corrections.
+In contrast, smaller values cause rapid, aggressive adjustments that may induce
+oscillatory behavior, especially during sharp turns or dynamic maneuvers, as illustrated
+in Figure 19. This phenomenon has been similarly reported in previous studies [56–57],
+which emphasize the importance of appropriately tuning the lookahead parameter to
+balance responsiveness and stability.
+Selecting an optimal 𝑙𝑑 is particularly crucial in high-speed navigation tasks,
+where maintaining both trajectory accuracy and motion stability becomes increasingly
+challenging. Adaptive strategies that adjust the lookahead distance based on vehicle
+velocity and steering demands have been proposed to further enhance path-following
+performance under varying environmental and operational conditions.
+3.6.3 Path tracking analysis
+An analysis of path tracking strategies with an emphasis on enhancing the PP
+algorithm through a dynamic lookahead distance mechanism. In its traditional form, the
+PP algorithm utilizes a fixed lookahead distance 𝑙𝑑 , which may lead to suboptimal
+tracking performance under varying velocity conditions. A small constant 𝑙𝑑 often
+results in oscillatory behavior due to overly aggressive steering, whereas a large 𝑙𝑑 can
+delay corrective actions and degrade path-following accuracy.
+To improve adaptability, the lookahead distance can be dynamically adjusted
+in response to the robot’s current linear velocity. This allows the controller to assign a
+shorter 𝑙𝑑 at low speeds for precise maneuvering and a longer 𝑙𝑑 at higher speeds to
+ensure smooth and stable motion. Figure 8 illustrates this relationship by comparing the
+
+36
+
+qualitative effects of different lookahead distances. A greater 𝑙𝑑 results in smoother
+trajectory tracking but reduces responsiveness, while a smaller 𝑙𝑑 enables sharper
+corrections that may cause instability or oscillations, particularly during low-speed
+maneuvers.
+The dynamic lookahead distance is defined as a piecewise function of the
+absolute linear velocity 𝑣, as shown in Eq. (20), where 𝑣 represents the robot’s current
+forward speed in meters per second:
+1.5 + (|𝑣| − 1.0) × 3.0
+𝑙𝑑 = {
+1.5 + 10.0
+
+𝑖𝑓(|𝑣| − 1.0) × 3.0 ≤ 10.0
+,
+𝑜𝑡ℎ𝑒𝑟𝑤𝑖𝑠𝑒
+
+(20)
+
+In this formulation, 1.5 meters serves as the base lookahead distance. The
+dynamic component increases linearly with the velocity offset from 1.0 m/s, scaled by
+a factor of 3. However, to avoid oversteering at high speeds, the maximum lookahead
+distance is limited to 11.5 meters.
+As part of the geometric derivation, the variable 𝜔 represents the angular offset
+between the robot's heading direction and the line toward the goal point. The steering
+angle required to reach the target is denoted by 𝛿𝑈 , which is calculated using the
+dynamic lookahead distance in Eq. (18). Subsequently, the path curvature resulting
+from this steering command is represented by 𝛾𝑈 , as shown in Eq. (19). These variables
+allow the controller to adaptively compute turning behavior according to real-time
+speed and position.
+By applying Eq. (20), the PP controller becomes more responsive and stable
+across varying speeds. This approach is particularly beneficial in agricultural and field
+robotics, where terrain and motion dynamics can change rapidly.
+3.7
+
+Development and Implementation of Algorithms
+3.7.1 Pure Pursuit Path Tracking (PP)
+Pure Pursuit calculates the steering angle 𝛿 and linear velocity 𝑣
+
+required to follow a predefined path. It identifies a goal point located a fixed distance
+𝑙𝑑 ahead of the robot’s position (𝑥, 𝑦), and computes a circular arc toward it based on
+the 𝜃 and 𝐿.
+The reference path is represented as a discrete set of waypoints
+𝑃 = {(𝑥𝑖 , 𝑦𝑖 )}𝑛𝑖=1 .The algorithm finds the nearest waypoint, then selects the first point
+beyond the lookahead distance. This point is transformed into the robot’s local
+
+37
+
+coordinate frame and used to calculate 𝛿. The velocity 𝑣 is assigned either as a constant
+or adaptive value. The full procedure is shown in Algorithm 1.
+Algorithm 1: Pure Pursuit Path Tracking (PP)
+Input: Current robot state (𝑥, 𝑦, 𝜃), path (𝑃), wheelbase (𝐿), fixed lookahead distance
+(𝑙𝑑)
+Output: Steering angle 𝛿, linear velocity 𝑣
+1. Acquire the current position of the robot: (𝑥𝑟𝑜𝑏𝑜𝑡 , 𝑦𝑟𝑜𝑏𝑜𝑡 ).
+2. Acquire the current heading angle of the robot: 𝜃𝑟𝑜𝑏𝑜𝑡 .
+3. Find the index of the nearest waypoint on the path:
+𝑛𝑒𝑎𝑟𝑒𝑠𝑡𝑖𝑑𝑥 ← Find closest waypoint (𝑃, 𝑥𝑟𝑜𝑏𝑜𝑡 , 𝑦𝑟𝑜𝑏𝑜𝑡 ).
+4. Starting from 𝑛𝑒𝑎𝑟𝑒𝑠𝑡𝑖𝑑𝑥 , search for the lookahead point:
+o
+
+For each point 𝑃[𝑖 ]from 𝑛𝑒𝑎𝑟𝑒𝑠𝑡𝑖𝑑𝑥 to the end of the path:
+▪
+
+If the distance between 𝑃[𝑖 ] and the current position is greater
+than or equal to 𝑙𝑑, set
+𝑙𝑜𝑜𝑘𝑎ℎ𝑒𝑎𝑑𝑝𝑜𝑖𝑛𝑡 ← 𝑃[𝑖 ] and break the loop.
+
+5. Transform the coordinates of the 𝑙𝑜𝑜𝑘𝑎ℎ𝑒𝑎𝑑𝑝𝑜𝑖𝑛𝑡 into the robot’s local
+(base_link) frame:
+(𝑥𝑙𝑑 ,𝑦𝑙𝑑 )←TransformToRobotFrame(𝑙𝑜𝑜𝑘𝑎ℎ𝑒𝑎𝑑𝑝𝑜𝑖𝑛𝑡 ,𝑥𝑟𝑜𝑏𝑜𝑡 , 𝑦𝑟𝑜𝑏𝑜𝑡 , 𝜃𝑟𝑜𝑏𝑜𝑡 )
+6. Calculate the steering angle using the Pure Pursuit formula:
+𝛿 ← 𝑎𝑡𝑎𝑛2(2 ⋅ 𝑦𝑙𝑑 ⋅ 𝐿, 𝑙𝑑2).
+7. Constrain the steering angle within the maximum allowable limits:
+𝛿 ← 𝑐𝑜𝑛𝑠𝑡𝑟𝑎𝑖𝑛(𝛿, − 𝛿𝑚𝑎𝑥, 𝛿𝑚𝑎𝑥).
+8. Set the linear velocity within predefined safe bounds:
+𝑣 ← 𝑐𝑜𝑛𝑠𝑡𝑟𝑎𝑖𝑛(𝑣𝑑𝑒𝑠𝑖𝑟𝑒𝑑, 𝑣𝑚𝑖𝑛, 𝑣𝑚𝑎𝑥).
+9. Return the computed steering angle 𝛿 and linear velocity 𝑣.
+Although this implementation uses a fixed lookahead distance, the algorithm
+structure supports further enhancement, such as dynamic lookahead control.
+
+38
+
+3.7.2 Pure Pursuit Path Tracking with Dynamic Lookahead Distance (PPDL)
+
+a)
+
+b)
+
+Figure 20 Pure pursuit tracking model and adaptive lookahead surface: (a)
+Geometric representation of lookahead-based path tracking; (b) Lookahead distance
+as a function of velocity and steering ratio.
+
+To enhance tracking performance across varying speeds and motion
+contexts, the traditional PP algorithm is extended by introducing a dynamic lookahead
+distance, 𝑙𝑑, which adjusts in real time based on the robot’s velocity. This technique
+improves the accuracy of tight turns at low speeds and provides smooth trajectory
+following at higher speeds.
+As depicted in Figure 20(a), the vehicle determines its steering angle by
+computing a circular arc connecting its current rear-axle position to a lookahead point
+on the desired path. The steering angle 𝛿 is calculated using the standard geometric
+formulation shown in Eq. (21):
+𝛿 = tan−1 (
+
+2𝑦𝑙𝑑𝐿
+𝑙𝑑2
+
+),
+
+(21)
+
+To prevent physically unrealistic steering angles, a saturation condition is enforced
+using the piecewise constraint shown in Eq. (22):
+𝛿 = 𝑚𝑎 𝑥(𝑚𝑖 𝑛(𝛿, 𝛿𝑚𝑎𝑥 ) , −𝛿𝑚𝑎𝑥 ),
+
+(22)
+
+39
+
+The lookahead distance 𝑙𝑑 is linearly adjusted based on the robot's current velocity,
+bounded by minimum and maximum limits. The adaptive formulation is expressed in
+Eq. (23):
+𝑙𝑑 = 𝑙𝑑 𝑚𝑖𝑛 + (
+
+𝑣−𝑣𝑚𝑖𝑛
+𝑣𝑚𝑎𝑥−𝑣𝑚𝑖𝑛
+
+) (𝑙𝑑𝑚𝑎𝑥 − 𝑙𝑑𝑚𝑖𝑛 ),
+
+(23)
+
+Velocity constraints for smooth control are expressed in Eqs. (24) and (25):
+𝑣accelerate = 𝑣robot + accelerate × Δ𝑡,
+
+(24)
+
+while the velocity constrained by deceleration is computed as Eq. (25):
+𝑣decelerate = √2 × decelerate × remaining distance,
+The final velocity command is selected using Eq. (26):
+𝑣𝑚𝑎𝑥
+𝑖𝑓𝑚𝑖𝑛(𝑣𝑎𝑐𝑐 , 𝑣𝑑𝑒𝑐 ) > 𝑣𝑚𝑎𝑥
+𝑣
+𝑣={
+𝑚𝑖𝑛
+𝑖𝑓𝑚𝑖𝑛(𝑣𝑎𝑐𝑐 , 𝑣𝑑𝑒𝑐 ) < 𝑣𝑚𝑖𝑛
+𝑚𝑖𝑛(𝑣𝑎𝑐𝑐 , 𝑣𝑑𝑒𝑐 ),
+𝑜𝑡ℎ𝑒𝑟𝑤𝑖𝑠𝑒
+
+(25)
+
+(26)
+
+As shown in Figure 20(b), the lookahead distance 𝑙𝑑 increases proportionally with the
+robot’s forward velocity, ranging from 𝑙𝑑𝑚𝑖𝑛 to 𝑙𝑑𝑚𝑎𝑥 This adaptive scaling enables
+tighter turning at low speeds and smoother tracking at higher speeds. By combining
+Eqs. (21) through (26), the controller jointly adjusts both the steering angle and linear
+velocity based on the robot’s state and motion constraints, enhancing robustness and
+trajectory stability across varying operating conditions.
+Algorithm 2: Pure Pursuit Path Tracking with Dynamic Lookahead Distance (PP-DL)
+Input Current robot state (𝑥, 𝑦, 𝜃), path (𝑃), wheelbase (𝐿), lookahead limits
+(𝑙𝑑𝑚𝑖𝑛 , 𝑙𝑑𝑚𝑎𝑥 ),velocity limits (𝑣𝑚𝑖𝑛 , 𝑣𝑚𝑎𝑥 ).
+Output: Steering angle 𝛿, linear velocity 𝑣.
+1. Retrieve the current robot state, including position, heading, and velocity:
+(𝑥𝑟𝑜𝑏𝑜𝑡 , 𝑦𝑟𝑜𝑏𝑜𝑡 , 𝜃𝑟𝑜𝑏𝑜𝑡 , 𝑣𝑟𝑜𝑏𝑜𝑡 ).
+2. Find the index of the nearest waypoint on the path:
+𝑛𝑒𝑎𝑟𝑒𝑠𝑡𝑖𝑑𝑥 ← 𝑎𝑟𝑔𝑚𝑖𝑛𝑖 𝑑𝑖𝑠𝑡𝑎𝑛𝑐𝑒(𝑃[𝑖 ], (𝑥𝑟𝑜𝑏𝑜𝑡 , 𝑦𝑟𝑜𝑏𝑜𝑡 )).
+3. Compute the normalized velocity ratio:
+𝑣𝑒𝑙𝑜𝑐𝑖𝑡𝑦_𝑟𝑎𝑡𝑖𝑜 ←
+
+𝑣𝑟𝑜𝑏𝑜𝑡 − 𝑣𝑚𝑖𝑛
+.
+𝑣𝑚𝑎𝑥 − 𝑣𝑚𝑖𝑛
+
+4. Clamp the velocity ratio to the range [0,1]:
+𝑣𝑒𝑙𝑜𝑐𝑖𝑡𝑦_𝑟𝑎𝑡𝑖𝑜 ← 𝑐𝑙𝑎𝑚𝑝(𝑣𝑒𝑙𝑜𝑐𝑖𝑡𝑦𝑟𝑎𝑡𝑖𝑜 , 0, 1).
+
+40
+
+5. Calculate the dynamic lookahead distance:
+𝑙𝑑 ← 𝑙𝑑𝑚𝑖𝑛 + 𝑣𝑒𝑙𝑜𝑐𝑖𝑡𝑦𝑟𝑎𝑡𝑖𝑜 × (𝑙𝑑𝑚𝑎𝑥 − 𝑙𝑑𝑚𝑖𝑛 ).
+6. Search for the lookahead point on the path:
+For each point 𝑃[𝑖] starting from 𝑛𝑒𝑎𝑟𝑒𝑠𝑡_𝑖𝑑𝑥,
+if 𝑑𝑖𝑠𝑡𝑎𝑛𝑐𝑒(𝑃[𝑖],(𝑥_𝑟𝑜𝑏𝑜𝑡, 𝑦_𝑟𝑜𝑏𝑜𝑡)) ≥ 𝑙𝑑 then assign
+𝑙𝑜𝑜𝑘𝑎ℎ𝑒𝑎𝑑_𝑝𝑜𝑖𝑛𝑡 ← 𝑃[𝑖] and break.
+7. Transform the lookahead point into the robot’s local (base_link) frame:
+(𝑥𝑙𝑑 , 𝑦𝑙𝑑 )←Transform to robot frame
+(𝑙𝑜𝑜𝑘𝑎ℎ𝑒𝑎𝑑_𝑝𝑜𝑖𝑛𝑡, 𝑥𝑟𝑜𝑏𝑜𝑡 , 𝑦𝑟𝑜𝑏𝑜𝑡 , 𝜃𝑟𝑜𝑏𝑜𝑡 ).
+8. Calculate the steering angle using the Pure Pursuit formula:
+𝛿 ← 𝑎𝑡𝑎𝑛2(2 ⋅ 𝑦𝑙𝑑 ⋅ 𝐿, 𝑙𝑑2).
+9. Constrain the steering angle within allowable limits:
+𝛿 ← 𝑐𝑙𝑎𝑚𝑝(𝛿, − 𝛿𝑚𝑎𝑥, 𝛿𝑚𝑎𝑥).
+10. Predict the velocity based on acceleration and deceleration limits:
+− 𝑣𝑎𝑐𝑐 ← 𝑣𝑟𝑜𝑏𝑜𝑡 + 𝑎 ⋅ 𝛥𝑡
+− 𝑣𝑑𝑒𝑐 ← √2 ∙ 𝑑 ∙ 𝑠𝑟𝑒𝑚𝑎𝑖𝑛𝑖𝑛𝑔
+11. Determine the final command velocity:
+𝑣 ← 𝑐𝑙𝑎𝑚𝑝(min(𝑣𝑎𝑐𝑐 , 𝑣𝑑𝑒𝑐 ) , 𝑣𝑚𝑖𝑛 , 𝑣𝑚𝑎𝑥 )
+12. Return the control commands:
+return (𝛿, 𝑣)
+3.7.2 Pure Pursuit Path Tracking with Dynamic Lookahead and SteeringBased Speed Control (PP-DSC)
+The Pure Pursuit Path Tracking with Dynamic Lookahead and SteeringBased Speed Control (PP-DSC) algorithm enhances trajectory tracking performance by
+integrating two key strategies. First, it dynamically adjusts the lookahead distance
+based on the robot’s linear velocity to ensure appropriate responsiveness and stability
+across different speeds. A shorter lookahead distance improves path-following
+precision at low speeds, while a longer lookahead distance promotes smoother motion
+and reduces oscillations at higher speeds, thereby maintaining tracking accuracy across
+varying dynamic conditions. Second, it adaptively regulates the forward velocity
+according to the robot’s steering intensity. Reducing speed during sharp turns allows
+
+41
+
+the robot to maintain better control and reduces the risk of overshooting or deviating
+from the planned trajectory. Conversely, maintaining higher speeds during straight-line
+motion improves efficiency without compromising stability. These combined strategies
+enable the robot to adapt its behavior dynamically to the characteristics of the path,
+enhancing overall robustness, motion smoothness, and trajectory-tracking precision.
+
+a)
+
+b)
+
+Figure 21 Steering-adaptive lookahead concept and surface plot
+(a) Conceptual diagram of steering-based lookahead behavior; (b) Parametric
+surface of lookahead distance as a function of velocity and steering percentage.
+
+To compute the steering angle, the algorithm follows the geometric
+formulation of the PP method. The steering angle 𝛿 is calculated based on the position
+of the lookahead point in the vehicle’s local coordinate frame, as shown in Eq. (27):
+δ = tan−1 (
+
+2𝑦ld 𝐿
+ld2
+
+),
+
+(27)
+
+In this equation, 𝑦𝑙𝑑 is the lateral displacement of the lookahead point, 𝐿 is the
+wheelbase, and 𝑙𝑑 is the lookahead distance. To ensure that the steering remains within
+the robot's mechanical limits, the output from Eq. (27) is bounded using a clamping
+function described in Eq. (28):
+𝛿𝑚𝑎𝑥 ,
+δ = {−𝛿𝑚𝑎𝑥 ,
+
+δ,
+
+𝑖𝑓 𝛿 > 𝛿𝑚𝑎𝑥
+𝑖𝑓 𝛿 < −𝛿𝑚𝑎𝑥
+𝑜𝑡ℎ𝑒𝑟𝑤𝑖𝑠𝑒
+
+,
+
+(28)
+
+42
+
+The lookahead distance 𝑙𝑑 is dynamically adapted to the current robot velocity 𝑣 ,
+scaling between minimum and maximum limits. This velocity-dependent adjustment is
+calculated using Eq. (29):
+𝑙𝑑 = 𝑙𝑑𝑚𝑖𝑛 + (
+
+𝑣 −𝑣 min
+𝑣 max −𝑣 min
+
+) (𝑙𝑑𝑚𝑎𝑥 − 𝑙𝑑𝑚𝑖𝑛 ),
+
+(29)
+
+As shown in Figure 21(a), the conceptual model illustrates how steering behavior
+influences lookahead adjustments. Meanwhile, Figure 21(b) provides a parametric
+surface that highlights how the lookahead distance changes with respect to both forward
+velocity and steering percentage.
+To achieve better stability during the turning maneuvers, the robot’s velocity is
+modulated based on the current steering demand. This process begins by normalizing
+the steering angle, resulting in a steering percentage, as shown in Eq. (30):
+𝑠𝑡𝑒𝑒𝑟_𝑝𝑐𝑡 =
+
+δ
+δmax
+
+,
+
+(30)
+
+This percentage indicates how close the steering angle is to its maximum allowable
+value. Using this metric, the robot's forward velocity 𝑣 is selected according to a
+piecewise function described in Eq. (31):
+S=
+
+𝑠𝑡𝑒𝑒𝑟_𝑝𝑐𝑡 − lower𝑠𝑡𝑒𝑒𝑟_𝑝𝑐𝑡
+𝑢𝑝𝑝𝑒𝑟𝑠𝑡𝑒𝑒𝑟_𝑝𝑐𝑡− 𝑙𝑜𝑤𝑒𝑟𝑠𝑡𝑒𝑒𝑟_𝑝𝑐𝑡
+
+,
+
+𝑣 min
+𝑣
+𝑣 = {
+max
+𝑣 min + (𝑣 max − 𝑣 min ) × 𝑆
+
+(31)
+𝑖𝑓 𝑠𝑡𝑒𝑒𝑟_𝑝𝑐𝑡 > 𝑢𝑝𝑝𝑒𝑟𝑠𝑡𝑒𝑒𝑟_𝑝𝑐𝑡
+𝑖𝑓 𝑠𝑡𝑒𝑒𝑟_𝑝𝑐𝑡 < 𝑙𝑜𝑤𝑒𝑟𝑠𝑡𝑒𝑒𝑟_𝑝𝑐𝑡
+𝑜𝑡ℎ𝑒𝑟𝑤𝑖𝑠𝑒
+
+(32)
+
+By combining the steering formulation in Eq. (27), the clamping in Eq. (28), the
+dynamic lookahead computation in Eq. (29), and the adaptive velocity control from Eq.
+(30) through (32), the PP-DSC algorithm enables the robot to track reference
+trajectories with greater precision and smoother motion, even under varying curvature
+and speed conditions.
+Algorithm 3: Pure Pursuit Path Tracking with Dynamic Lookahead and SteeringBased Speed Control (PP-DSC)
+Input: Robot state (𝑥, 𝑦, 𝜃), path 𝑃, wheelbase 𝐿, lookahead range
+(𝑙𝑑𝑚𝑖𝑛 , 𝑙𝑑𝑚𝑎𝑥 ),velocity limits (𝑣𝑚𝑖𝑛 , 𝑣𝑚𝑎𝑥 ), steering percentage thresholds
+(𝑢𝑝𝑝𝑒𝑟𝑝𝑐𝑡 , 𝑙𝑜𝑤𝑒𝑟𝑝𝑐𝑡 ).
+Output: Steering angle (𝛿), linear velocity (𝑣)
+1. Acquire the current robot state:
+
+43
+
+(𝑥𝑟𝑜𝑏𝑜𝑡 , 𝑦𝑟𝑜𝑏𝑜𝑡 , 𝜃𝑟𝑜𝑏𝑜𝑡 )
+2. Identify the index of the nearest waypoint on the path:
+𝑛𝑒𝑎𝑟𝑒𝑠𝑡_𝑖𝑑𝑥 ← 𝑎𝑟𝑔𝑚𝑖𝑛_𝑖 distance(𝑃[𝑖 ], (𝑥𝑟𝑜𝑏𝑜𝑡 , 𝑦𝑟𝑜𝑏𝑜𝑡 ))
+3. Search for the lookahead point:
+For each point 𝑃[𝑖] from 𝑛𝑒𝑎𝑟𝑒𝑠𝑡_𝑖𝑑𝑥 onward:
+If distance(𝑃[𝑖], (𝑥𝑟𝑜𝑏𝑜𝑡 , 𝑦𝑟𝑜𝑏𝑜𝑡 )) ≥ 𝑙𝑑,
+then assign 𝑙𝑜𝑜𝑘𝑎ℎ𝑒𝑎𝑑_𝑝𝑜𝑖𝑛𝑡 ← 𝑃[𝑖] and break the loop.
+4. Transform the 𝑙𝑜𝑜𝑘𝑎ℎ𝑒𝑎𝑑_𝑝𝑜𝑖𝑛𝑡 into the robot’s local (base_link) frame:
+(𝑥𝑙𝑑 , 𝑦𝑙𝑑 )←Transform to robot frame
+(𝑙𝑜𝑜𝑘𝑎ℎ𝑒𝑎𝑑_𝑝𝑜𝑖𝑛𝑡, 𝑥𝑟𝑜𝑏𝑜𝑡 , 𝑦𝑟𝑜𝑏𝑜𝑡 , 𝜃𝑟𝑜𝑏𝑜𝑡 ).
+5. Compute the steering angle using the Pure Pursuit formula:
+𝛿 ← 𝑎𝑡𝑎𝑛2(2 ⋅ 𝑦𝑙𝑑 ⋅ 𝐿, 𝑙𝑑 2 )
+6. Compute the steering angle using the Pure Pursuit formula:
+𝛿 ← 𝑐𝑙𝑎𝑚𝑝(𝛿, − 𝛿𝑚𝑎𝑥 , 𝛿𝑚𝑎𝑥 )
+7. Clamp the steering angle within allowable limits:
+𝑠𝑡𝑒𝑒_𝑝𝑐𝑡 ←
+
+|𝛿|
+𝛿𝑚𝑎𝑥
+
+8. Determine the linear velocity based on 𝑠𝑡𝑒𝑒𝑟_𝑝𝑐𝑡:
+If 𝑠𝑡𝑒𝑒𝑟_𝑝𝑐𝑡 > 𝑢𝑝𝑝𝑒𝑟_𝑝𝑐𝑡:
+𝑣 ← 𝑣𝑚𝑖𝑛
+Else If 𝑠𝑡𝑒𝑒𝑟_𝑝𝑐𝑡 > 𝑢𝑝𝑝𝑒𝑟_𝑝𝑐𝑡:
+𝑣 ← 𝑣𝑚𝑎𝑥
+Else:
+𝑣 ← 𝑣𝑚𝑖𝑛 + (𝑣𝑚𝑖𝑛 − 𝑣𝑚𝑎𝑥 ) ∙
+9. control commands:
+return (𝛿, 𝑣)
+
+𝑢𝑝𝑝𝑒𝑟_𝑝𝑐𝑡−𝑠𝑡𝑒𝑒𝑟_𝑝𝑐𝑡
+𝑢𝑝𝑝𝑒𝑟_𝑝𝑐𝑡−𝑙𝑜𝑤𝑒𝑟_𝑝𝑐𝑡
+
+44
+
+Table 5 Algorithm parameter configuration.
+PP
+
+PP-DSC
+
+Parameters
+
+Value
+
+Parameters
+
+Value
+
+𝐿
+
+1.10
+
+𝐿
+
+1.10
+
+𝑙𝑑
+
+5.0
+
+𝑙𝑑𝑚𝑖𝑛
+
+0.5
+
+𝑣
+
+5.0
+
+𝑙𝑑𝑚𝑎𝑥
+
+5.0
+
+𝑣𝑚𝑖𝑛
+
+0.5
+
+𝑣𝑚𝑎𝑥
+
+3.0
+
+𝑙𝑜𝑤𝑒𝑟𝑠𝑡𝑒𝑒𝑟_𝑝𝑐𝑡
+
+0.2
+
+𝑢𝑝𝑝𝑒𝑟𝑠𝑡𝑒𝑒𝑟_𝑝𝑐𝑡
+
+0.7
+
+3.8 Implementation procedure
+The overall autonomous navigation system developed in this study integrates
+positioning sensors and computational algorithms into a structured architecture, as
+illustrated in Figure 22. The system comprises three main components:
+• Positioning Sensors: This block includes GNSS RTK modules, IMU
+modules, and encoder modules. The GNSS RTK modules provide highaccuracy satellite-based positioning data, while the IMU modules offer
+inertial information regarding orientation and velocity. The encoder modules
+track wheel rotations or motor positions to support precise motion estimation.
+• Computer and Embedded Systems: This block consists of the computational
+platform that executes autonomous driving-based algorithms. These
+algorithms are categorized into three main types:
+• Position Algorithm: Processes raw sensor data to determine the current
+position of the robot.
+• Localization Algorithm: Integrates data from multiple sensors to ascertain
+the robot's location within a predefined coordinate framework or map.
+• Navigation Algorithm: Utilizes position and localization outputs to plan,
+control, and execute the robot’s movement paths.
+• GNSS Base Station: Depicted outside the main autonomous driving block,
+the GNSS base station provides differential correction signals to the GNSS
+
+45
+
+RTK modules. This correction mechanism significantly improves the
+positioning accuracy required for precise navigation tasks.
+
+Figure 22 Diagram illustrating the components of an autonomous driving system.
+
+The proposed navigation system was implemented following a structured
+workflow, as depicted in Figure 23. The procedure begins with system initialization,
+including the verification of sensor functionality and communication links. Once
+operational integrity is confirmed, localization is performed by fusing data from the
+GNSS RTK receiver, IMU, and wheel encoders. A state estimation module integrates
+these sensor inputs to generate a reliable pose estimation, which supports subsequent
+path planning and path-following tasks.
+The system was tested in an open-sky environment under optimal GNSS
+conditions, as shown in Figure 24. The test field provided a flat and unobstructed area
+measuring approximately 64 × 20 meters, offering ideal conditions for evaluating the
+navigation system's baseline performance.
+To comprehensively assess the tracking capabilities, three different trajectory
+types were evaluated:
+• Linear Path: Representing straightforward, high-speed motion.
+• Loop Path: Representing continuous, stable curving maneuvers.
+
+46
+
+• Figure-Eight Path: Representing alternating turn sequences requiring
+dynamic steering adjustments.
+These test paths, illustrated in Figure 25, were selected to reflect a range of
+motion dynamics and allowed for the assessment of the system’s adaptability and
+tracking accuracy under various navigation scenarios
+
+Figure 23 Flowchart of the Path Planning and Tracking Process for an Autonomous
+Robot
+
+47
+
+Figure 24 Field Test Location for Navigation Algorithms.
+
+Figure 25 Test Trajectories for Robot Navigation. (a) Linear, (b) Loop,
+(c) Figure-Eight
+
+CHAPTER IV
+RESULTS AND DISCUSSION
+
+4.1 Experiment Setting
+
+a)
+
+b)
+
+Figure 26 Experimental platform and GNSS-RTK base station setup
+(a) Mobile robot platform equipped with GNSS, IMU, and onboard computer
+(b) GNSS-RTK base station on tripod for high-precision localization
+To evaluate the performance of the proposed GNSS-RTK-based navigation
+system, a series of field experiments were conducted to assess the robot’s path-tracking
+accuracy and positioning capability under real-world conditions. The test environment,
+illustrated in Figure 26, was an open field with minimal GNSS signal obstruction,
+providing stable conditions for localization. The experiments were structured around
+three types of trajectories: a linear path, a loop path, and a figure-eight path, with the
+robot operating at speeds ranging from 1 to 5 m/s. Operational routes were defined
+using UTM coordinates to enable precise control within a Cartesian reference frame.
+The experimental workflow followed a standardized navigation sequence, which
+
+49
+
+included system initialization, sensor fusion for localization, path planning, and
+autonomous execution.
+Two tracking algorithms were evaluated during the experiments. The standard Pure
+Pursuit (PP) algorithm was employed as the baseline method for comparison, while the
+enhanced Pure Pursuit with Dynamic Lookahead and Steering-Based Speed Control
+(PP-DSC) algorithm was tested to assess its improvements. The PP-DSC algorithm
+incorporated a dynamic lookahead mechanism and steering-aware velocity modulation
+to enhance tracking accuracy and stability, particularly at higher speeds and during
+curved maneuvers. The evaluation primarily focused on trajectory adherence and
+positioning precision, using GNSS-RTK data as the main localization source.
+Experimental conditions are summarized in Table 6, and all tests were conducted in
+real-time outdoor environments to validate the practical applicability and robustness of
+the proposed system.
+
+Table 6 Summary of experimental conditions.
+
+Parameter
+
+Value
+
+Evaluation Metrics
+
+Path tracking accuracy, positioning capability
+
+Coordinate System
+
+UTM (Universal Transverse Mercator)
+
+Control Format
+
+Cartesian (x, y)
+
+Test Scenarios
+
+line path, loops path, figure-eight path
+
+Speed Range
+
+1 - 5 m/s
+
+Positioning Method
+
+GNSS-RTK
+
+Environment
+
+Real-world conditions (actual routes)
+
+4.2 Performance comparison of path tracking algorithms
+To assess the effectiveness of the proposed PP-DSC algorithm, a comparative
+evaluation was conducted against the conventional Pure Pursuit (PP) algorithm using
+three reference trajectories: straight-line, circular, and figure-eight paths, selected to
+
+50
+
+examine the algorithms' capability in handling directional variability and curvature
+transitions.
+For the straight-line trajectory (Figure 27(a)), the PP algorithm with a fixed
+lookahead distance of 4 meters resulted in an RMSE of 0.22 meters and a maximum
+lateral deviation of 0.41 meters, whereas PP-DSC reduced the RMSE to 0.05 meters
+and the maximum deviation to 0.09 meters. Oscillations during the initial motion phase
+under the PP algorithm, attributed to short lookahead settings, align with prior findings
+[58].
+Regarding the circular trajectory (Figure 27(b)), PP produced an RMSE of 0.29
+meters and a maximum deviation of 0.44 meters. In contrast, PP-DSC, by dynamically
+adjusting lookahead distance and velocity before curve entry, achieved an RMSE of
+0.07 meters and a maximum deviation of 0.11 meters, thus improving path conformity.
+For the figure-eight trajectory (Figure 27(c)), PP exhibited frequent overshoot and
+undershoot with an RMSE of 0.24 meters and a maximum deviation of 0.34 meters,
+whereas PP-DSC maintained higher stability, achieving an RMSE of 0.08 meters and
+capping deviation at 0.13 meters. These results corroborate previous studies [59],
+confirming the advantages of dynamic lookahead adjustment under rapidly changing
+curvature profiles.
+Quantitative performance across all trajectories is presented in Table 7 and
+visualized in Figure 28. The results clearly indicate that PP-DSC outperformed the
+standard PP algorithm across all error metrics, including mean deviation, RMSE, mean
+absolute error (MAE), and maximum deviation. When considered alongside prior
+studies [58-59], the findings confirm that dynamically adapting the lookahead distance
+and velocity in response to real-time steering conditions plays a critical role in reducing
+oscillations, enhancing stability, and achieving high-precision path tracking in diverse
+navigation scenarios.
+
+51
+
+a)
+
+b)
+
+c)
+Figure 27 PP-DSC vs PP performance on test trajectories:
+(a) Line;(b) Loop;(c) Figure-eight).
+
+Figure 28 RMSE performance of PP-DSC and PP across test trajectories.
+
+52
+
+Table 7 Performance comparison of PP-DSC and PP algorithms on various path types
+
+Tracking
+path
+
+Look
+Algorithm
+
+ahead
+(m)
+
+Line
+
+eight
+
+MAE
+
+(m)
+
+(m)
+
+(m)
+
+Max
+error
+(m)
+
+STD
+(m)
+
+1
+
+0.11
+
+0.12
+
+0.11
+
+0.30
+
+0.06
+
+PP
+
+4
+
+0.19
+
+0.22
+
+0.19
+
+0.31
+
+0.09
+
+0.05
+
+0.05
+
+0.05
+
+0.09
+
+0.02
+
+Dyna
+mic
+
+PP
+
+1
+
+0.28
+
+0.44
+
+0.28
+
+1.31
+
+0.33
+
+PP
+
+4
+
+0.40
+
+0.58
+
+0.40
+
+1.59
+
+0.43
+
+0.07
+
+0.09
+
+0.07
+
+0.30
+
+0.06
+
+PP-DSC
+
+Figure-
+
+RMSE
+
+PP
+
+PP-DSC
+
+Loop
+
+Mean
+
+Dyna
+mic
+
+PP
+
+1
+
+0.27
+
+0.34
+
+0.27
+
+0.93
+
+0.21
+
+PP
+
+4
+
+0.25
+
+0.32
+
+0.25
+
+0.89
+
+0.20
+
+0.08
+
+0.10
+
+0.08
+
+0.26
+
+0.06
+
+PP-DSC
+
+Dyna
+mic
+
+4.3 Speed Adaptation Behavior
+The ability to regulate a robot’s velocity based on path geometry is critical for
+enhancing tracking accuracy and motion stability in autonomous navigation. This
+capability becomes particularly important when the robot encounters directional
+changes or varying curvature along the trajectory. The conventional Pure Pursuit (PP)
+algorithm employs a fixed lookahead distance and does not adapt the velocity in real
+time. In contrast, the proposed Pure Pursuit with Dynamic Lookahead and SteeringBased Speed Control (PP-DSC) algorithm dynamically modulates the robot’s velocity
+according to the steering percentage, which is calculated as the ratio between the current
+steering angle and the maximum allowable steering angle, as defined in Eq. (30). The
+velocity is subsequently adjusted within predefined upper and lower bounds using Eqs.
+(31) and (32), enabling the robot to decelerate during sharp turns and accelerate along
+straight segments.
+
+53
+
+a)
+
+b)
+
+c)
+
+Figure 29 Steering angle distributions along different trajectory types: (a) StraightLine Path, (b) Loop Path and (c) Figure-Eight Path
+
+The steering angle profiles corresponding to different trajectories are depicted in
+Figure 29. On the straight-line trajectory (Figure 29(a)), the steering angles remained
+close to zero, indicating minimal directional deviation and allowing the robot to sustain
+a higher and more stable velocity. On the loop trajectory (Figure 29(b)), greater
+variations in steering angles were observed, necessitating dynamic speed adjustments
+to maintain path-tracking stability. Specifically, the robot decelerated while navigating
+curved segments and reaccelerated on straighter portions of the path.
+
+54
+
+a)
+
+b)
+
+c)
+Figure 30 Velocity, lookahead distance, and steering angle on different path types: (a)
+line; (b) loop; (c) figure-eight.
+
+55
+
+For the figure-eight trajectory (Figure 29(c)), frequent and sharp transitions
+between positive and negative steering angles were evident, reflecting continuous
+directional changes that required repeated speed modulation to ensure smooth and
+accurate trajectory tracking. These findings demonstrate that integrating steering
+feedback with velocity control, as realized in the PP-DSC algorithm, is essential for
+achieving adaptive, smooth, and robust navigation performance across a variety of
+dynamic path conditions.
+
+a)
+b)
+Figure 31 Steering angle histogram: line path (a), loop path (b).
+
+In the straight-line test, steering angles remained close to zero throughout the
+trajectory, which is consistent with expectations for a path with no curvature (Figure
+31(a)). The actual robot data and both simulated cases using 1-meter and 5-meter
+lookahead distances showed similar results. Most values clustered tightly between −5
+and +5 degrees, with minimal spread. Since the path did not require significant turning,
+all methods produced nearly identical steering behavior.
+The loop path, which includes continuous curved segments, resulted in a wider
+range of steering angles (Figure 31(b)). The actual steering values were concentrated
+mostly between −20 and +20 degrees. When comparing the two lookahead settings, the
+1-meter configuration showed a narrower distribution, while the 5-meter version
+introduced more variance and occasional steering commands that extended beyond ±30
+degrees. This suggests that the longer lookahead led to less responsive adjustments,
+especially in curve entry and exit zones.
+
+56
+
+Table 8 Comparison of speed performance and smoothness for PP-DSC and PP
+algorithms
+
+Path
+
+Line
+
+Loop
+
+Figureeight
+
+Algorit
+hm
+
+Lookahe
+ad
+
+Avg
+Speed
+(m/s)
+
+Max
+Speed
+(m/s)
+
+Min
+Speed
+(m/s)
+
+Std
+Dev
+(m/s)
+
+PP
+PP
+PP-DSC
+PP
+PP
+PP-DSC
+PP
+PP
+PP-DSC
+
+1.0
+4.0
+Dynamic
+1.0
+4.0
+Dynamic
+1.0
+4.0
+Dynamic
+
+3.11
+2.41
+4.39
+2.51
+2.6
+2.1
+2.13
+2.64
+0.99
+
+4.87
+4.82
+4.62
+3.0
+3.0
+3.0
+2.78
+2.75
+3.0
+
+0.5
+0.5
+4.62
+0.5
+0.5
+0.5
+0.5
+0.5
+0.5
+
+2.32
+2.41
+0.2
+0.98
+1.02
+1.16
+1.15
+0.54
+1.03
+
+Speed
+Drop
+in
+Turns
+0.3
+0.1
+0.8
+0.3
+0.1
+2.5
+0.3
+0.1
+2.5
+
+Smooth
+Score
+1.0
+1.0
+4.2
+1.08
+1.0
+1.0
+1.0
+2.84
+1.0
+
+4.4 Localization Accuracy
+Localization accuracy is a critical metric for evaluating the effectiveness of pathtracking algorithms, particularly in systems that integrate GNSS-RTK with real-time
+motion control. In this study, accuracy was assessed by comparing the robot’s actual
+position, converted into UTM coordinates using Eq. (5), against the reference
+trajectory. Positional deviations at each time step were used to compute standard spatial
+error metrics, including mean error, root mean square error (RMSE), and maximum
+error.
+
+a)
+
+b)
+
+57
+
+c)
+Figure 32 Path tracking comparison with zoomed-in segments: (a) line; (b) loop;
+(c) figure-eight.
+
+The experimental results indicated that the standard Pure Pursuit (PP) algorithm
+exhibited lower localization accuracy, particularly during curved segments and rapid
+directional changes. Significant deviations were observed along the loop path between
+18 and 24 meters and at the intersection region of the figure-eight path between 15 and
+25 meters, as shown in Figure 31. For the straight path (Figure 32(a)), the PP algorithm
+with a 4-meter lookahead distance produced an RMSE of 0.22 meters and a maximum
+error of 0.41 meters. In contrast, the PP-DSC algorithm improved accuracy, achieving
+an RMSE of 0.05 meters and a maximum error of 0.09 meters.
+On the loop trajectory (Figure 32(b)), the PP algorithm exhibited overshooting
+behavior in the left-hand curve section between 18 and 24 meters, resulting in an RMSE
+of 0.29 meters and a maximum error of 0.44 meters. The PP-DSC algorithm
+significantly reduced localization errors in this segment, lowering the RMSE to 0.07
+meters and the maximum error to 0.11 meters. For the figure-eight trajectory (Figure
+32(c)), characterized by alternating left and right curves, particularly between 15 and
+25 meters, the PP algorithm demonstrated inconsistent tracking performance with an
+RMSE of 0.24 meters and a maximum error of 0.34 meters. In comparison, the PP-DSC
+algorithm maintained more consistent performance, achieving an RMSE of 0.08 meters
+and a maximum error of no more than 0.13 meters.
+
+58
+
+Table 9 Deviation metrics for PP and PP-DSC algorithms across different path types
+
+Path
+
+Line
+
+Loop
+
+Figureeight
+
+Avg
+
+Max
+
+Std
+
+deviation
+
+deviation
+
+deviation
+
+1
+
+0.93
+
+2.89
+
+1.15
+
+PP
+
+4
+
+0.19
+
+0.75
+
+0.22
+
+PP-DSC
+
+Dynamic
+
+0.05
+
+0.09
+
+0.02
+
+PP
+
+1
+
+0.41
+
+1.5
+
+0.41
+
+PP
+
+4
+
+0.28
+
+1.31
+
+0.28
+
+PP-DSC
+
+Dynamic
+
+0.07
+
+0.30
+
+0.06
+
+PP
+
+1
+
+0.25
+
+0.89
+
+0.20
+
+PP
+
+4
+
+0.27
+
+0.93
+
+0.21
+
+PP-DSC
+
+Dynamic
+
+0.08
+
+0.26
+
+0.06
+
+Algorithm
+
+Lookahead(m)
+
+PP
+
+Figure 33 Radar chart of localization deviation metrics for PP and PP-DSC
+algorithms.
+
+59
+
+Table 10 Summary of observations from PP-DSC field testing
+
+Path
+
+Speed (m/s)
+
+Line
+
+5
+
+Observations
+Stable tracking, minimal steering
+adjustments required
+
+Loop
+
+5
+
+Reduced deviations at turns due to
+dynamic steering
+
+Figure-eight
+
+5
+
+Improved handling in complex curves,
+reduced sharp-turn errors
+
+Error
+(%)
+0.4
+
+0.9
+
+1.3
+
+Quantitative results presented in Table 9 and illustrated in Figure 33 clearly
+demonstrate the superior localization accuracy of the PP-DSC algorithm across all
+tested paths. Observations from the field trials, summarized in Table 10, further confirm
+that the PP-DSC algorithm maintained stable positional accuracy during straight-line
+movement and effectively minimized deviations during curved segments. When
+analyzing the results by path segment type, as shown in Table 11, it becomes evident
+that the PP algorithm exhibited larger deviations during curved paths, whereas the PPDSC algorithm consistently maintained low and stable error in both straight and curved
+segments. Spatial plots provided in Figure 34 visualize the actual robot trajectories
+compared to the reference paths, reaffirming that the PP-DSC algorithm achieved
+higher localization precision and consistency under all experimental conditions.
+
+60
+
+Table 11 Quantitative error comparison between PP and PP-DSC
+
+Path
+
+Algorithm
+
+Lookahead
+
+Segment
+type
+
+Mean
+
+Max
+
+Std
+
+deviation
+
+deviation
+
+deviation
+
+(m)
+
+(m)
+
+(m)
+
+1
+
+Straight
+
+1.07
+
+2.89
+
+1.22
+
+1
+
+Curve
+
+0.44
+
+2.89
+
+0.67
+
+4
+
+Straight
+
+0.20
+
+0.75
+
+0.24
+
+4
+
+Curve
+
+0.15
+
+0.72
+
+0.10
+
+Dynamic
+
+Straight
+
+0.05
+
+0.09
+
+0.02
+
+Dynamic
+
+Curve
+
+0.05
+
+0.09
+
+0.03
+
+1
+
+Straight
+
+0.42
+
+1.59
+
+0.42
+
+1
+
+Curve
+
+0.33
+
+1.59
+
+0.40
+
+4
+
+Straight
+
+0.28
+
+1.32
+
+0.27
+
+4
+
+Curve
+
+0.28
+
+1.32
+
+0.32
+
+Dynamic
+
+Straight
+
+0.05
+
+0.22
+
+0.05
+
+Dynamic
+
+Curve
+
+0.07
+
+0.30
+
+0.07
+
+1
+
+Straight
+
+0.25
+
+0.89
+
+0.20
+
+1
+
+Curve
+
+0.25
+
+0.89
+
+0.24
+
+Figure-
+
+4
+
+Straight
+
+0.27
+
+0.94
+
+0.21
+
+eight
+
+4
+
+Curve
+
+0.28
+
+0.94
+
+0.24
+
+Dynamic
+
+Straight
+
+0.07
+
+0.24
+
+0.06
+
+Dynamic
+
+Curve
+
+0.08
+
+0.26
+
+0.07
+
+PP
+Line
+
+PP-DSC
+
+PP
+Loop
+
+PP-DSC
+
+PP
+
+PP-DSC
+
+61
+
+Figure 34 Localization deviation comparison highlighting the consistency of PPDSC across path types.
+
+In autonomous navigation, the interplay between linear velocity, angular velocity,
+and turning radius plays a critical role, as illustrated in Figure 35. The relationship
+among these parameters fundamentally determines the maneuverability and stability of
+a mobile robot during path tracking. The turning radius 𝑟 can be expressed as the ratio
+of the linear velocity 𝑣 to the angular velocity 𝜔, formulated by the equation 𝑟 =
+
+𝑣
+𝜔
+
+.
+
+As shown in the figure, for a given angular velocity, increasing the linear velocity
+results in a larger turning radius, meaning the robot follows a gentler curve. Conversely,
+for a fixed linear velocity, increasing the angular velocity leads to a smaller turning
+radius, enabling the robot to execute sharper turns.
+This interaction highlights the need for coordinated control of both linear and angular
+velocities to maintain desired path curvature, especially when adapting to varying path
+geometries. In straight-line motion, where 𝜔 approaches zero, the turning radius tends
+toward infinity, allowing the robot to maintain high speeds. In contrast, when
+navigating tight curves requiring high angular velocities, the linear velocity must often
+be reduced to achieve a smaller, controllable turning radius without sacrificing pathfollowing accuracy or causing instability.
+
+62
+
+Understanding and managing this dynamic relationship is essential for designing
+navigation algorithms such as Pure Pursuit with Dynamic Lookahead and SteeringBased Speed Control (PP-DSC), which leverage adjustments in velocity profiles based
+on steering behavior to optimize tracking performance under diverse operational
+conditions.
+
+Figure 35 Surface plot of the relationship between linear velocity, angular velocity,
+and turning radius in autonomous robot navigation.
+
+CHAPTER V
+CONCLUSION
+
+This study presented the development of an advanced navigation framework for
+steering-type autonomous mobile robots, introducing an enhanced version of the Pure
+Pursuit (PP) algorithm known as Pure Pursuit with Dynamic Steering Control (PPDSC). The system was implemented on a ROS 2 platform and integrated multiple
+sensors including GNSS-RTK, IMU, and wheel encoders to achieve high-precision
+localization and robust trajectory tracking under various path conditions.
+The primary conclusions drawn from the study's findings reveal several key
+characteristics associated with autonomous navigation performance:
+• The PP-DSC algorithm dynamically adjusts the lookahead distance and
+linear velocity based on the steering demand, resulting in improved path-tracking
+accuracy compared to the conventional PP algorithm.
+• The enhanced algorithm reduced the mean lateral deviation to 0.05 meters
+on straight paths and maintained deviations below 0.08 meters on curved paths,
+outperforming the maximum deviation of 0.44 meters observed with standard PP.
+• The dynamic adjustment strategy effectively stabilized the robot’s motion
+during complex trajectories such as loops and figure-eight patterns.
+• The system achieved reliable performance at speeds up to 5.0 meters per
+second, demonstrating real-time localization robustness even under varied field
+conditions.
+These results emphasize the importance of adaptive control strategies in improving
+both motion stability and trajectory tracking precision. The success of the PP-DSC
+algorithm confirms that real-time adjustments of control parameters in response to the
+robot’s dynamics are essential for dependable autonomous navigation, particularly in
+outdoor agricultural applications.
+This research proposes a practical and effective approach for improving the
+performance of autonomous navigation systems, especially in contexts where high
+positioning accuracy and real-time responsiveness are critical. While this study was
+
+64
+
+conducted using a mobile robot prototype, the proposed framework is highly adaptable
+and can be applied to various types of agricultural machinery such as autonomous
+tractors, tillers, and field robots. This can improve operational efficiency, reduce labor
+requirements, and support the advancement of precision agriculture.
+Moreover, the developed PP-DSC algorithm holds strong potential for application
+in agricultural robotics. Its ability to dynamically adjust the lookahead distance and
+linear velocity allows autonomous systems to maintain precise trajectories even in
+narrow crop rows or structured field environments. This makes it highly suitable for
+use in tasks such as autonomous spraying, seeding, harvesting, or row-following
+operations in orchards and vineyards, where accuracy and consistency are essential to
+avoid crop damage and improve operational efficiency. The algorithm’s modular
+design also allows it to be integrated into a wide range of mobile platforms used in
+precision agriculture.
+Future development of the system may focus on expanding the algorithm’s
+capabilities to support obstacle avoidance, refining parameter tuning for high-speed
+operations, and incorporating machine learning techniques to improve adaptability in
+dynamic and unpredictable environments. These enhancements would contribute to the
+continued advancement of autonomous systems in both agricultural and industrial
+applications. Although the current framework has demonstrated reliable performance
+in flat, planar environments, it has not yet been tested in terrains with elevation changes
+or irregular surfaces such as slopes, hills, or rugged agricultural fields. In such
+conditions, additional factors including gravitational effects, slip dynamics, and tiltinduced localization errors may significantly influence the control performance and
+stability of the robot. Nevertheless, the system possesses strong potential for further
+development toward slope-capable navigation. With the integration of terrain
+inclination estimation, slope-aware path planning, and tilt-compensated control
+mechanisms, the framework could be extended to achieve precise and stable navigation
+across a wide range of real-world topographies.
+In conclusion, the research successfully achieves its original objectives by
+delivering an intelligent control system that enables accurate positioning and responsive
+maneuvering, along with a robust navigation framework that supports real-time
+autonomous operation in dynamic and wide-open environments.
+
+REFFERENCES
+1.
+
+Becher A. Innovation in agricultural robotics for precision agriculture.
+Springer 2021.
+
+2.
+
+Fountas S, Mylonas N, Malounas I, Rodias E, Hellmann Santos C, Pekkeriet
+E. Agricultural robotics for field operations. Sensors 2020; 20(9): Article
+2672.
+
+3.
+
+Oliveira LFP, Moreira AP, Silva MF. Advances in agriculture robotics: A
+state-of-the-art review and challenges ahead. Robotics 2021; 10(3): Article
+52.
+
+4.
+
+Sparrow R, Howard M. Robots in agriculture: Prospects, impacts, ethics, and
+policy. Precision Agriculture 2021; 22(3): 818–833.
+
+5.
+
+Bonadies S, Gadsden SA. An overview of autonomous crop row navigation
+strategies for unmanned ground vehicles. Engineering in Agriculture,
+Environment and Food 2019; 12(1): 24–31.
+
+6.
+
+Thanh DN, Tan LN. LiDAR-based online navigation algorithm for an
+autonomous robot. Journal of Control Engineering and Applied
+Informatics 2022; 24(1): 90–100.
+
+7.
+
+Quigley M, Conley K, Gerkey BP, Faust J, Foote T, Leibs J, Wheeler R, Ng
+AY. ROS: An open-source robot operating system. Proceedings of the ICRA
+Workshop on Open Source Software 2009. Kobe, Japan.
+
+8.
+
+Winterhalter W, Fleckenstein F, Dornhege C, Burgard W. Localization for
+precision navigation in agricultural fields: Beyond crop row following.
+Journal of Field Robotics 2021; 38(3): 429–451.
+
+9.
+
+Promkaew N, Thammawiset S, Srisan P, Sanitchon P, Tummawai T,
+Sukpancharoen S. Development of metaheuristic algorithms for efficient path
+planning of autonomous mobile robots in indoor environments. Results in
+Engineering 2024; 22: Article 102280.
+
+66
+
+10.
+
+Xiong Y, Ge Y, Grimstad L, From PJ. An autonomous strawberry-harvesting
+robot: Design, development, integration, and field evaluation. Journal of
+F ie l d
+
+11.
+
+R o b o t ic s
+
+2 0 2 0 ;
+
+3 7 ( 2 ) :
+
+2 0 2 – 2 2 4 .
+
+Liang S, Zhao W, Lin N, Huang Y. Adaptive fusion positioning based on
+Gaussian mixture models for GNSS-RTK and stereo cameras in arboretum
+environments. Agronomy 2023; 13(8): Article 1982.
+
+12.
+
+Yan Y, Zhang B, Zhou J, Zhang Y, Liu XA. Real-time localization and
+mapping utilizing multi-sensor fusion and visual-IMU wheel odometry for
+agricultural robots in unstructured, dynamic, and GPS-denied greenhouse
+environments. Agronomy 2022; 12(8): Article 1740.
+
+13.
+
+Yamasaki Y, Noguchi N. Research on autonomous driving technology for
+agricultural robots in mountainous farmland using RTK-GNSS. Smart
+Agricultural Technology 2023; 2(5): 231–240.
+
+14.
+
+Li Y, Feng Q, Ji C, Sun J, Sun Y. GNSS and LiDAR integrated navigation
+method in orchards with intermittent GNSS dropout. Applied Sciences 2024;
+14(8): Article 3231.
+
+15.
+
+Velasquez AEB, Higuti VAH. Multi-sensor fusion-based robust row
+following for compact agricultural robots. arXiv preprint 2021.
+
+16.
+
+Charoenkalunyuta T, Satirapod C, Anantakarn K, Thongtan T. An evaluation
+of the accuracy of GNSS receivers integrated with MEMS-IMU sensors for
+optimal angle determination in tilted observation scenarios using the NRTK
+GNSS technique in Thailand. Engineering Journal 2024; 28(11): 99–109.
+
+17.
+
+Padhiary M, Saha D, Kumar R, Sethi LN, Kumar A. Enhancing precision
+agriculture: A comprehensive review of machine learning and AI vision
+applications in all-terrain vehicle for farm automation. Smart Agricultural
+Technology
+
+2024;
+
+8:
+
+100483.
+
+Available
+
+from:
+
+https://doi.org/10.1016/j.atech.2024.100483
+18.
+
+Zhou L, Zhang Y, Wang H. Deep reinforcement learning based adaptation of
+pure-pursuit path tracking algorithm for autonomous vehicles. IFACPapersOnLine
+
+2022;
+
+55(29):
+
+https://doi.org/10.1016/j.ifacol.2022.11.001
+
+1–6.
+
+Available
+
+from:
+
+67
+
+19.
+
+Yang Y, Li Y, Wen X, Zhang G, Ma Q, Cheng S, Qi J, Xu L, Chen L. An
+optimal goal point determination algorithm for automatic navigation of
+agricultural machinery: Improving the tracking accuracy of the pure pursuit
+algorithm. Computers and Electronics in Agriculture 2022; 194: 106760.
+Available from: https://doi.org/10.1016/j.compag.2022.106760
+
+20.
+
+Zhou J, Wen J, Yao L, Yang Z, Xu L, Yao L. Agricultural machinery path
+tracking with varying curvatures based on an improved pure-pursuit method.
+Agriculture 2025; 15(3): Article 266.
+
+21.
+
+Artuñedo A, Moreno-Gonzalez M, Villagra J. Lateral control for autonomous
+vehicles: A comparative evaluation. Annual Reviews in Control 2024; 57:
+Article 100910.
+
+22.
+
+Al-Kamil SJ, Szabolcsi R. Optimizing path planning in mobile robot systems
+using motion capture technology. Results in Engineering 2024; 22: 102043.
+
+23.
+
+Teng X, Shen Z, Huang L, Li H, Li W. Multi-sensor fusion-based wheeled
+robot research on indoor positioning method. Results in Engineering 2024;
+22: 102268.
+
+24.
+
+Lv M, Wei H, Fu X, Wang W, Zhou D. A loosely coupled extended Kalman
+filter algorithm for agricultural scene-based multi-sensor fusion. Frontiers in
+Plant Science 2022; 13: 849260.
+
+25.
+
+Pentzer JL. Utilization of A-Star and pure pursuit algorithms for enhanced
+robotic navigation. Journal of Advanced Systems 2014; 12(9): 334–348.
+
+26.
+
+Medina L, Guerra G, Herrera M, Guevara L, Camacho O. Trajectory tracking
+for non-holonomic mobile robots: A comparison of sliding mode control
+approaches. Results in Engineering 2024; 22: Article 102105.
+
+27.
+
+Kongskilde. New automated agricultural platform Kongskilde Vibro Crop
+Robotti. Online 2017. Available from: http://conpleks.com/robotech/newautomated
+
+28.
+
+Bergerman M, Maeta SM, Zhang J, Freitas GM, Hamner B, Singh S, Kantor
+G. Robot farmers: Autonomous orchard vehicles help tree fruit production.
+IEEE Robotics & Automation Magazine 2015; 22(1): 54–63.
+
+68
+
+29.
+
+Gonzalez-de-Santos P, Ribeiro A, Fernandez-Quintanilla C, Lopez-Granados
+F, Brandstoetter M, Tomic S, Pedrazzi S, Peruzzi A, Pajares G, Kaplanis G.
+Fleets of robots for environmentally-safe pest control in agriculture.
+Precision Agriculture 2017; 18(4): 574–614.
+
+30.
+
+Emmi L, Fernández R, Gonzalez-de-Santos P, Francia M, Golfarelli M, Vitali
+G, Wollweber M. Exploiting the internet resources for autonomous robots in
+agriculture. Agriculture 2023; 13(5): Article 1005.
+
+31.
+
+López-Riquelme J, Pavón-Pulido N, Navarro-Hellín H, Soto-Valles F,
+Torres-Sánchez R. A software architecture based on FIWARE cloud for
+precision agriculture. Agricultural Water Management 2017; 183: 123–
+135.
+
+32.
+
+Vasconcelos G, Spina T, Pedrini H. Low-cost domain adaptation for crop and
+weed segmentation. Proceedings of the 25th Iberoamerican Congress on
+Pattern Recognition 2021: 141–150.
+
+33.
+
+Deemyad T. Design of five-fingered underactuated hand for two-position
+tasks [Master’s thesis]. Idaho State University 2016.
+
+34.
+
+Shah TM, Nasika DPB, Otterpohl R. Plant and weed identifier robot as an
+agroecological tool using artificial neural networks for image identification.
+Agriculture 2021; 11(3): Article 222.
+
+35.
+
+Ganguly RK, Mukherjee A, Chakraborty SK, Verma JP. Impact of
+agrochemical application in sustainable agriculture. In: New and future
+developments in microbial biotechnology and bioengineering. Elsevier;
+2021: 15–24.
+
+36.
+
+Esposito M, Crimaldi M, Cirillo V, Sarghini F, Maggio A. Drone and sensor
+technology for sustainable weed management: A review. Chemical and
+Biological Technologies in Agriculture 2021; 8(1): Article 18.
+
+37.
+
+Groeneveld D, Tekinerdogan B, Garousi V, Catal C. A domain-specific
+language framework for farm management information systems in precision
+agriculture. Precision Agriculture 2021; 22(4): 1067–1106.
+
+38.
+
+Picon A, San-Emeterio MG, Bereciartua-Perez A, Klukas C, Eggers T,
+Navarra-Mestre R. Deep learning-based segmentation of multiple species of
+
+69
+
+weeds and corn crop using synthetic and real image datasets. Computers and
+Electronics in Agriculture 2022; 194: Article 106719.
+39.
+
+Mishra AM, Harnal S, Gautam V, Tiwari R, Upadhyay S. Weed density
+estimation in soya bean crop using deep convolutional neural networks in
+smart agriculture. Journal of Plant Diseases and Protection 2022; 129(3):
+593–604.
+
+40.
+
+Vayssade JA, Jones G, Gée C, Paoli JN. Pixelwise instance segmentation of
+leaves in dense foliage. Computers and Electronics in Agriculture 2022;
+195: Article 106797.
+
+41.
+
+Champ J, Mora-Fallas A, Goëau H, Mata-Montero E, Bonnet P, Joly A.
+Instance segmentation for the fine detection of crop and weed plants by
+precision agricultural robots. Applications in Plant Sciences 2020; 8(7):
+e11373.
+
+42.
+
+Nagata M, Cui Y, Jasper G. Study on cartesian-type harvesting robot for
+strawberry. Proceedings of the 3rd IFAC International Workshop on BioRobotics, Information Technology and Intelligent
+
+Control for
+
+Bioproduction Systems 2006: 266–270.
+43.
+
+Meng Z, Wu Z, Gray J. Microwave sensor technologies for food evaluation
+and analysis: Methods, challenges, and solutions. Transactions of the
+Institute of Measurement and Control 2017; 40(12): 3433–3448.
+
+44.
+
+Siegwart R, Nourbakhsh IR, Scaramuzza D. Introduction to autonomous
+mobile robots. MIT Press 2011.
+
+45.
+
+Geng J, Mokhtar Zadeh AA, Fei H, Gao H, Ding N, Kong R, Zhou J. Robot
+positioning and navigation technology based on integration of the Global
+Navigation Satellite System and real-time kinematics. Journal of Physics:
+Conference Series 2023; 2467(1): Article 012027.
+
+46.
+
+Hiraoka R, Aoyagi Y, Kobayashi K. Automatic travelling of agricultural
+support robot for a fruit farm: Verification of effectiveness of RTK-GNSS
+and developed simulator for specification design. Journal of Agricultural
+Engineering 2023.
+
+70
+
+47.
+
+Vasconcelos GJQ, Costa GSR, Spina TV, Pedrini H. Low-cost robot for
+agricultural image data acquisition. Agriculture 2023; 13(2): Article 413.
+
+48.
+
+Deemyad T, Hassanzadeh N, Perez-Gracia A. Coupling mechanisms for
+multi-fingered robotic hands with skew axes. In: Mechanism Design for
+Robotics. Springer; 2018: 209–219.
+
+49.
+
+Deemyad T, Heidari O, Perez-Gracia A. Singularity design for RRSS
+mechanisms. Proceedings of the USCToMM Symposium on Mechanical
+Systems and Robotics 2020.
+
+50.
+
+Moeller R, Deemyad T, Sebastian A. Autonomous navigation of an
+agricultural robot using RTK GPS and Pixhawk. 2020 Intermountain
+Engineering, Technology and Computing (IETC) 2020: 1–6.
+
+51.
+
+Liang S, Zhao W, Lin N, Huang Y. Adaptive fusion positioning based on
+Gaussian mixture models for GNSS-RTK and stereo cameras in arboretum
+environments. Agronomy 2023; 13(8): 1982.
+
+52.
+
+Yan Y, Zhang B, Zhou J, Zhang Y, Liu X. Real-time localization and
+mapping utilizing multi-sensor fusion and Visual–IMU–Wheel odometry for
+agricultural robots. Agronomy 2022; 12(8): 1740.
+
+53.
+
+Pham CK, Nguyen GT, Nguyen VH, Tran TX. Research and development of
+real-time high-precision GNSS receivers: A feasible application for surveying
+and mapping in Vietnam. Inżynieria Mineralna 2021.
+
+54.
+
+Latip NBA, Omar R. Car-like robot path tracker with kinematic constraints.
+Proceedings of the 2016 6th IEEE International Conference on Control
+System, Computing and Engineering (ICCSCE) 2016: 223–227.
+
+55.
+
+Wen L, Liu Y, Li H. CL-MAPF: Multi-agent path finding for car-like robots
+with kinematic and spatiotemporal constraints. Robotics and Autonomous
+Systems 2022; 150: 103997.
+
+56.
+
+Medina L, Guerra G, Herrera M, Guevara L, Camacho O. Trajectory tracking
+for non-holonomic mobile robots: A comparison of sliding mode control
+approaches. Results in Engineering 2024; 22: 102105.
+
+71
+
+57.
+
+Andersen H, Chong ZJ, Eng YH, Pendleton S, Ang MH. Geometric path
+tracking algorithm for autonomous driving in pedestrian environment.
+Proceedings of the 2016 IEEE International Conference on Advanced
+Intelligent Mechatronics (AIM) 2016: 1669–1674.
+
+58.
+
+Zhao Z, Wang H, Zhang L, Li Y. Adaptive pure pursuit algorithm for
+autonomous vehicle path tracking in uncertain outdoor environments.
+Sensors 2024; 24(1): 41.
+
+59.
+
+Sukhil S, Behl M. Adaptive lookahead pure-pursuit for autonomous racing.
+arXiv preprint 2021. Available from: https://arxiv.org/abs/2111.08873
+
+60.
+
+Macenski S, Martin J, White B. Regulated pure pursuit: A flexible path
+tracking controller for autonomous robots. arXiv preprint 2023. Available
+from: https://arxiv.org/abs/2305.20026
+
+VITAE
+Name:
+
+Mr.Nattapong Promkaew
+
+Day of Birth:
+
+May 27, 2000
+
+Place of Birth
+
+Narathiwat Province, Thailand.
+
+Email address:
+
+Npromkaew7@gmail.com
+
+Phone number
+
+(+66)91-459-7194
+
+Education:
+2015-2018
+
+Bachelor of Mechatronics Engineering,
+Rajamangala University of Technology
+Thanyaburi.
+
+2023-2024
+
+Student of Master of Engineering in
+Agricultural Engineering, Graduate School,
+Khon Kaen University, Khon Kaen,
+Thailand.
+
+Experiences
+2022–Present
+
+Robotics Engineer, Gensurv Co., Ltd.
+Developed and implemented robotic
+systems for industrial applications.
+
+2021–2022
+
+Undergraduate Senior Project Designed and
+developed an Autonomous Mobile Robot
+(AMR) guided by laser navigation
+integrated with a collaborative robot
+(Cobot) for object handling and
+transportation.
+
+2021
+
+Internship, Embedded Systems Department,
+RV Connex Co., Ltd. Designed
+mathematical modeling for simulating a
+fixed-wing aircraft launcher system.
+
+

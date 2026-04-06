@@ -1,0 +1,680 @@
+2021 IEEE Intelligent Transportation Systems Conference (ITSC)
+Indianapolis, USA. September 19-21, 2021
+
+AUDRIC2: A Modular and Highly Interconnected Automated Driving
+Framework Focus on Decision Making and Vehicle Control
+
+2021 IEEE International Intelligent Transportation Systems Conference (ITSC) | 978-1-7281-9142-3/21/$31.00 ©2021 IEEE | DOI: 10.1109/ITSC48978.2021.9564640
+
+Ray Lattaruloa , Carlos Hidalgoa , Asier Arizalab , and Joshue Pereza
+ing simulation software from the Swedish National Road
+and Transport Research Institute (VTI) and a framework
+for traffic and network simulation specifically designed for
+testing platoon applications (Platooning Extension for Veins,
+or Plexe). The strength of the approach relies on combining
+three different simulators providing the best advantages of
+each one during testing.
+Another approach proposed a framework for sensor fusion
+of self-driving cars and other autonomous robots [5]. The
+main goal of the contribution was to design a universal and
+scalable platform for building up robust 3D models of the
+agent’s surrounding environment by fusing a wide range
+of various sensors. The authors have considered RGB and
+thermal cameras, 3D LiDARs, 3D IMU, and a GNSS. The
+framework covers a complete pipeline from data loading,
+filtering, pre-processing, environment model construction,
+visualization, and data storage. The software was design to
+be compatible with ROS. Nevertheless, high performance,
+high concurrency, and multi-threading were not considered
+because it is looking for a clear architecture, easy to scale
+up, and simple pipeline.
+Down in the control hierarchy, when it comes to decisionmaking based on the data gotten from the perception system,
+there are several recent proposals. In [6] probabilistic methods are used to evaluate the possibility of collision to assess
+and make safe decisions on highway situations. In their
+implementation with ROS, they have access to information
+about the pilot state (e.g., whether they are distracted or
+healthy). The driver state permits to implement this in the
+risk calculus and taking action in consequence.
+Some other approaches have achieved partially scalable
+and replicable solutions in multiple platforms. On the project
+SmartShuttle, an automated driving architecture has unified
+software, hardware, control, and decision targeting low-speed
+shuttles [7]. This approach was validated in a Ford Fusion
+and a Dash EV. Later on, the approach was tested in another
+two vehicles of the same model (newer versions).
+A newer approach has presented an architecture for automated cars based on ROS2 [8]. The main goal has been
+to achieve the demands of real-time, high reliability, and
+requisites of functional safety, along with ROS benefits such
+as standardized messages and distributed architectures.
+Considering the literature, this work presents the updated
+version of the AUDRIC (AUtomated DRIving Core) framework previously introduced in [9]. This version comes with
+a modular scheme designed to work with different real and
+virtual platforms. Moreover, the first developed modules are
+described which guarantee safe guidance of the vehicle under
+
+Abstract— Last years, automated vehicle technologies made
+considerable progress in academia and the industry. However,
+there is still a need for more scalable solutions which ensure
+fast progress between the prototypes and the final deployments.
+In this sense, this work introduces the updated version of the
+AUtomated DRIving Core framework (AUDRIC), which aims
+for robust and reliable vehicle decision-making and control
+algorithms. The solution is modular and provides MATLAB
+and ROS interfaces. Also, it has the integration links between
+the CARLA simulator and Dynacar (in-house simulator). The
+Autoware.AI framework was integrated to support vehicle
+perception. This framework targets non-holonomic ground
+vehicles, such as passenger cars, buses, shuttles, non-holonomic
+industrial AGV, etc. A simulation around Tecnalia premises was
+used to verify the provided functionalities (Basque Country,
+Spain). This framework will continue its development with the
+support of the European project SHOW. Vehicle cooperation
+functions are considered as an upcoming feature.
+
+I. INTRODUCTION
+Automated vehicles have shown great potential for improving safety, vehicle comfort, and efficiency during driving
+tasks. Nevertheless, robust and optimal solutions for vehicle
+decision and control are demanded in compliance with the
+geometry of the maps, vehicle dimensions, its dynamics, and
+safety [1].
+The decision making processes of the vehicle has been
+described, classically, as a hierarchical structure where some
+of the layers are: i) routing based on requirements of the
+passengers, traffic conditions, and road network; ii) reasoning
+through a sequence of driving behaviors such as turning,
+lane-changing, among others; and iii) the generation of
+feasible trajectories that lead the vehicle safely [2]. Additionally, the control layer is in charge of tracking the
+navigation commands provided by vehicle planning through
+the trajectory (path and speed profile) [3].
+Since the DARPA challenges and even more recently,
+many groups and companies have tried to standardized
+frameworks for automated driving obtaining good results.
+Moreover, newer approaches are looking for more general
+and scalable solutions that bring prototypes to commercial
+deployments.
+In these terms, a simulation framework for testing and
+evaluating cooperative intelligent transportation system (CITS) was proposed [4]. The approach combines the driva Ray
+Lattarulo, Carlos Hidalgo, and Joshue Perez are
+with TECNALIA, Basque Research and Technology Alliance
+(BRTA)
+rayalejandro.lattarulo@tecnalia.com,
+
+carlos.hidalgo@tecnalia.com, and
+joshue.perez@tecnalia.com
+b Asier Arizala is with University of the Basque Country, 48013 Bilbao,Spain aarizala002@ikasle.ehu.eus
+
+978-1-7281-9142-3/21/$31.00 ©2021 IEEE
+
+763
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 30,2026 at 02:37:54 UTC from IEEE Xplore. Restrictions apply.
+
+mixed traffic circumstances, using the ROS or MATLAB
+interfaces provided in the framework. A simulation test
+case, around Tecnalia premises (Basque Country, Spain), was
+proposed to demonstrate the benefits of the proposal. The
+continuous development and integration of the framework
+of the supported interfaces (ROS and Matlab) are the main
+differences compared to the literature. The European project
+SHOW will be used to finance -partially- the development
+of the ROS and Matlab interfaces. In the future, an interface
+for ROS2 will be included (subject to interest and budget).
+The rest of the work is structured as follows, section
+II presents the explanation of the second version of the
+AUDRIC framework, section II gives details about each
+module and the interfaces and integration links with simulation environments and other frameworks. In section III,
+several validation scenarios, in the framework of the European project SHOW, are explained and the results of the
+first simulation tests are presented. Finally, the summary of
+conclusions future works is presented in the section IV.
+
+[9]:
+Acquisition: collecting sensor information.
+Perception: vehicle and environment modeling using
+sensor information and communications.
+• Communication:
+interaction among infrastructure,
+pedestrians, and vehicles (V2X).
+• Decision: algorithms for high-level decision making,
+trajectory generation, collaboration among vehicles, etc.
+• Control: vehicle tracking controllers. They can be coupled (steering and pedals in one controller) or decoupled
+(steering and pedals in different controllers).
+• Actuation: interaction of the control signals with the
+vehicle interface to move the actuators, e.g. electric
+signals to external motors coupled to the pedals or
+steering wheel, CAN-Bus messages to interact with Xby-wire components, etc.
+•
+•
+
+II. AUDRIC: AUTO MATED DRI VING C ORE V2.0
+The AUDRIC framework was presented for the first time
+in 2017 [9]. However, it received its name some months
+later. It used to contain basic methods (e.g. static trajectories,
+simple controllers, etc) to guide the vehicle over a predefined
+route which was the basis for developing a long number
+of European and local projects [10]. Nevertheless, great
+changes have arisen in the automated driving field, as we
+mentioned in the introduction. This demands an improvement
+of AUDRIC to meet new minimum needs of the technology,
+such as:
+• Modular tasks.
+• Safe guidance of the vehicle under mixed traffic circumstances (it could not consider overtaking necessarily).
+• Comfort and smoothness during a normal operation.
+• Capacities to detect and modelling the environment, as
+well as communication with infrastructure and other
+vehicles on the road.
+• The use of complex simulation environments, during the
+testing stage, that consider more details on the road, e.g.
+buildings, pedestrians’ movement, other vehicles, etc.
+Moreover, we have included another requirement which is
+standardizing the solution for all ground vehicles with nonholonomic constraints, at the moment, without considering a
+load connected with a joint, e.g. trailers, trucks, etc.
+Some of the simulation environments and vehicles tested
+with the AUDRIC2 framework, or some of its modules, are:
+Dynacar simulation environment (top-left Fig. 1), CARLA
+simulator (top-right Fig. 1), a modified Renault Twizy
+(middle-left Fig. 1), a double Ackermann ground vehicle
+(middle-right Fig. 1), and it is expected to be tested in
+upcoming month on an electric Gulliver shuttle (bottom-left
+Fig. 1), and a 12m-long electric bus (bottom-right Fig. 1).
+However, this topic will be covered in more detail on section
+III.
+In these terms, AUDRIC2 has been developed as a C++ library preserving its initial six-modules architecture including
+
+Fig. 1. Platforms using AUDRIC. (top-left). (top-right) 2 . (middle-left).
+(middle-right). (bottom-left). (bottom-right).
+
+The acquisition and actuation modules rely on the hardware/software architecture of the considered platform. The
+state of the art has impressive approaches to generate vehicle positioning and inertial values, as well as environment
+perception; due to these reasons, the perception module is integrated from an external source and is bridged to AUDRIC.
+Communication is solved by standardized devices (V2X).
+However, the bridge between the AUDRIC information and
+the V2X devices is considered as part of the framework
+as well as internet-based data exchanging, e.g. exchange
+of MQTT messages with an external Data Management
+Platform. Considering these conditions, the framework is
+focused, mainly, on decision-making and vehicle control
+solutions which are easier to escalate and to generate a
+modular framework that targets non-holonomic automated
+vehicles.
+2 Image extracted from https://carla.readthedocs.io/en/0.
+9.11/adv_rendering_options/
+
+764
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 30,2026 at 02:37:54 UTC from IEEE Xplore. Restrictions apply.
+
+Fig. 2.
+
+The module is in charge of guiding the vehicle with the
+generation of a drivable space (bottom of Fig. 3) which
+has the outer right and left boundaries of the road, and
+the reference of the center of the lane that is more in the
+right side of the road. This ensures safe driving without
+compromising the traffic flow. This reference can be changed
+to the center of another lane, based on some criteria that will
+be studied in the future, e.g. merging, platoon, etc.
+Moreover, the drivable space is obtained considering the
+shortest path from the vehicle to the goal considering the
+connections of the road map.
+2) Trajectory Generator: This function is part of the
+decision module (Fig. 2) and it uses the information of
+the drivable space as well as the lane reference and speed
+reference from the globalRoadFollower to generate safe,
+smooth, and continuous trajectories (path and speed) to be
+tracked by the vehicle controllers.
+The module uses motion primitives derived from Bézier
+curves based on previous approaches presented by the group
+[12] [13].
+
+Categories (modules) into the AUDRIC Framework
+
+An abstraction of the framework, divided into stages or
+modules, is presented in Fig. 2. The currently available
+modules will be detailed in the following sections as well
+as the interfaces used to deploy the framework.
+A. Modules
+1) Global Road Planner: This function is part of the
+decision module (Fig. 2) and it plans the global route that
+leads the vehicle to its destination. The module relies on map
+information provided via an OSM file which uses a format
+inspired by the Lanelet2 standard [11], nevertheless, it is a
+simplified version of the aforementioned.
+
+Fig. 4.
+
+Fig. 3.
+
+Trajectory generation
+
+This method generates layers of motion primitives as
+it is presented in Fig. 4. The best trajectory candidate is
+given by weighting the farther it reaches, the smoothness
+of the trajectory, and the closeness to the driving reference.
+Moreover, the computation of the travel distance considers,
+in the case of vehicles, the propagation of other agents on
+the road. In the case of agents out of the road limits, the
+propagation is performed following the same direction of
+the agent. Additionally, the trajectory will cruise the vehicle,
+totally (considering the vehicle geometry), into the drivable
+space boundaries.
+A separate publication is intended to explain all the
+details of the approach as well as performing extensive tests
+considering specific and real driving scenarios.
+3) Control Lateral Model Based: This solution is part of
+the control module (Fig. 2) and it is a lateral tracking controller (AUDRIC provides decoupled lateral and longitudinal
+motion controllers). It is inspired by the method of Model
+Predictive Control, nevertheless, the solution space is limited
+to a set of possible motion candidates based on the rate of
+change of the steering angle (C1 , ..., Ci , ..., Cn on Fig. 5).
+
+Road definition
+
+The top of Fig. 3 depicts an area of a map described by
+lanes. These lanes are defined as a relationship composed
+of a right and a left boundary where those are defined by
+polylines (array of points). A continuous road, which has
+been made from lane pieces, must have the starting nodes
+(boundaries) of the current lane equal to the ending nodes
+of the previous lane. Moreover, the relationship contains
+the speed limit and the presence of a yield, stop sign, or
+pedestrian crossing at the end of the lane.
+765
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 30,2026 at 02:37:54 UTC from IEEE Xplore. Restrictions apply.
+
+Fig. 5.
+
+1) ROS: This interface supports all the modules previously mention on section II-A. Nevertheless, it includes
+interfaces (bridges) to interact with the perception module
+of Autoware.ai [14]. Currently, it is supported the NDT
+matching algorithm used to generate the vehicle position
+based on LiDAR information, as well as the EKF filter. In
+terms of obstacle detection, the framework has a bridge to
+connect the obstacle detected with the Autoware clustering
+algorithm and its UKF algorithm to estimate its movement
+direction and speed. We are working to integrate a camera
+sensor that improves the detection of obstacles on the road.
+2) MATLAB/Simulink: Simulink is a block diagram environment for multi-domain simulation and Model-Based
+Design. It supports system-level design, simulation, automatic code generation, and continuous test and verification
+of embedded systems. Thanks to the so-called MEX File
+Functions, all the modules developed in AUDRIC2 can be
+integrated since allows C/C++ programs to behave just like
+MATLAB functions. In Fig. 6 a more detailed implementation of AUDIRC2 in Simulink can be observed. Where
+each block corresponds to one of the six-module architecture
+described previously.
+
+Lateral controller based on steering wheel candidates
+
+The model used is a kinematic bicycle model, as it is
+shown in Fig 5. The set of functions defining the model are
+the following:
+
+θ̇ = ω =
+
+v
+l
+v tan(δ)
+& tan(δ) =
+−→ θ̇ =
+r
+r
+l
+θ = θ0 + ω∆t
+
+(1)
+(2)
+
+x = x0 + v∆t cos (θ)
+
+(3)
+
+y = y0 + v∆t sin (θ)
+
+(4)
+
+v is the vehicle speed (this approach considers a constant
+speed), l is the wheelbase, r is the turning radius, ω is the
+yaw rate, θ is the orientation, x, y are the positions in a
+Cartesian coordinate system, ∆t is the time interval, and δ
+is the steering angle.
+The candidates are generated based on constant rate
+change of the steering angle ( dδ
+dt ) and with a change to
+an opposite-sign value (its maximum value is denoted as
+dδ
+dt max ). For example based on Fig 5, 6 candidates are
+dδ
+generated from − dδ
+dt max and dt max , 3 values are constant
+and 3 change from a positive or negative value to another one
+with opposite-sign (at fraction of the maximum evaluation
+time).
+4) Control Longitudinal Linear: This function resolves
+the longitudinal vehicle control and it is also part of the
+control module. It generates a throttle of brake signal based
+on a function that relates the speed error with an action value.
+Nevertheless, it includes a fuzzy logic controller explained
+in previous articles [9]. In the future, this controller will be
+updated with a newer version based on a model.
+
+Fig. 6.
+
+AUDRIC2 Simulink block diagram.
+
+Thanks to environmental compatibility, in addition to the
+developed functions, TCP/UDP bridges can be made to interact with outside sources e.j. external simulators. Therefore,
+developing a UDP bridge connection with the Dynacar [15]
+simulator can be carried out. By doing so, a reliable vehicle
+representation can be obtained while having a 3D interface
+for monitoring purposes [16].
+Moreover to the aforementioned integration, connections
+with actuators or D-GPS can be made through CAN Toolbox
+already integrated with the MATLAB environment. Works
+using these features with the AUDRIC previous version
+can be observed in the following articles [17], [18], [19],
+where validation of merging, overtaking, and car following
+maneuvers are presented.
+Taking into consideration, the progress made with the
+framework, developments in different maneuvers such as
+roundabout platoon merging are planned in the future. Moreover, with the integration of the Commsignia V2X devices,
+a new car following module version is under development,
+where vehicles with multiple dynamics (e.g. a 12m-long bus,
+Gulliver shuttle, or Renault Twizy 80) are being contemplated.
+
+B. Interfaces
+For this article, the interfaces are all the environments
+where AUDRIC2 can be executed. The modules can be
+integrated with different environments or platforms because
+they are programmed in C++, and it has 2 function wrappers
+around ROS and MATLAB/Simulink. In the future, we are
+planning to integrate the modules in ROS2 as well.
+766
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 30,2026 at 02:37:54 UTC from IEEE Xplore. Restrictions apply.
+
+3) Integration with CARLA simulator: Released in 2017,
+CARLA simulator is one of the most important automated
+vehicle-oriented open-source simulators nowadays. The regular updates it receives from a highly active community give
+this software a great versatility when it comes to validating
+experimental algorithms [20], [21]. Its compatibility with
+ROS makes it easy to integrate with other platforms like
+Autoware [22], [23] or MATLAB [24]. Therefore, exists a
+big interest in testing AUDRIC2 in CARLA simulator. Our
+current developments are going towards this goal, which will
+be studied in detail in future works.
+
+same city, those are shown in Fig. 7 (3D Maps generated
+with Autoware which is used as a complement of the perception for the AUDRIC2 Framework). The upper part of the
+aforementioned figure is a depot of one of the companies in
+charge of public urban transport (Carabanchel depot), and the
+lower part is an open-traffic scenario that connects a subway
+station with the innovation hub of ”La Nave” (Villaverde
+scenario), both in the Madrid region.
+Platooning, teleoperation, automated docking/parking, and
+automated depot management are some of the use cases that
+will be tested in the Carabanchel depot. Automated passenger
+transport service, using shuttles, will be considered in the
+Villaverde scenario where a variety of difficult conditions
+will be present. Mixed traffic circumstances, regulated (traffic
+lights) and non-regulated intersections, narrow roads, high
+density of pedestrians, among others are some of the conditions present in this last scenario.
+The vehicles used, in both scenarios, are shown in Fig. 1
+and they are two automated Renault Twizy, one 12m electric
+bus, and two automated shuttle. Currently, the Twizy and
+the electric bus are receiving improvements in hardware and
+software, and the electric shuttles (Gulliver model) are in
+the process of setting up the actuators and the interface to
+control it automatically.
+
+III. VALIDATION SCENARIO
+The previous sections have highlighted the intention of
+using AUDRIC2 to control different vehicles (Fig. 1). The
+new vehicles that will use this solution will be a 12 meters
+electric bus and two electric shuttles into the framework of
+the European project SHOW.
+In these terms, the current section contains the explanation
+of one of the sites proposed in the project SHOW and the
+first simulations conducted in this context.
+
+B. Preliminary tests: Basque Country
+As it was mentioned in previous sections, the objective
+of this article is to present the updated version of the
+AUDRIC2 framework and its deployment in the SHOW
+project. Nevertheless, a real test will be considered in the
+final demonstration of the project (end of 2023). Moreover,
+the vehicles do not have the permits to drive in automated
+mode in Madrid.
+In these terms, the first tests will be conducted at Tecnalia
+premises in the Basque Country (Spain) around the technological park, using the automated Renault Twizy platform.
+For this work, the tests are in simulation environments doing
+the definition of the scenario as close as possible to the real
+one.
+The parameters used for the simulation, and the decision
+and control algorithm, are the following:
+
+Fig. 7.
+
+Veh. length
+Veh. width
+Veh. wheelbase
+Max. steering angle
+Max. time for turning
+
+Scenarios considered in the SHOW project, Madrid pilot
+
+A. European project SHOW
+
+2.4 meters
+1.4 meters
+1.75 meters
+32◦
+2 second
+
+The system used to execute the algorithm is a Core i76820HQ with 32GB of RAM along with the ROS interface
+(ROS Melodic, Ubuntu 18.04 LTS).
+Fig. 8, at its top, presents the test case conditions, around
+Tecnalia premises, that will be tested as a verification phase
+before facing Madrid scenarios. This scenario has an approximated length of 1.5km which is similar to the longest
+scenario of Madrid (Villaverde). It has a roundabout and a
+90◦ left turn. The rest of the scenario is shaped by soft and
+
+SHOW is a European initiative which is intended to bring
+the automated operation of Personal Transport (PT) and
+Demand-Responsive Transport (DRT) services considering
+dense city traffic, peri-urban areas, and neighborhoods in
+20 different European cities of 13 countries. The vehicles
+considered, in the project, are automated buses, robo-taxis,
+cars, cargo vehicles, and shuttles.
+This article considers the Spanish pilot in the city of
+Madrid. It is separated into two different scenarios in the
+767
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 30,2026 at 02:37:54 UTC from IEEE Xplore. Restrictions apply.
+
+tight bends. Moreover, a variety of merging conditions will
+be considered and tested in future contributions.
+
+important to highlight that this work does not present moving
+obstacles due to a deeper study will be presented on an article
+dedicated to the trajectoryGenerator module. For further
+information about moving obstacles, a method similar to the
+one previously presented in [18] is used in this new version
+of the algorithm.
+
+Fig. 10.
+
+Fig. 8.
+
+Fig. 10 depicts the capacity of manage a 90◦ left turn.
+The original map is depicted in white, the boundaries of the
+drivable space are green, the generated trajectory is in yellow
+and the time propagation of the lateral control (steering
+wheel) is in red. The length of the control prediction reduces
+as the vehicle arrives at the intersection, and it increases
+when the vehicle exits the turn. This is mainly produced by
+the speed profile which is associated with the curvature of
+the trajectory (refer to Fig. 8 between a distance of 1000 and
+1200 meters).
+
+First tests without obstacles.
+
+The middle and lower part of Fig. 8 presents the curvature
+and speed profile respectively. Those values are extracted
+from the green trajectory presented at the top of the aforementioned figure. One of the main advantages of the trajectoryGenerator module is the smoothness of the curvature
+which improves the tracking of the steering control, as well
+as the generation of smooth and comfortable speed profiles.
+
+Fig. 11.
+
+Fig. 9.
+
+View of the trajectory generation and control on the left turn.
+
+Analysis of the steering delay and its effect on real test cases.
+
+The incidence of the turning time (time to move the
+steering wheel from straight position to the maximum at
+the right or left side which is a value used to calculate the
+dδ/dtmax used by the Control Lateral Model Based) in the
+response of the controller is appreciated in Fig. 11. The time
+of moving the steering wheel has been simulated to generate
+a close-to-reality result. Mostly, the lateral error between the
+vehicle position and its desired trajectory is under 10cm in
+
+Static obstacles in the roundabout.
+
+Furthermore, Fig. 9 depicts the capacity of the framework
+to face obstacles under difficult circumstances such as on
+a bent segment or in the middle of a roundabout. It is
+768
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 30,2026 at 02:37:54 UTC from IEEE Xplore. Restrictions apply.
+
+most of the cases. Nevertheless, this error increases along
+with the turning time of the steering wheel.
+In these terms, the control values will be studied in more
+detail in the real vehicle due to simulated values do not
+provide enough information to obtain a conclusion about the
+performance of the control method. However, it is important
+to highlight that the expected result is close to this one
+because the steering wheel rate has been considered in the
+controller.
+
+[6] S. Noh and K. An, “Decision-making framework for automated
+driving in highway environments,” IEEE Transactions on Intelligent
+Transportation Systems, vol. 19, no. 1, pp. 58–71, 2017.
+[7] S. Y. Gelbal, B. Aksun-Guvenc, and L. Guvenc, “Smartshuttle: Model
+based design and evaluation of automated on-demand shuttles for
+solving the first-mile and last-mile problem in a smart city,” arXiv
+preprint arXiv:2012.12431, 2020.
+[8] M. Reke, D. Peter, J. Schulte-Tigges, S. Schiffer, A. Ferrein, T. Walter,
+and D. Matheis, “A self-driving car architecture in ros2,” in 2020
+International SAUPEC/RobMech/PRASA Conference. IEEE, 2020,
+pp. 1–6.
+[9] R. Lattarulo, J. Pérez, and M. Dendaluce, “A complete framework
+for developing and testing automated driving controllers,” IFACPapersOnLine, vol. 50, no. 1, pp. 258–263, 2017.
+[10] R. Lattarulo, L. González, E. Martı́, J. Matute, M. Marcano, and
+J. Pérez, “Urban motion planning framework based on n-bézier curves
+considering comfort and safety,” Journal of Advanced Transportation,
+vol. 2018, 2018.
+[11] F. Poggenhans, J.-H. Pauls, J. Janosovits, S. Orf, M. Naumann,
+F. Kuhnt, and M. Mayr, “Lanelet2: A high-definition map framework
+for the future of automated driving,” in 2018 21st International
+Conference on Intelligent Transportation Systems (ITSC).
+IEEE,
+2018, pp. 1672–1679.
+[12] R. Lattarulo, L. González, and J. Perez, “Real-time trajectory planning method based on n-order curve optimization,” in 2020 24th
+International Conference on System Theory, Control and Computing
+(ICSTCC). IEEE, 2020, pp. 751–756.
+[13] R. Lattarulo and J. Perez, “Fast real-time trajectory planning method
+with 3rd-order curve optimization for automated vehicles,” in 2020
+IEEE 23rd International Conference on Intelligent Transportation
+Systems (ITSC). IEEE, 2020, pp. 1–6.
+[14] S. Kato, S. Tokunaga, Y. Maruyama, S. Maeda, M. Hirabayashi,
+Y. Kitsukawa, A. Monrroy, T. Ando, Y. Fujii, and T. Azumi, “Autoware
+on board: Enabling autonomous vehicles with embedded systems,”
+in 2018 ACM/IEEE 9th International Conference on Cyber-Physical
+Systems (ICCPS). IEEE, 2018, pp. 287–296.
+[15] A. Parra, A. J. Rodrı́guez, A. Zubizarreta, and J. Pérez, “Validation
+of a real-time capable multibody vehicle dynamics formulation for
+automotive testing frameworks based on simulation,” IEEE Access,
+vol. 8, pp. 213 253–213 265, 2020.
+[16] J. A. Matute-Peaspan, A. Zubizarreta-Pico, and S. E. Diaz-Briceno, “A
+vehicle simulation model and automated driving features validation
+for low-speed high automation applications,” IEEE Transactions on
+Intelligent Transportation Systems, 2020.
+[17] C. E. H. Vieira, M. Marcano, G. Fernández, and J. M. Pérez,
+“Maniobras cooperativas aplicadas a vehı́culos automatizados en entornos virtuales y reales,” Revista Iberoamericana de Automática e
+Informática industrial, 2019.
+[18] R. Lattarulo and J. Pérez Rastelli, “A hybrid planning approach based
+on mpc and parametric curves for overtaking maneuvers,” Sensors,
+vol. 21, no. 2, p. 595, 2021.
+[19] C. Hidalgo, R. Lattarulo, C. Flores, and P. Rastelli, “Platoon merging
+approach based on hybrid trajectory planning and cacc strategies,”
+Sensors, vol. 21, no. 8, p. 2626, 2021.
+[20] R. Gutiérrez, E. López-Guillén, L. M. Bergasa, R. Barea, Ó. Pérez,
+C. Gómez-Huélamo, F. Arango, J. Del Egido, and J. López-Fernández,
+“A waypoint tracking controller for autonomous road vehicles using
+ROS framework,” Sensors (Switzerland), vol. 20, no. 14, 2020.
+[21] T. Buhet, E. Wirbel, and X. Perrotton, “Conditional vehicle trajectories
+prediction in carla urban environment,” Proceedings - 2019 International Conference on Computer Vision Workshop, ICCVW 2019, pp.
+2310–2319, 2019.
+[22] S. Stević, M. Krunić, M. Dragojević, , and N. Kaprocki, “Development
+and validation of ADAS perception application in ROS environment
+integrated with CARLA simulator,” Telfor Journal, vol. 12, no. 1, pp.
+40–45, 2020.
+[23] ——, “Development of ADAS perception applications in ROS and
+“Software-In-the-Loop” validation with CARLA simulator,” Telfor
+Journal, vol. 12, no. 1, pp. 40–45, 2020.
+[24] A. Dosovitskiy, G. Ros, F. Codevilla, A. Lopez, and V. Koltun,
+“CARLA: An Open Urban Driving Simulator,” PMLR, no. CoRL,
+pp. 1–16, 2017. [Online]. Available: http://arxiv.org/abs/1711.03938
+
+IV. CONCLUSIONS AND FUTURE WORKS
+This article has presented an updated version of an automated driving framework that was proposed in 2017. It has
+included a novel interface to ROS along with the previous
+one (based only on MATLAB/Simulink). Moreover, this new
+version of the AUDRIC2 framework will be embedded in
+different vehicles, such as cars, shuttles, buses, and nonholonomic mobile robots. This is an important contribution
+because it can prove the capacity to be a scalable framework
+considering vehicles with different dynamics and geometries.
+The article highlights that AUDRIC2 is aiming at decisionmaking and control algorithms for ground automated vehicles which demands the integration of a 3rd party software
+to obtain vehicle and obstacle information (mainly in the
+perception stage). In these terms, the current version of
+AUDRIC2 can be combined with the Autoware framework,
+specifically Autoware.AI (based on ROS). This integration
+will be explained in an upcoming article along with real
+vehicle tests.
+In terms of future work, real-platform tests have been
+programmed for the upcoming month as well as the creation
+of the ROS2 interface that permits the integration of the
+newest version of Autoware.Auto. Moreover, the weather
+conditions of the Basque Country will be exploit to make
+more robust and resilient algorithms under foggy or rainy
+conditions.
+ACKNOWLEDGMENT
+This work was supported by the European Project SHOW
+from the Horizon 2020 program under the grant agreement
+No 875530 and the AUTOLIB project (ELKARTEK 2019
+ref. KK-2019/00035; Gobierno Vasco)
+R EFERENCES
+[1] J. Godoy, A. Artuñedo, and J. Villagra, “Self-generated osm-based
+driving corridors,” IEEE Access, vol. 7, pp. 20 113–20 125, 2019.
+[2] Y. Huang, H. Ding, Y. Zhang, H. Wang, D. Cao, N. Xu, and
+C. Hu, “A motion planning and tracking framework for autonomous
+vehicles based on artificial potential field elaborated resistance network
+approach,” IEEE Transactions on Industrial Electronics, vol. 67, no. 2,
+pp. 1376–1386, 2019.
+[3] E. Thorn, S. Kimmel, , and M. Chaka, “A framework for automated
+driving system testable cases and scenarios,” Report No. DOT HS 812
+623, 2018.
+[4] M. Aramrattana, T. Larsson, J. Jansson, and A. Nåbo, “A simulation
+framework for cooperative intelligent transport systems testing and
+evaluation,” Transportation research part F: traffic psychology and
+behaviour, vol. 61, pp. 268–280, 2019.
+[5] A. Ligocki, A. Jelinek, and L. Zalud, “Atlas fusion–modern framework for autonomous agent sensor data fusion,” arXiv preprint
+arXiv:2010.11991, 2020.
+
+769
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 30,2026 at 02:37:54 UTC from IEEE Xplore. Restrictions apply.
+
+

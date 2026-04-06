@@ -1,0 +1,386 @@
+F03- Research Progress Report.
+
+TAIST-Tokyo Tech
+Research Progress Report
+For Living allowance scholarship
+Academic Year……
+ 1st  2nd  3rd  4th  5th  6th  7th  8th Research Progress Report
+
+Part 1: Student information
+Name
+
+Nontanan
+
+Surname
+
+Sommat
+
+Student ID 68070703807 University King Mongkut's University of Technology Thonburi
+Program:
+ Dept. of Automotive Engineering (A2TE)
+ Dept. of Information and Communication Technology for Embedded System (AIoT)
+ Dept. of Sustainable Energy and Resources Engineering
+
+Part 2: University Advisor information
+Advisor:
+
+Asst. Prof. Dr. Danai
+
+Surname
+
+Phaoharuhansa
+
+Part 3: NSTDA Researcher Information
+NSTDA researcher:
+Research Center:
+Laboratory:
+
+Surname
+ NECTEC
+
+ MTEC
+
+ BIOTEC
+
+ NANOTEC
+
+F03- Research Progress Report.
+
+Part 4: Thesis/Research Information
+Title of thesis/research:
+Development of an Adaptive Path Tracking Control System for a Multi-Trailer
+Autonomous Tow Truck using Metaheuristic Optimization in CARLA Simulator
+* Introduction
+The operation of autonomous towing tractors with multiple trailers (Standard N-Trailer)
+presents significant challenges in trajectory tracking due to complex kinematic constraints, offtracking effects, and potential instability such as jackknifing. Furthermore, real-world
+implementations often suffer from physical uncertainties like mechanical wear and steering
+bias, which degrade the performance of standard controllers. This research proposes an
+adaptive control framework integrating Nonlinear Model Predictive Control (NMPC) with a
+Grey Wolf Optimizer (GWO). The GWO functions as an online observer to estimate and
+compensate for steering bias in real-time, ensuring precise tracking for a tractor with four
+drawbar trailers.
+* Scopes/Objectives
+1) To derive and validate the kinematic model of a tractor with four drawbar trailers,
+specifically accounting for off-axle hitching geometry.
+2) To develop a Nonlinear Model Predictive Control (NMPC) system capable of
+handling multi-body constraints and ensuring stability.
+3) To implement the Grey Wolf Optimizer (GWO) as an adaptive estimator to
+compensate for steering bias and disturbances.
+4) To validate the system performance using CARLA Simulator integrated with ROS
+2 and Autoware.
+* Write only at the first time of report (or rewrite if there is any change from the previous
+report)
+
+F03- Research Progress Report.
+
+Research Plan
+1. Research plan: give a brief explanation of each activity/procedure, and report recent
+progress, completed activity, and future plan)
+Phase 1: Development Environment & Middleware Deployment
+Setting up the simulation testbed involved installing Ubuntu 22.04 LTS and
+ROS 2 Humble. The system was configured with NVIDIA Drivers and Autoware Universe to
+enable hardware acceleration. Afterward, CARLA Simulator 0.9.15 was deployed natively,
+followed by benchmarking to ensure the workstation can handle multi-agent physics
+simulations.
+Status: [COMPLETED]
+.
+Phase 2: Mathematical Modeling & Kinematic Analysis
+Theoretical foundation work focuses on vehicle dynamics, starting with the
+derivation of state-space kinematic equations for the tractor with four drawbar trailers,
+explicitly accounting for off-axle hitching geometry. These equations will be validated via an
+open-loop Python simulation. Following this validation, the tractor_odometry ROS 2 package
+will be developed to broadcast real-time pose estimations. Simultaneously, a comprehensive
+study of Metaheuristic Algorithms will be conducted to select the optimal strategy for
+parameter tuning
+Status: [2.1-2.3 COMPLETED].
+Phase 3: Controller Framework Development (NMPC)
+Design and implementation of the core control architecture focuses on
+formulating the NMPC cost function to minimize tracking error while enforcing safety
+constraints, such as jackknifing prevention. The solver will be implemented using CasADi with
+Python simulation. To integrate effectively with the autonomous stack, two interface nodes
+will be developed: planning_interface for trajectory parsing and control_interface for command
+transmission. Finally, an integration test will verify the communication pipeline between the
+custom package and Autoware.
+Phase 4: Adaptive System Integration (AI)
+Implementation of the intelligent adaptation layer entails coding the Grey Wolf
+Optimizer (GWO) algorithm class structure. Logic for estimating "Steering Bias" from steadystate tracking errors will be developed to function as a disturbance observer. The final step
+involves integrating this GWO observer with the NMPC prediction model to achieve ClosedLoop Adaptation, enabling the system to compensate for physical uncertainties in real-time.
+Phase 5: High-Fidelity Environment & Asset Construction
+Creation of realistic simulation assets includes designing dimensionally
+accurate 3D models of the tractor and trailers using SolidWorks and Blender. Furthermore, HD
+Maps (.xodr) and Point Clouds (.pcd) will be generated for Autoware localization. These assets
+will be used for full system integration, merging CARLA, Autoware, and the control package,
+followed by initial control parameter tuning to establish a stable baseline.
+
+F03- Research Progress Report.
+
+Phase 6: Validation, Analysis & Dissemination
+The final phase involves designing experiments and defining metrics to evaluate
+system performance. The goal is to achieve a success rate of over 95%. Testing will cover
+complex scenarios, such as sharp cornering and fault handling, to verify robustness. Results
+will be compiled into the final thesis and prepared for publication.
+Table 1 Research Plan
+Research Plan (Activities)
+
+1 2 3 4 5 6 7 8 9 10 11 12
+
+1. Development Environment & Middleware
+1.1 Install Ubuntu 22.04 & ROS 2 Humble
+
+C
+
+1.2 Setup GPU Driver & Install Autoware Universe
+
+C
+
+1.3 Install CARLA 0.9.15 (Native) & Benchmarking
+
+C
+
+2. Mathematical Modeling & Metaheuristics
+2.1 Study Kinematics & Derive 4-Trailer Equations
+
+C
+
+2.2 Simulate Kinematic Model in Python (Validation)
+
+C
+
+2.3 Develop ROS 2 Package tractor_odometry
+
+C
+
+2.4 Study Metaheuristics Algorithm
+
+IP
+
+3. Controller Development (NMPC)
+3.1 Design NMPC cost function & constraints
+
+X
+
+3.2 Implement Solver (CasADi) & Python Simulation
+
+X
+
+3.3 Develop planning_interface (Trajectory Bridge)
+
+X
+
+3.4 Develop control_interface (Cmd Override)
+
+X
+
+3.5 Integration Test (Custom Pkg vs Autoware)
+
+X X
+
+4. Adaptive System Development (AI)
+4.1 Develop Grey Wolf Optimizer (GWO) algorithm
+
+X X
+
+4.2 Implement "Steering Bias" estimation logic
+
+X X
+
+4.3 Integrate GWO with NMPC (Closed-loop)
+
+X X
+
+5. Simulation Environment & Assets
+5.1 Design 3D Models (SolidWorks/Blender)
+5.2 Create HD Map (.xodr) & Point Cloud (.pcd)
+5.3 Full System Integration (CARLA+Autoware+AI)
+
+X X
+X X
+X X X
+
+5.4 Control Parameter Tuning & Optimization
+
+X X
+
+6. Testing, Validation & Docs
+6.1 Design Experiment & Evaluation Metrics
+
+X X
+
+6.2 Performance Validation (>95%)
+
+X X
+
+6.3 Scenario Testing & Analysis
+
+X X
+
+6.4 Thesis Writing
+Note: C is Completed (Finished), IP is In Progress, X is Future Plan
+
+X X
+
+F03- Research Progress Report.
+
+Figure 1: Research Plan Timeline. Green indicates completed tasks, Yellow indicates
+in-progress tasks, and Gray indicates future planned tasks.
+2. Report in detail of the progress: By showing understandable and clear data
+including scientific data (if any) such as graph, table, and image.
+2.1 Detailed Progress of Phase 1: Middleware Implementation & Performance
+
+Figure 2: Implementation of CARLA, ROS 2, and Autoware bridge. The visualization shows
+high-fidelity 3D map data, road lanes, and real-time sensors. We successfully tested
+manual control via the Autoware interface.
+
+F03- Research Progress Report.
+
+Figure 3: Integration with Autoware planning and control plugins. The system can now
+generate valid trajectories and execute motion commands to navigate effectively.
+
+Figure 4: System resource monitoring during multi-agent simulation. The upper terminal
+shows heavy GPU load (60-100%), while the lower terminal confirms stable CPU usage.
+
+F03- Research Progress Report.
+
+2.2 Detailed Progress of Phase 2: Mathematical Modeling & Python Validation
+We derived recursive kinematic equations for the multi-trailer system, capturing
+the complex dynamics of off-axle hitching geometry. These equations respect the nonholonomic (no-slip) constraints essential for accurate motion planning.
+Package Repository: https://github.com/nontanan-linux/tracter_trailer.git
+𝑥̇ 0 = 𝑣0 cos⁡ 𝜃0
+𝑦̇ 0 = 𝑣0 sin⁡ 𝜃0
+𝜃̇0 =
+
+𝑣0
+tan⁡ 𝛿
+𝐿0
+
+Generalized Recursive Step: k-th Trailer Unit: For any trailer unit k (where
+k=1,2,…,N), consisting of Drawbar k and Trailer k
+1) Dolly k (𝑃2𝑘−1 ): Calculated from the preceding hitch 𝐻𝑘 .
+cos 𝜃2𝑘−1
+𝑃2𝑘−1 = 𝐻𝑘 − 𝐿𝑏𝑎𝑟,𝑘 [
+]
+sin 𝜃2𝑘−1
+2) Axle k (𝑃2𝑘 ): Calculated from Dolly 𝑘.
+𝑃2𝑘 = 𝑃2𝑘−1 − 𝐿𝑡𝑟𝑙,𝑘 [
+
+cos 𝜃2𝑘
+]
+sin 𝜃2𝑘
+
+3) Next Hitch (𝐻𝑘+1 ): Calculated from Axle 𝑘 (if another trailer
+follows).
+cos 𝜃2𝑘
+𝐻𝑘+1 = 𝑃2𝑘 − 𝑑ℎ,𝑘 [
+]
+sin 𝜃2𝑘
+•
+
+𝐿𝑏𝑎𝑟,𝑘 : Length of Drawbar 𝑘 (𝐿1 , 𝐿3 , …)
+
+•
+
+𝐿𝑡𝑟𝑙,𝑘 : Length of Trailer 𝑘 (𝐿2 , 𝐿4 , …)
+
+•
+
+𝑑ℎ,𝑘 : Hitch offset of Trailer 𝑘 (𝑑ℎ2 , …)
+
+F03- Research Progress Report.
+
+Figure 5: Kinematic diagram of the tractor with 4 drawbar trailers. The diagram defines key
+parameters and motion variables (theta, v). It specifically highlights the off-axle hitching
+distance (dh) that influences off-tracking.
+
+Figure 6: Python-based simulation result. The plot displays the path of the tractor (blue)
+and four trailers during a turn. The result confirms that our equations correctly predict the
+off-tracking behavior.
+2.3 ROS 2 Package: tractor_odometry
+We developed a ROS 2 package 'tractor_odometry' to implement these
+validated models. It accepts real-time steering and velocity inputs from the tractor and
+computes the position/velocity states for all attached trailers.
+Package Repository: https://github.com/nontanan-linux/tracter_odometer.git
+
+Figure 7: ROS 2 tractor_odometry visualization showing the estimated pose and velocity.
+
+F03- Research Progress Report.
+
+Academic works (in the period of this report) (if it is in the process of reviewing or under
+consideration, please explain)
+
+ Published in International Journal ………………..issue(s)
+ Published in National Journal ………………..issue(s)
+ Published in International Proceedings ………………..issue(s)
+ Published in National Proceedings ………………..issue(s)
+ Poster / Oral presentation in International Conference………………..issue(s)
+ Poster / Oral presentation in National Conference………………..issue(s)
+ Patent / Pretty Patent...........................item(s)
+ Prototype............................ item(s)
+ Award ........................................... item(s)
+ Others………………………………….
+Title of academic works........................................................................................
+Date of presentation (if any).....................................................................
+Place of presentation (if any)....................................................................
+
+F03- Research Progress Report.
+
+Was the work complete as planned? If there was any obstacle, please specify and explain how
+you adjusted the plan?
+The research activities have been completed in accordance with the proposed timeline.
+Phase 1 (Development Environment Setup) and the critical parts of Phase 2 (Mathematical
+Modeling and Validation) are finished.
+Obstacle & Adjustment: No significant obstacles were encountered. However, ensuring
+the numerical stability of the kinematic model for a 4-trailer system required more rigorous
+validation than initially expected. Consequently, I allocated additional time to develop a
+"Recursive Matrix Formulation" and a Python-based simulation (Activity 2.2) to verify the
+model before implementing it in ROS 2. This proactive step ensures a robust foundation for the
+upcoming controller development phase.
+Progress of the research up to now is 25 % of the overall research plan.
+……………………………..
+(Nontanan Sommat)
+12/Jan/2026
+Scholarship Recipient
+Part 5: For Dissertation Advisor’s Comment
+University Advisor’s Comment
+He has good performance for reaearch
+
+Evaluation of student’s woks
+
+Excellent  Good
+
+Evaluation of scholarship
+
+Should be proceeded
+
+Fair
+
+Poor
+
+Should be suspended
+
+(Asst. Prof. Dr. Danai Phaoharuhansa)
+07/Jan/2026
+University Advisor
+
+F03- Research Progress Report.
+
+NSTDA Advisor’s Comment
+
+Evaluation of student’s woks
+
+Excellent Good
+
+Evaluation of scholarship
+
+Should be proceeded
+
+Fair
+
+Poor
+
+Should be suspended
+…………………………..
+(………………………….)
+…..…/..…/.......
+NSTDA Advisor
+
+

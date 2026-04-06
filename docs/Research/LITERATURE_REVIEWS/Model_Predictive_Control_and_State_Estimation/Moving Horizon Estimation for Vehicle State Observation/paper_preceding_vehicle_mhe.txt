@@ -1,0 +1,913 @@
+   IEEE TRANSACTIONS ON VEHICULAR TECHNOLOGY, VOL. 70, NO. 9, SEPTEMBER 2021                                                                                  8755
+
+
+
+
+    Real-Time Longitudinal and Lateral State Estimation
+          of Preceding Vehicle Based on Moving
+                   Horizon Estimation
+                     Hanghang Liu , Ping Wang , Jiamei Lin, Haitao Ding , Hong Chen , and Fang Xu
+
+
+      Abstract—In the advanced driver assistance system (ADAS) and                   autonomous driving system (ADS) have attracted wide inter-
+   autonomous driving systems, accurate information on preceding                     est [1]–[3]. In general, the ADAS and ADS can be summarized
+   vehicle motion states is vital for the path planning and control.                 in three parts: perception, planning and control. The perception
+   To develop those intelligent driving systems, a modular integrated
+   estimation algorithm for the preceding vehicle longitudinal and                   part collects and processes information from the ego vehicle
+   lateral states is proposed in this paper, the coupled nonlinear                   and its surrounding environment. The processed information
+   characteristics of vehicle dynamics are applied to improve state                  provides the necessary support to the planning and control parts.
+   estimation accuracy. First, considering driver aggressiveness, a                  The perception part is the pioneering component in the whole
+   linear moving horizon estimator for the vehicle longitudinal speed
+                                                                                     system.
+   is designed based on the car following model. Then, the estimated
+   vehicle longitudinal speed is delivered to the lateral estimator mod-                 Regarding the perception part, there are many studies on
+   ule in real-time. For the arbitrary driving routes, the Serret-Frenet             the vehicle state estimation [4], [5]. The longitudinal motion
+   equations and nonlinear lateral dynamics are combined to describe                 states (usually are speed and acceleration) are widely used
+   the lateral motion of preceding vehicle. Furthermore, a nonlinear                 in many ADAS systems, it has a great significance to derive
+   moving horizon estimator is constructed to estimate vehicle lateral
+                                                                                     these information. For example, in adaptive cruise control and
+   states accurately. To reduce the computational burden, the multiple
+   shooting (MS) method is introduced, then the objective function is                autonomous emergency braking systems, it is necessary to derive
+   divided into several segments to improve the strong nonlinearity                  the preceding vehicle speed and the distance between the host
+   produced by multiple iterations. The proposed estimation algo-                    and preceding vehicles [6]–[8]. In earlier studies, the Kalman
+   rithm can effectively handle the initial biases, the additive biases              filter (KF) was employed in vehicle position and speed esti-
+   and model error, which are common in the acquired signals, and
+                                                                                     mation for the purpose of target tracking [9], [10]. Recently,
+   provide an accurate estimate of preceding vehicle states.
+                                                                                     with the development of sensors and relative technologies, the
+      Index Terms—Advanced driver assistance system (ADAS), state                    inter-vehicle distance can also be obtained based on the vision
+   estimation, moving horizon estimation (MHE), multiple shooting                    systems [11]. To accurately depict the relationship between
+   (MS).
+                                                                                     the vehicle and its surroundings and improve the estimation
+                                                                                     accuracy, it is necessary to model the vehicle motion. Helbing
+                               I. INTRODUCTION                                       and Molnar proposed a social force model (SFM) to depict the
+                                                                                     interaction relationships between pedestrians [12]. Then, the
+      N RECENT years, with the continuous increase in vehi-
+   I  cles and notable development of information and intelligent
+   technology, the advanced driver assistance system (ADAS) and
+                                                                                     SFM is modified to model the vehicle dynamics and a vehicle
+                                                                                     tracking method was proposed based on the modified SFM
+                                                                                     in [13], which achieved a higher accuracy. However the SFM is
+                                                                                     only an empirical approximate model, and is not accurate enough
+      Manuscript received April 7, 2021; revised June 25, 2021; accepted July 20,
+   2021. Date of publication July 30, 2021; date of current version September 17,    to precisely describe the vehicle motion. Substantial studies
+   2021. This work was supported by the National Natural Science Foundation of       have also focus on the car following model, which can precisely
+   China under Grants 62073152, 61790564, and U1864206. The review of this           depict the following vehicle motion for designing controllers and
+   article was coordinated by Dr. Hamid Khayyam. (Corresponding author: Fang
+   Xu.)                                                                              estimators [14]. In [15], a new car following model (CFM) based
+      Hanghang Liu, Ping Wang, and Fang Xu are with the State Key Laboratory         on the Helly’s model was proposed to describes the dependent
+   of Automotive Simulation and Control, Jilin University, Changchun 130025,         motion of vehicles in the single-lane case. Then, combined with
+   China, and also with the Department of Control Science and Engineering, Jilin
+   University, Changchun 130025, China (e-mail: xingxing18@mails.jlu.edu.cn;         Kalman filter (KF), a multivehicle motion estimation algorithm
+   wangping12@jlu.edu.cn; fangxu@jlu.edu.cn).                                        was proposed that attained a satisfactory performance for vehicle
+      Jiamei Lin and Haitao Ding are with the State Key Laboratory of Automotive     speed estimation.
+   Simulation and Control, Jilin University, Changchun 130025, China (e-mail:
+   linjmazura@sina.com; dinght@jlu.edu.cn).                                              In fact, it is not enough to observe only the longitudinal
+      Hong Chen is with the Clean Energy Automotive Engineering Center, Tongji       motion. For example, when a host vehicle is about to overtake
+   University, Shanghai 201804, China, and also with the Department of Control       a preceding vehicle, the preceding vehicle lateral motion can
+   Science and Engineering, Jilin University, Changchun 130025, China (e-mail:
+   chenhong2019@tongji.edu.cn).                                                      be used to decide whether the overtaking process should be
+      Digital Object Identifier 10.1109/TVT.2021.3100988                             terminated [16]. In other scenarios, such as trajectory planning
+
+
+                            0018-9545 © 2021 IEEE. Personal use is permitted, but republication/redistribution requires IEEE permission.
+                                          See https://www.ieee.org/publications/rights/index.html for more information.
+
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 04:09:36 UTC from IEEE Xplore. Restrictions apply.
+    8756                                                                     IEEE TRANSACTIONS ON VEHICULAR TECHNOLOGY, VOL. 70, NO. 9, SEPTEMBER 2021
+
+
+
+    and car-following control, the lateral motion states are also                     convergence speed with a large initial error and higher robust-
+    critical [17], [18]. Although, the motion states may be measur-                   ness to disturbance. However, MHE-based estimators require a
+    able for the lidar and high accuracy radar. The high costs caused                 long computational time, which is the largest barrier for MHE
+    by these high performance sensors are still unacceptable for the                  applications. To solve this problem, on the one hand, with the
+    auto makers. For the sensors equipped in production vehicles,                     development of hardware, the computational ability is rapidly
+    the preceding vehicle lateral motion states are very difficult to                 improving, while on the other hand, the optimization algorithm
+    directly measure. With the development of vehicle-to-vehicle                      can also be improved, such as the direct MS method.
+    (V2V), vehicle-to-infrastructure (V2I) communications and ve-                        Compared with the existent studies, the main contributions of
+    hicle recognition technology [18]–[21], it is possible to transmit                the proposed estimation algorithm are as follows:
+    some intrinsic parameters including mass, moment of inertia,                         (1) Unlike the conventional studies assuming the longitudinal
+    cornering stiffness and wheelbase between vehicles. Besides,                      speed of preceding vehicle is known, a linear MHE based
+    in vehicle platoon and following control, the dynamic vehicle                     estimator for the longitudinal speed derivation is developed. The
+    information such as longitudinal and lateral motion states and                    Helly’s SFM is incorporated in the longitudinal model, so that
+    location can also been transmitted by V2V and V2I. S. Wei et                      both the driver and model uncertainties can be considered in the
+    al. [18] presented an integrated longitudinal and lateral vehicle                 proposed estimator. Then, the estimation results are provided to
+    following control system where the V2V was used to transmit                       update the longitudinal speed in the lateral estimator.
+    the preceding vehicle states and parameters. However, the V2V                        (2) To satisfy the demand of information perception for in-
+    and V2I are easily influenced by the communication delays                         telligent vehicle under all driving conditions, the nonlinearity
+    and disturbances and thus not suitable to transmit the complete                   of vehicle must be taken into account. In the conventional
+    longitudinal and lateral motion states. Besides, the geometry of                  preceding vehicle lateral state estimation studies, linear vehicle
+    the roads parameters should also be incorporated in the model.                    models are adopted to depict the vehicle dynamics. To achieve
+    In the study presented in [22], a stochastic modeling method                      a higher estimation accuracy, the nonlinearity of vehicle motion
+    was proposed to create realistic artificial road geometry, where                  are considered, then combined with the MHE algorithm, a lateral
+    the number of segments, length of road segments, left and right                   states estimator is constructed for the high estimation accuracy.
+    bend deflection degrees and the height of up and down hills are                      (3) One of the biggest obstacles prevent MHE from been
+    generated by the Poisson, exponential, Gaussian and Rayleigh                      applied in vehicular environment is the heavy computational
+    distributions, respectively. In [23], the steady-state responses of               burden caused by nonlinear optimization. To solve this prob-
+    a bicycle-roll vehicle model was analyzed to give the instanta-                   lem, the multiple shooting method is adopted for the optimiza-
+    neous center of rotation (ICR) under the constant velocity and                    tion problem formulation. With the MS method, the objective
+    steering angle. Then, the desired velocity and steering angle                     function is redesigned, then the computational burden can be
+    can be derived based the curvature center of road. Y. Wang                        reduced obviously and makes it possible to implement MHE in
+    et al. [16] proposed a combined vehicle model based on the                        a vehicular environment.
+    vehicle dynamic model and road geometry constraints. Then                            The rest of this paper is organized as follows. The related
+    a KF-based lateral state estimator was also proposed in this                      models used to design the estimators are introduced in Section II.
+    study. However, the proposed filter [16] was designed under                       The design procedure of the estimators with the MS method
+    the assumption that the preceding vehicle longitudinal speed                      as well as the guidelines for estimator parameter selection are
+    and accurate parameters can be derived by vehicle recognition                     introduced in Section III. Hardware in loop (HIL) experiments
+    technology in advance. This assumption is difficult to satisfy                    and results are provided in Section IV, and conclusions are
+    under the current technology, which limits the application in                     summarized in Section V.
+    vehicles. Besides, the vehicle is easy to enter the nonlinear
+    regions under the extreme conditions [24]. In this case, the                                               II. RELATED MODELS
+    nonlinearity of vehicle must be considered so that the estimation
+    accuracy can be improved.                                                         A. Vehicle Longitudinal Motion Model
+       The aforementioned estimation algorithms are mostly de-                          Here the CFM of Helly [33] is adapted to describe the vehicle
+    signed based on KF and its extension. Indeed, the KF has                          longitudinal motion. Under the car-following scenario, the host
+    been applied in many fields for its simplicity and effectiveness.                 vehicle acceleration ah is given as:
+    However, in certain cases, such as when a large initial error
+    and strong nonlinearity occur, KF-based algorithms can not                          ah (k) = C1 (vp (k) − vh (k)) + C2 d(k) + C3 vh (k) + C4 , (1)
+    attain a satisfactory performance. When the system is highly
+    nonlinear, the moving horizon estimation (MHE) method could                       where vh (k), vp (k) and d(k) are the host vehicle longitudinal
+    be a competitive choice [25]. In addition, MHE also tends to                      speed, preceding vehicle longitudinal speed and relative distance
+    be more robust and adaptive to model and parameter uncer-                         between the two vehicles, respectively, at time instant k. The
+    tainties, because multiple groups of measurements are used in                     coefficients C1 , C2 and C3 can be determined with real exper-
+    the estimation. For the above reasons, MHE has already been                       iments [33]. To reflect the different driving habits of different
+    applied in vehicle parameters and state estimation [26]–[28].                     drivers, a coefficient C4 called driver’s aggressiveness, which
+    In addition, the superiority of MHE has been verified [28], in                    determines the distance between the host and preceding vehicles
+    which the MHE based estimator attains a higher accuracy, higher                   when they reach a steady-state equilibrium (the acceleration of
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 04:09:36 UTC from IEEE Xplore. Restrictions apply.
+   LIU et al.: REAL-TIME LONGITUDINAL AND LATERAL STATE ESTIMATION OF PRECEDING VEHICLE                                                                       8757
+
+
+
+   following vehicle satisfies ah = 0), is introduced to calculate
+   the acceleration of host vehicle.
+      We assume that the host vehicle drives in the current lane
+   and follows the preceding vehicle, and the host vehicle will be
+   influenced only by the preceding vehicle. At this time, we define
+   the system state as:
+                       x(k) = [vp (k), d(k), vh (k)]T .                       (2)
+   Then we define the system sample time of the longitudinal
+   module as δk . The system can be derived as:
+             x(k + 1) = F (δk )x(k) + Γ(δk )[a(k) + ω(k)],                    (3)
+   where a(k) = [0, ah (k)]T is the additional acceleration of the                   Fig. 1.   The 2DOF bicycle vehicle model.
+   driver, and considering the host vehicle acceleration (1), we
+                                                                                                                                           
+   obtain:                                                                                                                         Γ(δk )
+                                                                                                                    Γ(δk ) =                    .            (10)
+                                                                                                                                     0
+                             a(k) = Γa x(k) + C,                              (4)
+                                                                                        The measurements of this system are the distance between
+   where,
+                                                                                 the host and preceding vehicles d and the host vehicle veloc-
+                            0 0      0                           0                   ity vh . The relative distance can be derived based on radars and
+                Γa =                              ,C =                    ,
+                            C1 C2 C3 − C1                        C4                  vision systems [1], [11], [18], and the host vehicle speed can
+                                                                                     be measured by sensors. However, sensor measurements are
+   The state transition matrix F (δk ) and the acceleration gain                     commonly polluted by noise, and measurement uncertainties
+   matrix Γ(δk ) are defined as:                                                     must be considered. Therefore, we can derive the measurement
+                                 ⎛                ⎞
+                                     1 0 0                                           equation as:
+                      F (δk ) = ⎝ δk 1 −δk ⎠ ,               (5)                                             y(k) = Dx(k) + η(k),                            (11)
+                                     0 0 1                                                                                   
+                                ⎛                 ⎞                                                                   01000
+                                    δk      0                                                                  D=               .                            (12)
+                                                                                                                      00100
+                      Γ (δk ) = ⎝ 21 δk2 − 21 δk2 ⎠ .        (6)
+                                    0     δk                                           Where D is the measurement matrix and η(k) is the white
+                                                                                     Gaussian noise sequence which represents the measurement
+   It should be noted that, in Eq. (3), a two-dimensional vector                     noise.
+   process noise ω(k) is the noisy acceleration component to model
+   the disturbances of driving behaviours in the system. Then,                       B. Vehicle Lateral Motion Model
+   to facility the equation construction process, a zero additional
+   acceleration is added in a(k), so that the additional acceleration                   As the main purpose of this paper is to estimate the lateral
+   can be a a two-dimensional vector to simplify the equation                        speed and yaw rate simultaneously, the lateral speed is highly
+   construction process.                                                             coupled with the vehicle dynamics. To consider the vehicle
+      By substituting Eq. (4) into Eq. (3), we attain:                               dynamic characteristics, a 2-DOF yaw plane vehicle model is
+                                                                                     considered here. At the front and rear axles, the left and right
+               x(k + 1) = A(δk )x(k) + Γ(δk )[C + ω(k)],                      (7)    wheels (the grey wheels in Fig. 1) are lumped into a single wheel
+      where,                                                                         (the black wheels in Fig. 1). The driver can only steer the front
+                                                                                     wheels, and the steering angles of the two front wheels are equal.
+                        A(δk ) = F (δk ) + Γ(δk )Γa .                                Hence, the vehicle model is simplified as a bicycle model.
+                                                                                        On the basis of the vehicle dynamics theory, the simplified
+      It should be noted that, different drivers may have different
+                                                                                     vehicle dynamics are described as:
+   driving styles, which are subject to different aggressiveness
+   parameters, and the aggressiveness parameters of drivers may                                                   Fyf + Fyr
+                                                                                                            v˙y =           − γvx ,                         (13a)
+   not be known in advance. As such, the driver aggressiveness                                                        m
+   parameter should also be estimated. Therefore we expand the                                                    Lf Fyf − Lr Fyr
+   state vector as x(k) = [xT (k), C T ]T , and considering Eq. (7),                                         γ̇ =                 .                         (13b)
+                                                                                                                         Iz
+   a new state space equation can be derived as:
+                                                                                        Where the system states vy and γ represent the lateral speed
+                  x(k + 1) = F (δk )x(k) + Γ(δk )ω(k),                        (8)    and yaw rate, the symbol Fyf and Fyr denote lateral tire forces
+                                                                                     of front and rear tires. The lateral tire forces are described
+      where,
+                                                                                   by the single friction coefficient Fiala tire model [30]. This
+                                         A(δk ) Γ(δk )                               model uses the slip angle as an intermediate variable. When the
+                        F (δk ) =                            ,                (9)
+                                           0    I2×2                                 sideslip angle α is very small, tan α ≈ α. Then, the tire model
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 04:09:36 UTC from IEEE Xplore. Restrictions apply.
+    8758                                                                     IEEE TRANSACTIONS ON VEHICULAR TECHNOLOGY, VOL. 70, NO. 9, SEPTEMBER 2021
+
+
+
+                                  TABLE I
+                 PRECEDING VEHICLE VARIABLES AND PARAMETERS
+
+
+
+
+                                                                                      Fig. 2.   Vehicle lateral motion model with respect to the desired path.
+
+
+                                                                                                         ψ̇ = γ − c(vx cos ψ − vy sin ψ).                         (17)
+
+                                                                                      It should be noted that the road curvature c is assumed to be a
+                                                                                      constant in every short sample period in this paper
+
+                                                                                                                          ċ = 0.                                 (18)
+    is approximated as follows:                                                          Based on the above equations, a combined preceding vehicle
+                  ⎧                                                                   lateral motion model, that both the vehicle dynamic character-
+                  ⎪             C2        1 C3
+                  ⎨ −Cα α + 3μFαz |α|α − 3 (3μFαz )2 α3 ,                             istics and road geometry parameters can be considered, can be
+             Fy =                  |α| < arctan( 3μFCα )
+                                                       z                     (14)     derived as:
+                  ⎪
+                  ⎩
+                     −μFz sgnα,       otherwise
+                                                                                                                         Ẋ = f (X) + ω,                         (19a)
+    where, the tire cornering stiffness Cα and vertical load Fz are
+                                                                                                                   Y = HX + η,                                   (19b)
+    expressed as Cf , Cr and Fzf , Fzr for the front and rear tires,
+                                                                                                                     ⎛        ⎞
+    respectively. In (14), the tire sideslip angles of the front and rear                                          000100
+    wheels are calculated as follows:                                                                         H = ⎝0 0 0 0 1 0⎠.                                 (19c)
+                                            Lf                                                                     000001
+                              αf = β +         γ − δ,                      (15a)
+                                            vx
+                                                                                      The state vector is defined as X = (vy , γ, δf , e, ψ, c)T , and
+                               αr = β −
+                                            Lr
+                                               γ.                          (15b)      the measurement of this system is defined as Y = (e, ψ, c)T .
+                                            vx                                        According to [16], the lateral off set e, heading angle ψ and road
+       The physical meanings of the above symbols and parameters                      curvature c can be measured with the vision system. The pro-
+    are listed in Table I. These basic intrinsic parameters m, Iz , Lf ,              cess noise ω and measurement noise η represent the modelling
+    Lr , Cf and Cr can be derived by V2V and vehicle recognition                      and measurement uncertainties, respectively. The discrete state
+    technologies presented in [18]–[21]. The friction coefficient                     space model is consequently given as:
+    μ can be derived from the online estimation technology [31],                                   X(k + 1) = Ts f [X(k)] + X(k) + ω(k),                         (20a)
+    [32]. The longitudinal speed vx is updated in real time by the
+    estimation result vp from the longitudinal estimator module.                                             Y (k) = HX(k) + η(k).                               (20b)
+       Besides, the roads geometry parameters should also be con-
+                                                                                      Where the Ts is the sample time of the lateral module.
+    sidered as the preceding vehicle lateral motion states are related
+    to the current vehicle position along the desired path, such as the
+    distance error between the vehicle centre and the centreline of                                           III. ESTIMATOR DESIGN
+    the road. In contrast to studies on host vehicle state estimation,                   A diagram of the modular integrated estimation algorithm is
+    the preceding vehicle steering angle is very difficult to derive.                 shown in Fig. 3. The relative distance is detected by a radar,
+    Therefore the preceding vehicle steering angle is also estimated.                 and the host vehicle speed is measured by a speed sensor, and
+    We assume that the preceding vehicle steering angle remains                       the preceding vehicle intrinsic parameters are recognized with a
+    constant during the sample period, resulting in δ̇f = 0.                          vehicle recognition system. Moreover, the parameters e, ψ and
+       The Serret-Frenet equations are used to describe the vehicle                   c are measured with the vision system. The longitudinal state
+    tracking dynamics with respect to the desired path. As shown                      estimator is designed based on linear MHE and the lateral state
+    in Fig. 2, when the vehicle drives along the desired path, there                  estimator is designed based on nonlinear MHE.
+    will be a lateral off set e represents the distance between vehicle
+    center and road centerline and a heading angle ψ represents angle                 A. Linear MHE for the Longitudinal Estimator
+    between tangent of road centerline and vehicle longitudinal axis.
+    Considering the vehicle longitudinal and lateral speeds and the                      To improve the estimation accuracy and robustness to the
+    road curvature c, we have:                                                        initial guess error, a linear MHE based estimator is designed
+                                                                                      for preceding vehicle speed estimation. Eqs. (8) and (11) are
+                                 ė = vx sin ψ + vy cos ψ,                   (16)     adopted to describe the vehicle longitudinal motion, then linear
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 04:09:36 UTC from IEEE Xplore. Restrictions apply.
+   LIU et al.: REAL-TIME LONGITUDINAL AND LATERAL STATE ESTIMATION OF PRECEDING VEHICLE                                                                       8759
+
+
+
+                                                                                     is updated by the KF method [25], and the updating process are
+                                                                                     given as follows:
+
+                                                                                                 K1 (k − n) = P1 (k − n|k − n − 1)D
+                                                                                                                     ×(R1 +DP1 (k−n|k−n − 1)DT )−1 ,
+                                                                                                                                             (22a)
+                                                                                           x(k − n|k − n) = x(k − n|k − n − 1) + K1 (k − n)
+                                                                                                                     × (y(k − n) − Dx(k − n|k)),
+                                                                                                                                                            (22b)
+                                                                                          P1 (k − n|k − n) = (I − K1 (k − n)D)P1
+                                                                                                                     × (k − n|k − n − 1),                   (22c)
+   Fig. 3.   Diagram of the estimators.
+                                                                                      x(k − n + 1|k − n) = F (δk )x(k|k − n),                               (22d)
+   MHE problem for longitudinal estimation is given as follows:                      P1 (k − n + 1|k − n) = F (δk )P1 (k − n|k − n)F (δk )T
+        min x(k − n) − x(k − n|k − n − 1)2P −1 (k−n|k−n−1)                                                         + Γ(δk )Q1 Γ(δk )T .                   (22e)
+       x,ω,η                                                1
+
+
+                    k−1                      k                                       where K1 is the kalman gain, I is identity matrix. It should
+               +           ω(i)2Q−1 +            η(i)2R−1 ,           (21a)      be noted that, the above updating strategy is activated only
+                                    1                           1
+                   i=k−n                  i=k−n                                      when t ≥ n + 1. If this condition is not satisfied, there are two
+                                                                                     ways including forging faked measurements and truncating the
+                                                                                     horizon to implement MHE. The truncating horizon is adopted
+             s.t. x(k + 1) = F (δk )x(k) + Γ(δk )ω(k),                    (21b)      in this paper, that the horizon length is initialised at zero and then
+                          y(k) = Dx(k) + η(k).                            (21c)      horizon is increased gradually to n as the time step increases.
+                                                                                     Then, the above optimization problem can be transformed into
+   In this problem, the variables includes the state variables x =                   a quadratic programming problem.
+   [x(k − n), . . ., x(k)], the process noise sequences ω = [ω(k −
+   n), . . ., ω(k − 1)] and the measurement noise sequences η =                      B. Nonlinear MHE for the Lateral Estimator
+   [η(k − n), . . ., η(k)]. The (i|k) denotes the estimate at time
+   step i with measurements until time step k. Where n is the                           In contrast to the vehicle longitudinal motion, a nonlinear state
+   window length of the longitudinal estimator module, and x(k −                     space equation describes the lateral motion. Combined with the
+   n|k − n − 1) is the initial guess at time step k − n which is                     nonlinear model (20), the nonlinear MHE problem for lateral
+   also called as a priori state estimate. The state estimation,                     estimation can be formulated as:
+   and process and measurement noise covariance matrixes are
+                                                                                       min X(k − N ) − X(k − N |k − N − 1)2P −1 (k−N |k−N −1)
+   denoted as P1 (k − n|k − n − 1), Q1 and R1 , respectively. The                     X,ω,η                                                     2
+
+   x(k − n|k − n) and P1 (k − n|k − n) are defined as a posteriori                              k−1                       k
+   state estimate and error covariance at time step k − n, respec-                         +           ω(i)2Q−1 +             η(i)2R−1 ,                (23a)
+   tively. As can be seen from the above problem formulation, a                                i=k−N
+                                                                                                                 2
+                                                                                                                       i=k−N
+                                                                                                                                          2
+
+   large covariance Q1 used in (21a) means a small weighting Q−1
+   given to the second component of (21a), which also means little                   s.t. X(k + 1) = Ts f [X(k)] + X(k) + ω(k),                             (23b)
+   trust is put on the model, and vice versa. The similar explanation                               Y (k) = HX(k) + η(k).                                   (23c)
+   can also been used in P1 (k − n|k − n − 1) and R1 .
+      Ideally, every past measurement should be used in estimation.                     Here the variables still includes the state variables X =
+   However, this will cause an infinite dimension optimization                       [X(k − N ), . . ., X(k)], the process noise sequences ω =
+   problem and bring unaffordable computational burden with the                      [ω(k − N ), . . ., ω(k − 1)] and the measurement noise se-
+   increasing time step. Thus, it is necessary to introduce a certain                quences η[η(k − N ), . . ., η(k)]. The length of the estimation
+   groups of measurements in the problem formulation. To this                        window N in the lateral modular determines the number of
+   end, a horizon length n is introduced to define a window length                   measurement groups used in Eq. (23a). Similarly, in the lateral
+   that only n + 1 groups of measurements in the window are used                     estimator module X(k − n|k − N − 1) is the initial guess at
+   in estimation. The past measurements before time step k − n                       time step k − N which is also called as a priori state estimate.
+   should also be summarized, thus the first term in Eq. (21a) called                The state estimation, and process and measurement noise co-
+   arrival cost is introduced in problem formulation. The arrival                    variance matrixes are denoted as P2 (k − N |k − N − 1), Q2 and
+   cost is updated iteratively as the window is moving forward.                      R2 , respectively. The X(k − N |k − N ) and P2 (k − N |k − N )
+   Because a linear state equation is adopted to describe the vehicle                are defined as a posteriori state estimate and error covari-
+   longitudinal motion, the arrival cost of longitudinal estimation                  ance at time step k − N , respectively. The weighting matrices
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 04:09:36 UTC from IEEE Xplore. Restrictions apply.
+    8760                                                                     IEEE TRANSACTIONS ON VEHICULAR TECHNOLOGY, VOL. 70, NO. 9, SEPTEMBER 2021
+
+
+
+    P2 (k − N |k − N − 1), Q2 and R2 have the same effect as
+    presented in Section III-A.
+        In this problem, the optimization variables are the state es-
+    timation X(k − N ) and process noise sequences ω. Once the
+    optimization problem is solved, the estimation at the current time
+    step can be derived through the system sate space equations.
+    It should be noted that, the above optimization problem is
+    not suitable for quadratic programming, but can be solved by
+    nonlinear programming (NLP). The arrival cost can be updated
+    by EKF and unscented KF (UKF)-based approaches, or the
+                                                                                      Fig. 4.    Diagram of the multiple shooting method for MHE.
+    filtering/smoothing update strategy [28]. The EKF updating
+    strategy is adopted in this paper, the updating process are given
+    as follows:                                                                       which makes the problem extremely nonlinear. In MS-MHE,
+                                                                                      the whole time horizon [k − N, k] is divided into N segments
+     K2 (k − N ) = P2 (k − N |k − N − 1)H                                             with the sample time Ts , the jth segment Ij is defined as:
+                         × (R2 + HP2 (k − N |k − N − 1)H T )−1 ,                                  Ij = [k − j, k − j + 1], (j = 1, 2, . . ., N ).              (26)
+                                                             (24a)
+                                                                                      It is assumed that the dimension of process noise ω is nω , and
+     X(k − N |k − N ) = X(k − N |k − N − 1)                                           the ith component of the process noise is ω i (i = 1, 2, . . ., nω ).
+                         + K2 (k − N )(Y (k − N ) − HX(k − N |k)),                    Then the process noise can be formulated as:
+                                                            (24b)                                                           N
+                                                                                                               ω i (t) =            ω ij (t)χj (t).            (27)
+     P2 (k − N |k − N ) = (I − K2 (k − N )H)P2                                                                              j=1
+                         × (k − N |k − N − 1),                              (24c)     Where ω ij (t) represents the process noise of the ith component
+     X(k − N + 1|k − N ) = Ts f [X(k − N |k)]                                         ω i (t) in segment Ij , and χj (t) is the unit switching function,
+                                                                                      which is defined as:
+                         + X(k − N |k),                                    (24d)                              
+                                                                                                                1, t ∈ [k − j, k − j + 1]
+                                                                                                    χj (t) =                              .         (28)
+     P2 (k − N + 1|k − N ) = A(k − N |k)P2 (k − N |k − N )                                                      0, t ∈
+                                                                                                                     / [k − j, k − j + 1]
+                         × A(k − N |k)T + Q2 .                              (24e)        In this study, the process noise is parameterized by a constant
+                                                                                      in every segment:
+    where K2 is the kalman gain, A(k − N |k) is the jacobian
+    matrix which is linearised around the estimation X(k − N |k),                                                     ω ij (t) ≈ σij .                         (29)
+    is defined as follow:                                                             After process parameterization of process, the states and mea-
+                                      ∂f                                              surements propagate in every single segment.
+                     A(k − N |k) =                  .        (25)
+                                      ∂X X(k−N |k)                                       It should be noted that, initial values are necessary for state
+    As same as the longitudinal estimator module, the truncating                      propagation in every segment. Hence, the initial value set is de-
+    horizon is also adopted in the lateral estimator module.                          fined as X s = [Xs (k − N ), Xs (k − N + 1), . . ., Xs (k − 1)],
+                                                                                      where the component Xs (i)(i = k − N, k − N + 1, . . ., k − 1)
+    C. Multiple Shooting for Nonlinear MHE                                            denotes the initial state values in every segment. Particularly, in
+                                                                                      the first segment, the initial state value is defined as Xs (k −
+       As discussed above, a NLP problem has to be solved in lateral
+                                                                                      N ) = X(k − N ).
+    estimation. When the system nonlinearity is high or the horizon
+                                                                                         To guarantee continuity of the predicted states and measure-
+    length N is large, the computational time may be unacceptable
+                                                                                      ments, N − 1 equality constraints are introduced as follows:
+    for vehicle applications. This is also one of the largest obstacles
+    preventing MHE from being applied in ADASs. Owing to the                                    X̂(i) − Xs (i) = 0, i = k − N + 1, . . ., k − 1.               (30)
+    MS method, the original NLP problem can be reformulated as
+    a sparser and less nonlinear problem compared with the single                     Where X̂(K) is the predicted state based on the initial value
+    shooting (SS) method. In Fig. 4, the blue line represents real                    Xs (K − 1) at time instance K.
+    measurements, and the green dotted line represents the predicted                     Thus, the original NLP problem in Eq. (23) is transformed
+    measurements with SS-MHE, the red dotted line represents                          into a new one with optimization variables ω and initial values
+    the predicted measurements with MS-MHE. In the SS-MHE                             set Xs . Then the new MHE problem can be written as:
+    method, all the predicted states and measurements propagate                         min Xs (k − N ) − X(k − N |k − N − 1)2P −1 (k−N |k−N−1)
+    along the space state equation at the same given initial value                    X s ,σ,η                                                         2
+
+
+    X(k − N ). The NLP problem becomes increasingly nonlinear                              N     nω                             k
+    with increasing time step, for instance, the terminal predicted                    +              σij 2Q2 (i,i)−1 +               η(i)2R−1 ,         (31a)
+                                                                                                                                                  2
+    states and measurements are iteratively calculated N times,                            j=1 i=1                          i=k−N
+
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 04:09:36 UTC from IEEE Xplore. Restrictions apply.
+   LIU et al.: REAL-TIME LONGITUDINAL AND LATERAL STATE ESTIMATION OF PRECEDING VEHICLE                                                                        8761
+
+
+
+
+   s.t. X(k + 1) = Ts f [X(k)] + X(k) + ω(k),                             (31b)
+   Y (k) = HX(k) + η(k),                                                  (31c)
+
+   X̂(i) − Xs (i) = 0, i = k − N + 1, . . ., k − 1.                       (31d)
+   Where Q2 (i, i)(i = 1, 2, . . ., nω ) denotes the components in the
+   ith row and column, and the optimization variables set σ is
+   defined as:
+                       ⎛                            ⎞
+                           σ11 σ12 . . . σ1 N
+                       ⎜ σ21 σ22 . . . σ2 N ⎟
+                       ⎜                            ⎟
+                  σ=⎜ .              ..    ..   .. ⎟ .           (32)
+                       ⎝ ..           .     .    . ⎠
+                               σnω 1 σnω 2 . . . σnω N
+                                                                                     Fig. 5.   RMSE and error integration for the different horizon lengths.
+   From the above discussion, there are nx × (N + 1) + nω × N
+   variables in the MS-MHE. In contrast, only nx + nω × N vari-                                         t
+   ables in SS-MHE. The influence of the increase in variables will                  defined as eint = tse |err(t)|dt, where err(t) is the estimation
+   be discussed later.                                                               error, and ts and te are the time instants when the estimation
+                                                                                     starts and ends, respectively.
+   D. Simulation Results                                                                The comparison results are shown in Fig. 5, where the left
+                                                                                     and right axes represent the RMSE and error integration val-
+      As discussed in Section III-B and III-C, NLP of lateral es-
+                                                                                     ues, respectively. When the horizon length N ≤ 16, both the
+   timator is the main cause of heavy computational burden. To
+                                                                                     RMSE and error integration decrease sharply with increasing
+   reduce the computational time, the multiple shooting method
+                                                                                     horizon length. However, when the horizon length N ≥ 16, the
+   is adopted for the lateral estimator. Besides, the computational
+                                                                                     improvement of the estimation accuracy is not notable with
+   burden and horizon length N of lateral estimator are closely
+                                                                                     increasing horizon length. This phenomenon corresponds with
+   related. The horizon length N is also a critical parameter in
+                                                                                     the conclusion derived by Rao and Rawlings in [25], that the
+   MHE and directly affects the estimation accuracy. Thus, the
+                                                                                     MHE performance improves with increasing the horizon length,
+   horizon length N of lateral estimator and influence of multiple
+                                                                                     albeit with diminishing returns once N is sufficiently large.
+   shooting will be discussed firstly in this subsection, so that
+                                                                                        However, the estimation accuracy even deteriorate when
+   some guidelines of parameter selection can be provided for the
+                                                                                     N ≥ 26, as shown in Fig. 5, and the RMSE and error inte-
+   HIL experiments. To this end, a series of joint simulations with
+                                                                                     gration increase when the horizon length is excessive. This is
+   Carsim/MATLAB will be conducted and all the simulations run
+                                                                                     mainly caused by the modelling error in the estimator. It can
+   on a desktop computer with an Intel i7-7700 processor. It should
+                                                                                     be explained that, on one hand, when N is a suitable large
+   be noted that a modified double lane change manipulation is
+                                                                                     number, this benefits the estimation because multiple groups
+   adopted here and the longitudinal speed is set as vx = 30 m/s.
+                                                                                     of measurements are used. On the other hand, as the horizon
+      1) Selection of the Horizon Length: The sample time of the
+                                                                                     length increases, the modelling error, which can compromise the
+   lateral motion model is set to Ts = 0.007 s, the process and
+                                                                                     optimization process, accumulates simultaneously. As a result,
+   measurement noise covariance matrixes Q2 and R2 , the prior
+                                                                                     diminishing returns will be obtained, and the accumulation of
+   state guess covariance matrix P2 (0), and the initial state guess
+                                                                                     modelling error will even decrease the estimation accuracy when
+   X(0) are set as follows:
+                                                                                     an excessively large N is adopted. Besides, the computational
+           Q2 = diag(4.8E − 6, 5.1E − 17, 1.2E − 9,                                  efficiency should also be taken into account, which means the
+                                                                                     horizon length N should not be very large. Thus, the horizon
+                          4.1E − 7, 6.3E − 16, 3.7E − 13),                (33a)
+                                                                                     length N of lateral estimator is set as N = 16 in this paper, so
+           R2 = diag(3.2E − 3, 6.9E − 6, 4.5E − 6),                       (33b)      that both the estimation accuracy and computational efficiency
+                                                                                     can be guaranteed. Similarly, the horizon length n of longitudinal
+        P2 (0) = diag(1.5E − 5, 1E − 6, 1.7E − 7, 3.2E − 5,
+                                                                                     estimator can be determined in the same way. Due to the limited
+                             1E − 7, 1.1E − 9),                           (33c)      space, the related results are not given in this paper.
+                                                                                        2) Influence of Multiple Shooting: Overall, a suitable large N
+                            X(0) = (0, 0, 0, −2, 0, 0).                   (33d)
+                                                                                     can improve the estimation accuracy. Meanwhile, the computa-
+      It should be noted that the initial state guess is set as the true             tional burden will also increase with the horizon length increas-
+   initial value. And the longitudinal speed of preceding vehicle is                 ing. As mentioned in Section III-C, the nonlinear MHE problem
+   introduced directly from CarSim, which means that the longitu-                    are segmented into short time intervals, and the integration
+   dinal estimator is disabled in this simulation and only the lateral               can be simultaneously implemented in each segment. Then, the
+   estimator is tested with different horizon length N .                             original NLP problem is reformulated with more optimization
+      To facilitate a comparison of the estimation accuracy with                     variables as well as less nonlinear. Then the MS method is used
+   different values of N , the root mean square error (RMSE) and                     to reduce the computational burden. The computational times
+   the error integration eint are adopted. The error integration is                  with different shooting methods are shown in Fig. 6. When
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 04:09:36 UTC from IEEE Xplore. Restrictions apply.
+    8762                                                                     IEEE TRANSACTIONS ON VEHICULAR TECHNOLOGY, VOL. 70, NO. 9, SEPTEMBER 2021
+
+
+
+                                                                                                                    TABLE II
+                                                                                                   LONGITUDINAL ESTIMATION RESULTS COMPARISON
+
+
+
+
+                                                                                      effectiveness of the longitudinal speed estimator, two scenarios
+                                                                                      are established in the experiments. In scenario 1, the preceding
+                                                                                      vehicle will accelerate and decelerate and maintain a constant
+    Fig. 6.   Computational time with different horizon lengths.                      speed between acceleration and deceleration, while a time-
+                                                                                      varying speed profile is established between acceleration and
+                                                                                      deceleration in the scenario 2. The speed and relative distance
+    the MS method is applied, the computational time increases
+                                                                                      of the two vehicles are shown in Fig. 8.
+    linearly with the horizon length. However, the computational
+                                                                                         In this experiment, the sample time δk = 0.05 s, and the
+    time increases exponentially with the horizon length, when the
+                                                                                      measurements are polluted by artificial noise following a normal
+    SS method is applied. The computational time with MS method
+                                                                                      distribution with zero mean, and standard deviations 0.5 m
+    is significantly shorter than that with the SS method.
+                                                                                      and 0.01 m/s for the relative distance and host vehicle speed,
+       However, more optimization variables and equality con-
+                                                                                      respectively. According to [15], the coefficients in Eq. (1) are
+    straints are introduced in MS method to guarantee the continuity,
+                                                                                      set to C1 = 0.5, C2 = 0.125 and C3 = −0.125. The parameter
+    thus making the reformulated NLP is larger as well as sparser
+                                                                                      C4 is an indicator of the relative distance between the host
+    than the original one. The increases in optimization variables and
+                                                                                      and preceding vehicle when the vehicles enter a steady-state
+    constraints are a drawback of MS method. However, the larger
+                                                                                      equilibrium. For example, under the assumption C4 = −2.5,
+    and sparser NLP can be solved by optimization algorithms tools
+                                                                                      the vehicles drive in a steady-state equilibrium at vx = 20 m/s,
+    such as SQP, and this makes the MS method significantly faster
+                                                                                      the relative distance is d = 40 m, for vx = 30 m/s, the relative
+    than the SS method [28], [29]. Thus, the proposed MHE can
+                                                                                      distance is d = 50 m. It should be noted that, the aggressiveness
+    successfully take care of both the accuracy and computational
+                                                                                      parameter can not be known in advance, so a mean value
+    burden.
+                                                                                      C4 = −2.5 [15] is considered as an in the initial state guess.
+                                                                                      The estimator works when the relative distance is smaller than
+                   IV. HARDWARE IN LOOP EVALUATION                                    100 m in the simulations. The horizon length of longitudinal
+       As one of the key subsystems of intelligent driving, the fea-                  estimator module is set as n = 10, which is determined by the
+    sibility of online estimation should be emphasized. To show the                   way mentioned in Section III-D. To compare the performance
+    feasibility of hardware implementation and vehicular applica-                     of MHE and KF, the model parameters remains the same. The
+    tion, as well as testing the effectiveness of proposed estimators,                process and measurement noise covariance matrixes Q1 and R1 ,
+    a hardware in loop (HIL) platform, as shown in Fig. 7, was                        the prior state guess covariance matrix P1 (0), and the initial state
+    established for the experiments. Based on the simulation results                  guess x(0) are set as:
+    given in Section III-D, a series of experiment will be conducted
+    in this section. The HIL platform consists of two industrial per-                                   Q1 = diag(0.5, 0.5)2 ,                               (34a)
+    sonal computers (IPC), a laptop computer, a desktop computer, a
+                                                                                                        R1 = diag(0.5, 0.01) ,     2
+                                                                                                                                                             (34b)
+    Controller Area Network (CAN) bus and a dSPACE MicroAu-
+    toBox DS1401. The IPC1 and desktop computer are used to                                         P1 (0) = diag(5, 0.5, 0.1, 0.001, 1.25)2 ,               (34c)
+    perform the vehicle dynamics simulation with CarSim as the
+    vehicle dynamic software, IPC2 is used to provide a simulated                                     x(0) = (30100, 30, 0, −2.5)T .                         (34d)
+    driving environment with visual scene software SCANeR. The
+    MicroAutoBox is utilized as a rapid prototype estimator, and a                       The estimation results are shown in Fig. 9 and summarized
+    laptop computer is used to monitor the whole system and store                     in Table II. When the relative distance is larger than 100 m,
+    the data. Besides, CAN bus is used to transmit data among the                     the estimator does not work and the output is set to 30 m/s. At
+    above devices.                                                                    approximately 12 s, the estimator starts to estimate the preceding
+                                                                                      vehicle speed according to the measurements. To compare the
+    A. Longitudinal Estimation Results                                                performance of KF and MHE, the estimation results are consid-
+                                                                                      ered to converge to the true values if they satisfy the following:
+       In this experiment, the preceding vehicle starts 100 m from
+    the starting point and drives at an initial speed of 20 m/s. The                                          |vp (k|k) − vp (k)| ≤ 0.2,                     (35a)
+    host vehicle accelerates to 30 m/s at the starting point, and
+    then approaches and follows the preceding vehicle. To test the                                           |C4 (k|k) − C4 (k)| ≤ 0.2.                      (35b)
+
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 04:09:36 UTC from IEEE Xplore. Restrictions apply.
+   LIU et al.: REAL-TIME LONGITUDINAL AND LATERAL STATE ESTIMATION OF PRECEDING VEHICLE                                                                              8763
+
+
+
+
+   Fig. 7.   Hardware in loop experiment platform.
+
+
+
+
+   Fig. 8. The speed and relative distance between the vehicles: (a) speed profiles
+   of the two vehicles, (b) relative distance between the two vehicles.
+
+
+   A time index tcog is defined to represent the time period to the
+   convergence time. It should be noted that, an initial guess should
+   be given in advance. However, an exactly accurate initial guess
+                                                                                      Fig. 9. Estimation results of the longitudinal module: (a) estimation results
+   is very difficult to be obtained, it is very necessary to test the                 for scenario 1; (b) estimation results for scenario 2; (c) estimation results of the
+   converge speed under initial guess error. The speed estimation                     driver aggressiveness.
+   results with large initial error are shown in Fig. 9(a), after a
+   period of time, both the KF and MHE converge to the true
+                                                                                      B. Lateral Estimation Results
+   value. However, the KF requires more time to converge to the
+   true value than the MHE. This can be explained by the fact                            Based on the estimation result of preceding vehicle speed,
+   that, the KF utilizes only one current measurement to estimate                     the longitudinal speed adopted in lateral estimator module can
+   the speed. In contrast, n + 1 measurements are utilized in the                     be updated. To fully test the proposed MHE-based lateral esti-
+   MHE for the speed estimation, which means that, a poor initial                     mator performance, the preceding vehicle will perform double
+   guess plays a less improtant role in MHE. For comparison, the                      lane change manipulations under different conditions, which
+   speed estimation results with accurate initial guess are given                     including low-speed, accelerating, high-speed and decelerating
+   in Fig. 9(b), both the KF and MHE can achieve a high estimation                    conditions. The speed profile of the preceding vehicle is shown
+   accuracy. In addition, both the root mean square error (RMSE)                      in Fig. 9(a).
+   and maximum error emax of MHE are smaller than those of the                           To highlight the superiority of the MHE-based estimator
+   KF. Similar results are shown in Figs. 9(c) and 12.                                proposed in this paper, EKF-based and UKF-based estimators
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 04:09:36 UTC from IEEE Xplore. Restrictions apply.
+    8764                                                                       IEEE TRANSACTIONS ON VEHICULAR TECHNOLOGY, VOL. 70, NO. 9, SEPTEMBER 2021
+
+
+
+
+    Fig. 10.   Estimation results of lateral speed under DLC scenario: (a) estimation results of lateral speed, (b) absolute error of estimated lateral speed.
+
+
+
+
+    Fig. 11.   Estimation results of yaw rate under DLC scenario: (a) estimation results of yaw rate, (b) absolute error of estimated yaw rate.
+
+    are designed with the same parameters for the fair comparison.                       with Section III-D. Convergence with a large initial error and
+    In the UKF-based estimator, a simplified strategy is adopted. The                    robustness to measurement disturbance will be discussed later.
+    number of sigma point is set to be 12, and all the weighting fac-                      The estimation results are shown in Figs. 10 and 11. The lateral
+    tors of sigma points are set as wi = 1/12, where i = 1, 2, . . ., 12.                speed and its estimation are shown in Fig. 10(a). Both the EKF
+    Then, a standard UKF update process is used to derive the                            and MHE results track the true value well when the longitudinal
+    estimation results. Only the estimation accuracy is examined                         speed is varied under the four different conditions. There is a
+    here, thus the parameters and initial conditions are consistent                      short estimation delay between the estimation and true values,
+
+
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 04:09:36 UTC from IEEE Xplore. Restrictions apply.
+   LIU et al.: REAL-TIME LONGITUDINAL AND LATERAL STATE ESTIMATION OF PRECEDING VEHICLE                                                                       8765
+
+
+
+                                                                               TABLE III
+                                                                     ESTIMATION RESULTS COMPARISON
+
+
+
+
+                                                                                         The statistical results of the estimation are summarized in Ta-
+                                                                                         ble III.
+                                                                                            From the aforementioned discussion, it can be concluded
+                                                                                         that the MHE-based estimator has a much higher accuracy than
+                                                                                         the UKF-based and EKF-based estimators. Besides, due to the
+                                                                                         nonlinear model is adopted, the UKF-based estimator also has a
+                                                                                         better performance in accuracy than EKF-based estimator. This
+                                                                                         can be explained by the fact that, on the one hand, the EKF relies
+                                                                                         on a linearized approximate model near the operation point,
+                                                                                         and in contrast, a nonlinear model, which describes the system
+                                                                                         better, is used in MHE and UKF. On the other hand, there are
+                                                                                         multiple groups of measurements used for estimation in MHE, in
+                                                                                         contrast, only one group of measurement is used in the EKF and
+                                                                                         UKF, which means MHE has a deeper degree of optimization
+                                                                                         and makes MHE more robust to modelling uncertainties and
+                                                                                         inaccuracies.
+   Fig. 12. Estimation results for a large initial guess error: (a) estimation results
+   of lateral speed, (b) estimation results of yaw rate.
+                                                                                         C. Robustness Test
+                                                                                             In this subsection, the robustness of estimators will be tested.
+   which are approximately 0.1 s for MHE, 0.16 s for UKF, and                            Three common conditions including large initial guess error,
+   0.21 s for EKF. A shorter estimation delay implies a higher accu-                     measurement disturbances and parameter uncertainty are con-
+   racy. Meanwhile the absolute error of lateral speed estimation is                     sidered.
+   shown in Fig. 10(b), and the MHE absolute error is below that of                          1) Large Initial Guess Error: In real applications, an initial
+   UKF and EKF. Similar phenomena are also observed in the yaw                           state guess should be provided first before the estimation, and
+   rate estimation results, as shown in Fig. 11(a). As can be seen                       it is impossible to attain a completely accurate guess. It is very
+   in estimation results, estimators can track the real values well                      common that there is a large error between the given initial
+   under the four different conditions, and the estimation delays                        guess and the true value. Instead of the accurate guess used
+   are approximately 0.11 s for MHE, 0.25 s for UKF, and 0.32 s                          in Section IV, an initial guess with a large error is defined as
+   for EKF. The yaw rate estimation absolute error, which is given                       X(0) = (0.09, 0.06, 0.1, 0, 0, 0)T . The other parameters are set
+   in Fig. 11(b), also reveals that MHE has a better accuracy than                       as same as in Section IV, and the horizon length and sample
+   UKF and EKF.                                                                          time are set as N = 16 and Ts = 0.007 s, respectively. And the
+      To further investigate and compare the performance of MHE,                         convergence time tcog is defined as the time from giving the
+   UKF and EKF, two performance improvement indexes of EKF                               initial guess to obtaining an accurate value.
+   and UKF are defined as:                                                                   The comparison results are shown in Fig. 12 and listed in
+                    IndexEKF − IndexM HE                                                 Table III. As shown in Fig. 12, for a large initial guess error,
+         PEKF =                                 × 100%,        (36a)                     the estimation results will first abruptly increase in the opposite
+                            IndexEKF
+                                                                                         direction. Then, the estimation results decrease and converge to
+                       IndexU KF − IndexM HE
+         PU KF =                             × 100%.                          (36b)      the true value after a short period of time. The convergence
+                             IndexU KF                                                   speed of MHE is much higher than that of UKF and EKF.
+   Where IndexEKF , IndexU KF and IndexM HE are statistical                              According to the statistical results summarized in Table III, for
+   indexes, such as the RMSE, maximum absolute error emax and                            the lateral speed estimation, it takes approximately 0.64 s, 1.75 s
+   convergence time tcog , of the EKF, UKF and MHE, respectively.                        and 1.1 s to converge for MHE, UKF and EKF, respectively.
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 04:09:36 UTC from IEEE Xplore. Restrictions apply.
+    8766                                                                     IEEE TRANSACTIONS ON VEHICULAR TECHNOLOGY, VOL. 70, NO. 9, SEPTEMBER 2021
+
+
+
+
+                                                                                      Fig. 14.   RMSE and emax of lateral speed for the different mass deviation.
+
+
+
+
+    Fig. 13. Estimation results with a measurement disturbance: (a) estimation
+    results of lateral speed, (b) estimation results of yaw rate.
+
+
+
+
+    For the yaw rate estimation, approximately 0.81 s, 1.42 s and
+    1.63 s are required by the MHE, UKF and EKF, respectively, to
+    converge.
+       At the beginning, the measurements used in MHE, UKF and
+    EKF are similar, then the result is that their estimation accuracies
+    are very similar. The phenomenon also exits when the horizon
+    length of MHE is very small. As more measurements are utilized
+                                                                                      Fig. 15.   RMSE and emax of yaw rate for the different mass deviation.
+    in MHE, the inaccurate initial guess doesn’t play an important
+    role in the estimation. Then the estimated values in MHE can
+    converge to the true value much quickly.                                             As discussed above, only one group of measurements is used
+       2) Measurement Disturbances: It is also very common that                       in UKF and EKF, and when the disturbance is introduced, only
+    measurements may be polluted by unexpected disturbances.                          a polluted measurement can be derived by them. However based
+    Therefore, a good estimator should have a high robustness                         on the objective function Eq. (23), the estimation results in MHE
+    to the measurement disturbances. To test the robustness of                        is partly influenced by the polluted measurement. In other words,
+    estimators to external measurement disturbances, an external                      the current polluted measurement is less disruptive in MHE
+    measurement disturbance ydis = (3, 0.3, 5E − 2)T will be in-                      compared to UKF and EKF.
+    jected into the system at time instant t = 66 s. The other pa-                       3) Parameter Uncertainty: In this paper, the model parame-
+    rameters are kept the same as in Section IV. The convergence                      ters used in lateral estimator module are derived vehicle recog-
+    time tcog here is defined as the time period form measure-                        nition technologies and V2V. Thus, only the basic intrinsic
+    ment disturbance injection to estimation converge to the true                     parameters can be obtained. However, some of these parameters
+    value.                                                                            may vary under different scenarios. For example, the mass
+       The comparison results are shown in Fig. 13 and listed in                      of vehicle varies with different number of passengers. And a
+    Table III. After the disturbance is injected into the system,                     group of experiment is constructed to test the robustness of
+    both the MHE, UKF and EKF estimation results deviate from                         MHE estimator to the parameter uncertainty. In this paper,
+    the true values. After a small period of time, both the MHE                       due to the limited space, only the mass deviation is discussed
+    and EKF can converge to the true value, and the MHE con-                          here.
+    vergence speed is also much higher than that of the EKF.                             The range of mass deviation is set from −20% to 20% of
+    As indicated in Table III, the EKF requires 1.8 s and 1.4 s                       the basic mass. Two indices including RMSE and maximum
+    for the lateral speed and yaw rate estimation results converg-                    absolute error emax of MHE and EKF with different mass
+    ing to the true values, while in contrast, MHE only requires                      deviations are compared. The results of lateral speed are given in
+    1.1 s and 0.9 s, respectively. Compared with the MHE and                          Fig. 14. Both the RMSE and emax increase with the increasing
+    EKF, UKF has a very weak convergence ability for the ex-                          mass deviation. And a very small increase can be observed
+    ternal measurement disturbance, it takes more than 25 s to                        when the mass deviation is kept within ±10%. The results
+    converge the true value when the measurement is polluted by                       show that the presented estimators has a good robustness to
+    disturbance.                                                                      parameter uncertainties. The results of yaw rate are given in
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 04:09:36 UTC from IEEE Xplore. Restrictions apply.
+   LIU et al.: REAL-TIME LONGITUDINAL AND LATERAL STATE ESTIMATION OF PRECEDING VEHICLE                                                                           8767
+
+
+
+   Fig. 15, it can be seen that the estimators performance of yaw                      [11] Z. Liu et al., “Vision-based inter-vehicle distance estimation for driver
+   rate estimation is almost immune to mass deviation. This can be                          alarm system,” IET Intell. Transp. Syst, vol. 13, no. 6, pp. 927–932,
+                                                                                            2019.
+   explained that the direct measurement of the preceding vehicle’s                    [12] D. Helbing, P. Molnr, “Social force model for pedestrian dynamics,” Phys.
+   heading angle makes it possible to estimate the yaw rate directly                        Rev. E., Statist. Phys. Plasmas Fluids Relat. Interdiscip. Top., vol. 51,
+   without relying on the vehicle dynamics. It should be noted                              pp. 4282–4286, 1995.
+                                                                                       [13] R. Ding, M. Yu, H. Oh, and W. Chen, “New multiple-target tracking
+   that, the presented MHE estimator still has a better performance                         strategy using domain knowledge and optimization,” IEEE Trans. Syst.,
+   and robustness than the UKF and EKF based estimators with                                Man, Cybern., Syst., vol. 47, no. 4, pp. 605–616, Apr. 2017.
+   different mass deviations.                                                          [14] R. M. Jannes et al., “Characterizing the impact of production adaptive
+                                                                                            cruise control on traffic flow: An investigation,” Traa. B-Transp. Dynas.,
+                                                                                            vol. 7, no. 1, pp. 992–1012, 2019.
+                                V. CONCLUSION                                          [15] D. Song, R. Tharmarasa, T. Kirubarajan, and X. N. Fernando, “Multi-
+                                                                                            vehicle tracking with road maps and car-following models,” IEEE Trans.
+      In this paper, a modular integrated estimation scheme has                             Intell. Transp. Syst., vol. 19, no. 5, pp. 1375–1386, May 2018.
+                                                                                       [16] Y. Wang, Z. Zhou, C. Wei, Y. Liu, and C. Yin, “Host-target vehicle
+   been proposed for the preceding vehicle longitudinal and lateral                         model-based lateral state estimation for preceding target vehicles con-
+   states. With the consideration of different driver aggressiveness                        sidering measurement delay,” IEEE Trans. Ind. Inform., vol. 14, no. 9,
+   and model uncertainties, a linear moving horizon estimator was                           pp. 4190–4199, Sep. 2018.
+                                                                                       [17] J. Eilbrecht and O. Stursberg, “Hierarchical solution of non-convex optimal
+   designed to estimate the vehicle longitudinal speed. In order to                         control problems with application to autonomous driving,” Eur. J. Control.,
+   improve estimation accuracy, a nonlinear vehicle model was                               vol. 50, pp. 188–197, 2019.
+   adopted, then a a nonlinear moving horizon estimator with                           [18] S. Wei, Y. Zou, X. Zhang, T. Zhang, and X. Li, “An integrated lon-
+                                                                                            gitudinal and lateral vehicle following control system with radar and
+   MS method was designed to estimate the vehicle lateral states.                           vehicle-to-vehicle communication,” IEEE Trans. Veh. Technol., vol. 68,
+   Compared with SS method, the proposed MHE algorithm has                                  no. 2, pp. 1116–1127, Feb. 2019.
+   a shorter computational time by revising the objective function.                    [19] B. Zhang, “Reliable classification of vehicle types based on cascade
+                                                                                            classifier ensembles,” IEEE Trans. Intell. Transp. Syst., vol. 14, no. 1,
+   A series of simulations and HIL experiments were conducted to                            pp. 322–332, Mar. 2013.
+   test feasibility of hardware implementation and vehicular appli-                    [20] R. Baran, A. Glowacz, and A. Matiolanski, “The efficient real- and nonreal-
+   cation, as well as the effectiveness of the proposed estimators,                         time make and model recognition of cars,” Multimedia Tools Appl., vol. 74,
+                                                                                            no. 12, pp. 4269–4288, 2015.
+   the experiment results showed that the proposed estimators can                      [21] J. Fang, Y. Zhou, Y. Yu, and S. Du, “Fine-grained vehicle model
+   provide an accurate estimate of preceding vehicle states. For a                          recognition using a coarse-to-fine convolutional neural network architec-
+   large initial guess error and external measurement disturbance,                          ture,” IEEE Trans. Intell. Transp. Syst., vol. 18, no. 7, pp. 1782–1792,
+                                                                                            Jul. 2017.
+   MHE have a much higher convergence speed and robustness than                        [22] H. Khayyam, “Stochastic models of road geometry and wind condition
+   UKF and EKF. Due to the limited experimental conditions, no                              for vehicle energy management and control,” IEEE Trans. Veh. Technol.,
+   real vehicle data is tested in this study. Our future research will                      vol. 62, no. 1, pp. 61–68, Jan. 2013.
+                                                                                       [23] S. Milani, H. Khayyam, H. Marzbani, W. Melek, N. L. Azad and R.
+   be concentrated on the more extensive experimental validation                            N. Jazar, “Smart autodriver algorithm for real-time autonomous vehicle
+   of the proposed MHE estimator.                                                           trajectory control,” IEEE Trans. Intell. Transp. Syst., to be published,
+                                                                                            doi: 10.1109/TITS.2020.3030236.
+                                                                                       [24] W. Ping, L. Hanghang, Z. Lin, D. Haitao and C. Hong, “Design and
+                                      REFERENCES                                            experimental verification of real-time nonlinear predictive controller for
+                                                                                            improving the stability of production vehicles,” IEEE Trans. Control. Syst.
+    [1] S. Patole, M. Torlak, D. Wang, and M. Ali, “Automotive radars: A review             Technol., vol. 29, no. 5, pp. 2206–2213, Sep. 2021.
+        of signal processing techniques,” IEEE Signal Process. Mag., vol. 34, no. 2,   [25] C. V. Rao and J. B. Rawlings “Constrained process monitoring: Moving
+        pp. 22–35, Mar. 2017.                                                               horizon approach,”AIChE J., 2002, vol. 48, no. 1, pp. 97–109
+    [2] S. E. Shladover, “Connected and automated vehicle systems: Introduction        [26] M. Canale, L. Fagiano, and C. Novara, “A direct moving horizon approach
+        and overview,” J. Intell. Transp. Syst., vol. 22, no. 3, pp. 190–200, 2018.         to vehicle side-slip angle estimation,” in Proc. 49th IEEE Conf. Decis.
+    [3] L. Zhang et al., “An adaptive backstepping sliding mode controller to im-           Control, 2010, pp. 2898–2903
+        prove vehicle maneuverability and stability via torque vectoring control,”     [27] M. Zanon, J. Frasch, and M. Diehl, “Nonlinear moving horizon estimation
+        IEEE Trans. Veh. Technol., vol. 69, no. 3, pp. 2598–2612, Mar. 2020.                for combined state and friction coefficient estimation in autonomous
+    [4] H. Guo, D. Cao, H. Chen, C. Lv, H. Wang, and S. Yang, “Vehicle dynamic              driving,” in Proc. Eur. Control Conf., 2013, pp. 4130–4135
+        state estimation: State of the art schemes and perspectives,” IEEE/CAA J.      [28] W. Zhang, Z. Wang, C. Zou, L. Drugge and M. Nybacka, “Advanced vehi-
+        Automat. Sinica., vol. 5, no. 2, pp. 418–431, Mar. 2018.                            cle state monitoring: Evaluating moving horizon estimators and unscented
+    [5] X. Jin et al., “Online estimation of inertial parameter for lightweight             kalman filter,” IEEE Trans. Veh. Technol., vol. 68, no. 6, pp. 5430–5442,
+        electric vehicle using dual unscented kalman filter approach,” IET Intell.          Jun. 2019.
+        Transp. Syst, vol. 14, no. 5, pp. 412–422, 2020.                               [29] L. T. Biegler, Nonlinear Programming: Concepts, Algorithms, and
+    [6] A. Abosekeen et al., “Adaptive Cruise Control Radar-Based Positioning               Applications to Chemical Processes. Philadelphia, PA, USA: SIAM,
+        in GNSS Chanllenging Environment,” IET Radar Sonar and Navigation.,                 2010
+        vol. 13, no. 10, pp. 1666–1677, 2019.                                          [30] H. B. Pacejka, Tyre and Vehicle Dynamics. Oxford, U.K.: Butterworth-
+    [7] L. Guoqiang, and D. Gorges, “Ecological adaptive cruise control and                 Heinemann, 2012.
+        energy management strategy for hybrid electric vehicles based on heuristic     [31] C. Ahn, and H. E. Tseng, “Robust estimation of road friction coeffi-
+        dynamic programming,” IEEE Trans. Intell. Transp. Syst., vol. 20, no. 9,            cient using lateral and longitudinal vehicle dynamics.” Veh. System Dyn.
+        pp. 3526–3535, Sep. 2019.                                                           vol. 50,no. 6, pp. 1–25, 2012.
+    [8] W. Yang et al., “Research on longitudinal active collision avoidance of        [32] X. Xia et al., “Estimation of maximum road friction coefficient based on
+        autonomous emergency braking pedestrian system (AEB-P),” SENSORS.,                  lyapunov method.” Int. J. Automot. Technol. vol. 17, no. 6, pp. 991–1002,
+        vol. 19, no. 21, 2019, Art. no. 4671.                                               2016.
+    [9] T. Kirubarajan, Y. Bar-Shalom, K. R. Pattipati, and I. Kadar, “Ground target   [33] W. Helly, “Simulation of bottlenecks in single lane traffic flow,” in Proc.
+        tracking with variable structure IMM estimator,” IEEE Trans. Aerosp.                Theory Traffic Flow, 1959, pp. 207–238.
+        Electron. Syst., vol. 36, no. 1, pp. 26–46, Jan. 2000.                         [34] L. Zhang et al., Human-centered torque vectoring control for distributed
+   [10] M. Ulmke, and W. Koch, “Road-map assisted ground moving target track-               drive electric considering driving characteristics, IEEE Trans. Veh. Tech-
+        ing,” IEEE Trans. Aerosp. Electron. Syst., vol. 42, no. 4, pp. 1264-1274,           nol., vol. 70, no. 8, pp. 7386–7399, Aug. 2021.
+        Oct. 2006.
+
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 04:09:36 UTC from IEEE Xplore. Restrictions apply.
+    8768                                                                      IEEE TRANSACTIONS ON VEHICULAR TECHNOLOGY, VOL. 70, NO. 9, SEPTEMBER 2021
+
+
+
+                              Hanghang Liu received the B.S. degree in electric                                Haitao Ding graduated from Jilin University,
+                              engineering from the Henan University of Technol-                                Changchun, China, in June 2003 and received the
+                              ogy, Zhengzhou, China, in 2018 and the M.S. de-                                  Ph.D. degree in vehicle engineering. He is currently
+                              gree in control theory and control engineering from                              teaching with the State Key Laboratory of Auto-
+                              Jilin University, Changchun, China, in 2021. He is                               motive Simulation and Control, Jilin University. His
+                              currently working toward the Ph.D. degree in con-                                research interests include automotive dynamics, au-
+                              trol science and engineering with Tongji University,                             tomotive chassis dynamics control (ABS, ESP, EHB,
+                              Shanghai, China. His research interests include model                            chassis-integrated control), new energy vehicle (fuel
+                              predictive control and autonomous driving in the                                 cell vehicles, hybrid vehicles, pure electric vehicles,
+                              ground vehicle field.                                                            four-wheel hub drive electric vehicles) modeling,
+                                                                                                               simulation, and control, automotive electronics com-
+                                                                                       mon technology (CAN and vehicle bus technology, ECU design, embedded
+                                                                                       software development, HIL testing), driver modeling, and intelligent vehicle
+                                                                                       control.
+
+
+
+                                                                                                                   Hong Chen (Senior Member, IEEE) received the
+                                                                                                                   B.S. and M.S. degrees in process control from
+                              Ping Wang received the M.Eng. and Ph.D. degrees
+                                                                                                                   Zhejiang University, Hangzhou, China, in 1983 and
+                              from the Department of Control Science and Engi-                                     1986, respectively, and the Ph.D. degree in system
+                              neering from Jilin University, Changchun, China, in
+                                                                                                                   dynamics and control engineering from the Univer-
+                              2008 and 2011, respectively. From 2011 to 2015 and
+                                                                                                                   sity of Stuttgart, Stuttgart, Germany, in 1997. In
+                              from 2015 to 2020, she was with Jilin University as
+                                                                                                                   1986, she joined the Jilin University of Technology,
+                              an Assistant and Associate Professor. Since 2020,
+                                                                                                                   Changchun, China. From 1993 to 1997, she was a
+                              she has been a Professor with Jilin university. Her
+                                                                                                                   Wissenschaftlicher Mitarbeiter with the Institut fuer
+                              research interests include model predictive control,
+                                                                                                                   Systemdynamik und Regelungstechnik, University of
+                              nonlinear control, and applications in automotive sys-                               Stuttgart. Since 1999, she has been a Professor with
+                              tems.
+                                                                                       Jilin University and hereafter a Tang Aoqing Professor. From 2015 to 2019,
+                                                                                       she was the Director of the State Key Laboratory of Automotive Simulation
+                                                                                       and Control. In 2019, she joined Tongji University, Shanghai, China, as a
+                                                                                       Distinguished Professor. Her current research interests include model predictive
+                                                                                       control, nonlinear control, and applications in mechatronic systems focusing on
+                                                                                       automotive systems.
+
+
+
+                              Jiamei Lin received the M.Eng. degree in control                                   Fang Xu received the B.S. degree in automation
+                              theory and control engineering from Jilin University,                              and the Ph.D. degree in control theory and control
+                              Changchun, China, in 2019. She is currently an Engi-                               engineering from Jilin University, Changchun, China,
+                              neer with the State Key Laboratory of Automotive                                   in 2009 and 2014, respectively. She is currently an
+                              Simulation and Control. Her research interests in-                                 Associate Professor with the Department of Control
+                              clude automotive control and nonlinear control.                                    Science and Engineering, Jilin University. Her current
+                                                                                                                 research interests include model predictive control,
+                                                                                                                 optimization method, and field programmable gate
+                                                                                                                 array.
+
+
+
+
+Authorized licensed use limited to: King Mongkut's University of Technology Thonburi. Downloaded on March 17,2026 at 04:09:36 UTC from IEEE Xplore. Restrictions apply.
+

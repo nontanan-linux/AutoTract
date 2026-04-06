@@ -1,0 +1,1604 @@
+Received 13 August 2022; revised 12 November 2022; accepted 22 February 2023. Date of publication 3 March 2023; date of current version 23 March 2023.
+Digital Object Identifier 10.1109/OJITS.2023.3252399
+
+Constrained Control Allocation Improving Fault
+Tolerance of a Four Wheel Independently
+Driven Articulated Vehicle
+ALEXANDER SEIFFER
+
+1 , LUKAS SCHÜTZ1,2 , MICHAEL FREY
+
+3 , AND FRANK GAUTERIN
+
+3
+
+1 SHARE at KIT, Schaeffler Technologies AG & Co. KG., 76131 Karlsruhe, Germany
+2 Vehicle Dynamics and Redundancy, Knorr-Bremse Systeme für Nutzfahrzeuge GmbH, 71701 Schwieberdingen, Germany
+3 Institute of Vehicle System Technology, Karlsruhe Institute of Technology, 76131 Karlsruhe, Germany
+
+CORRESPONDING AUTHOR: A. SEIFFER (e-mail: alexander.seiffer@schaeffler.com)
+This work was supported by the KIT-Publication Fund of the Karlsruhe Institute of Technology.
+
+ABSTRACT In articulated vehicles steering is accomplished by adjusting the articulation angle.
+
+Commonly a steering actuator is used to pivot the two vehicle sections. This actuator can be dispensed
+with if the pivoting is controlled by selective distribution of the drive torques to the individually driven
+wheels instead. Since steering is a safety-critical function, it must be ensured even if one of the drive
+motors fails. For this purpose, we propose a control method for a fault-tolerant four wheel independently
+driven articulated vehicle. The control method was developed and tested in a simulation environment and
+validated on a 1:5 scale demonstrator vehicle. The proposed method with constrained control allocation
+maintains the desired velocity and articulation angle by distributing the driving torques to the four wheels
+considering the current actuator limits. Both the simulation and the vehicle tests show that the control
+method meets the control objectives even when a sudden actuator limit occurs during critical driving scenarios like cornering. Thus, the vehicle can keep its maneuverability in the event of a detected failure of
+a drive motor. Together with reliable failure detection, the proposed approach provides a basis for further
+development towards innovative fault-tolerant electric articulated vehicles that meet the requirements of
+functional safety.
+INDEX TERMS Articulated vehicle, chassis control, control allocation, drive-by-wire, fault tolerance,
+
+over-actuated vehicle, redundancy, resilience, steer-by-wire, vehicle dynamics control, wheel-individual
+drive.
+
+I. INTRODUCTION
+
+E
+
+LECTRIFICATION and automation are two major current development trends not only in the entire mobility
+sector but also regarding commercial vehicles [1]. An exemplary application for electric articulated vehicles are innovative sweepers [2], a use case that is also of interest in terms
+of automation [3]. In mining industry automated articulated
+haulers are a preferred solution, as articulated steering offers
+enhanced maneuverability [4] while automation increases
+safety of human operators [5].
+The review of this article was arranged by Associate Editor Pardis
+Khayyer.
+
+Drive-by-wire systems including steer-by-wire enable the
+deployment of automated driving functions. For lateral guidance the steer-by-wire control unit receives the steering
+commands from an input module and transmits the corresponding signals to an actuator that is connected to the
+steering gear module of the vehicle [6]. The steering command can come either from an operator interface (steering
+wheel) or, in the case of an automated driving vehicle, from
+a control unit [6], [7].
+Unlike conventional steering systems, there is no mechanical link between the driver’s input device and the steered
+wheels. Thus, the driver can no longer intervene as a fallback
+in the event of a malfunction of the steering actuation [6].
+
+This work is licensed under a Creative Commons Attribution 4.0 License. For more information, see https://creativecommons.org/licenses/by/4.0/
+VOLUME 4, 2023
+
+187
+
+SEIFFER et al.: CONSTRAINED CONTROL ALLOCATION IMPROVING FAULT TOLERANCE
+
+FIGURE 2. Demonstrator vehicle (scale 1:5) consisting of the front vehicle section
+(right) and the rear section (left). The sections are connected with an articulated
+swivel joint that is freely rotatable around the articulation axis and the longitudinal
+axis. The vehicle measures 920 mm in length and 375 mm in width and has a
+maximum articulation angle δ of 50◦ . The vehicle is driven by four electric motors
+(82 W per wheel).
+
+FIGURE 1. Actuator forces for longitudinal and lateral control of an articulated
+vehicle. (a) In conventional solutions longitudinal wheel forces Fx1 –Fx4 accelerate and
+decelerate the vehicle while the steering actuator (Fsteer ) adjusts the articulation
+angle δ. (b) An alternative concept uses the individually distributed wheel forces
+Fx1 –Fx4 for both longitudinal and lateral control by means of differential steering [10].
+In the considered case, forces Fx2 and Fx4 are increased compared to Fx1 and Fx3 ,
+which causes the front vehicle section to experience counterclockwise torque and the
+rear section to experience clockwise torque, resulting in a change in the articulation
+angle δ.
+
+The requirements for fault-tolerant steer-by-wire systems
+towards reliability and availability, both in manual operated and automated vehicles, are therefore very demanding
+[7], [8]. Classically, these requirements are met by using
+hardware redundancies, but there are alternative approaches,
+such as the architecture presented by Bergmiller [9], which
+reduces the need for hardware redundancies by exploiting
+vehicle-wide functional redundancies.
+Articulated vehicles are steered by pivoting the two
+vehicle sections. Commonly a hydraulic actuator is used
+to adjust the articulation angle δ (Fig. 1a) [11]. In the
+course of the electrification of articulated vehicles, hydraulic
+systems are replaced by electric drives and actuators,
+whereby the steering actuator is usually still designed as
+a hydraulic actuator [2], [12]. To reduce the energy consumption of the hydraulic steering system Xu et al. [13]
+proposed an assist-steering method based on drive-torque
+distribution (skid steering or differential steering) and
+obtained a reduction of the steering actuator force for
+about 41.2%.
+The use of differential steering in articulated vehicles not only enables the reduction of actuator load but
+also the complete substitution of the steering actuator
+(Fig. 1b). Lateral and longitudinal dynamics of the vehicle are controlled by distributing the longitudinal wheel
+forces Fx1 –Fx4 to the four individually driven wheels. This
+approach investigated by Wadephul et al. [10] enables full
+electrification of an articulated vehicle without hydraulic
+components.
+In order to make this type of steering actuation usable
+as steer-by-wire system in manually or autonomous driven
+articulated vehicles, it is necessary to ensure the vehicles
+188
+
+functionality even in the event of a drive motor failure. For
+this purpose we propose a vehicle dynamics control approach
+for a four wheel individually driven articulated vehicle in this
+paper. The approach allows for compensation of the effect
+of a drive motor failure on the vehicles maneuverability.
+For the investigation and development of the vehicle
+dynamics control a demonstrator vehicle (scale 1:5) was
+used (Fig. 2). In addition we set up a simulation model with
+the software tool MATLAB representing the vehicle dynamics of the demonstrator. The function of the proposed control
+approach is to follow the desired setpoints (vehicle velocity
+vsp and articulation angle δsp ) by adjusting the four control variables (drive torques MD1 –MD4 ) taking into account
+current actuator limits or failures. We developed the control approach based on the simulation model and tested it
+with defined driving maneuvers in combination with emulated actuator failures. To validate the results gained with
+the simulation model and to prove the functionality of the
+approach on a real vehicle we have carried out test drives
+with the demonstrator vehicle.
+This paper is organized as follows: Section II introduces
+the methodology of this work, including the description of
+the demonstrator vehicle, the corresponding vehicle dynamics model, and the maneuvers used for testing and validation.
+In Section III we describe the reference control method
+and the proposed control method with constrained control
+allocation. The results of the driving tests of the simulationbased study and those of the demonstrator vehicle tests
+are presented and discussed in Section IV, followed by the
+conclusion in Section V.
+II. METHODS AND PROCEDURES
+A. DEMONSTRATOR VEHICLE
+
+The demonstrator vehicle is an electric four wheel independently driven articulated vehicle, that is not equipped with
+any steering actuator (Fig. 2). It can be controlled manually
+via remote control, controlling articulation angle δ and driving force FDrive . In automated mode, it follows an offline
+defined time sequence of articulation angle δ and vehicle
+velocity v.
+VOLUME 4, 2023
+
+FIGURE 3. Placement of the main components within the demonstrator vehicle (top)
+and functional diagram (bottom): control unit (1), electric motor and gear units with
+motor controllers (2), motor speed sensors (3), articulation angle sensor (4) and
+battery (5).
+
+Sensors, motors, motor controllers, control unit and battery are the essential components of the mechatronic system
+(Fig. 3). The controller approach developed in the simulation
+environment (MATLAB) can be compiled and transferred to
+the control unit of the vehicle. The motor speeds nM1 –nM4
+and the articulation angle δ are available to the controller as
+measured input variables. The drive torques MD1 –MD4 are
+defined as output variables and result in the driving forces
+FD1 –FD4 .
+B. VEHICLE DYNAMICS SIMULATION MODEL
+
+The articulated vehicle is a multi-body system consisting
+of two bodies. We used a free body diagram of vehicle
+sections to find the system equations (Fig. 4). Assumptions
+and simplifications were made in order to set up the system
+equations. Due to the low height of the center of gravity
+and the low lateral acceleration, the vehicle can be assumed
+to be flat and weight transfer can be neglected. The lateral
+wheel forces Fy1 –Fy4 can be assumed to increase linearly
+with the corresponding lateral slip angles α1 –α4 , and the
+cornering stiffnesses c1,2 at the front axle and c3,4 at the
+rear axle are constant accordingly. There is no consideration of longitudinal slip, instead longitudinal wheel forces
+Fx1 –Fx4 are calculated directly as resultant forces from the
+driving forces FD1 –FD4 and the wheel and gear resistance
+forces FR . The functionality of the articulation joint J is represented by the joint forces Rx and Ry and the joint damping
+torque Md .
+The coordinate systems of the vehicle sections are placed
+in the corresponding centers of gravity CG1 and CG2 . The
+vehicle has four degrees of freedom, which are the minimal
+coordinates to describe the free dynamics of the system.
+These minimal coordinates correspond to the state variables
+of the model. They are the longitudinal velocity ẋ1 (which
+VOLUME 4, 2023
+
+FIGURE 4. Free body diagram of the two body system representing the
+demonstrator vehicle with longitudinal wheel forces Fx1 –Fx4 and lateral wheel forces
+Fy1 –Fy4 , joint forces Rx and Ry , damping torque Md , articulation angle δ, yaw rate of
+the front section (ψ̇1 ) and the rear section (ψ̇2 ), coordinate system of the front section
+(x1 , y1 ) and the rear section (x2 , y2 ). All other parameters of the vehicle model are
+listed in Table 3.
+
+is defined as vehicle velocity v), the lateral velocity ẏ1 and
+the yaw rate ψ̇1 of the front vehicle section as well as the
+articulation angle δ. All other quantities like the velocities
+and the yaw rate of the rear vehicle section and the lateral
+slip angle α1 –α4 can be calculated at any time from these
+four state variables.
+To derive the total system equation, all necessary components first need to be set up in the corresponding coordinate
+systems. Then they can be transformed into the front section
+coordinate system to evaluate the equilibrium conditions.
+For the detailed derivation, refer to Appendix A. The six
+scalar equations of the equilibrium conditions resulting from
+(46)–(49) have to be solved according to the highest order
+189
+
+SEIFFER et al.: CONSTRAINED CONTROL ALLOCATION IMPROVING FAULT TOLERANCE
+
+derivatives of the four state variables by eliminating the
+internal forces Rx and Ry . This can be done with MATLAB
+using the command solve in symbolic notation. Finally, these
+four equations are obtained:
+
+
+ẍ1 = f1 ẋ1 , ẏ1 , ψ̇1 , δ, δ̇, FD1 , FD2 , FD3 , FD4
+
+
+ÿ1 = f2 ẋ1 , ẏ1 , ψ̇1 , δ, δ̇, FD1 , FD2 , FD3 , FD4
+
+
+ψ̈1 = f3 ẋ1 , ẏ1 , ψ̇1 , δ, δ̇, FD1 , FD2 , FD3 , FD4
+
+
+δ̈ = f4 ẋ1 , ẏ1 , ψ̇1 , δ, δ̇, FD1 , FD2 , FD3 , FD4
+(1)
+To set up a first-order state-space representation, the states
+are substituted as follows:
+
+T
+z = ẋ1 ẏ1 ψ̇1 δ δ̇
+T
+
+u = FD1 FD2 FD3 FD4
+(2)
+The first order nonlinear state-space representation results in
+ż = f (z, u)
+
+z(0) = z0
+
+(3)
+
+By solving these differential equations, the states of the
+system can be calculated for given initial conditions and
+trajectories of the control variables u, which allows for the
+simulation of the vehicle behavior.
+C. TEST AND VALIDATION PROCEDURE
+
+We used two different maneuvers to evaluate the control
+approach. During the test run, a failure of a drive could be
+initiated to consider how the vehicle compensates for the
+failure. We ran each test with both the proposed approach
+and, to provide a benchmark for evaluation, additionally with
+a reference control approach as used by Wadephul et al. [10].
+First, we performed the investigations on the simulation model
+and then validated the results in selected aspects on the
+real vehicle.
+The first maneuver was a step-steer followed by a steadystate circular maneuver. We used it to investigate how the
+behavior of the vehicle differs during a step in the articulation
+angle setpoint, depending on whether a failure of a drive is
+present or not. In a further test, the failure was initiated
+later during the steady-state circular drive. From this, the
+immediate response of the control approach to a failure could
+be evaluated.
+In addition, a slalom maneuver was considered. Compared
+to the first maneuver, the required articulation angle in this
+case changes continuously, making this maneuver suitable for
+investigating the dynamic steering behavior before, during
+and after a failure. This allowed us to evaluate the vehicle’s
+driving behavior in critical situations such as a drive failure
+during an evasive maneuver.
+In the following, the maneuvers, failure scenarios and the
+quantities that were evaluated are considered in more detail.
+1) DRIVING MANEUVERS
+
+The step-steer maneuver included a short acceleration phase
+while driving straight and a step in the articulation angle
+190
+
+FIGURE 5. Setpoints. (a) Vehicle velocity vsp for the step-steer maneuver. (b) Vehicle
+velocity vsp for the slalom maneuver. (c) Articulation angle δsp for the step-steer
+maneuver. (d) Articulation angle δsp for the slalom maneuver.
+
+setpoint after 4 s followed by stationary circular maneuver at constant velocity. At the end of the maneuver,
+a braking process was initiated at a constant articulation
+angle.
+In order for the maneuver to be considered both demanding and representative of a real driving situation, the speed
+and articulation angle specifications are chosen in consideration of the step-steer definition of ISO 7401 [14]. There, a
+lateral acceleration of 4 m/s2 is recommended. Taking into
+account the vehicle scale, a lateral acceleration of at least
+0.8 m/s2 is therefore required.
+We choose a vehicle velocity vsp of 1 m/s and an articulation angle δsp of 0.5 rad (which equals approximately 29◦ )
+resulting in a turn radius of about 1 m, a yaw rate ψ̇1 of
+about 1 rad/s and a lateral acceleration of 1 m/s2 , which
+makes the maneuver exceeding the requirements of the
+ISO 7401.
+The slalom maneuver also started with straight line
+acceleration phase. After reaching constant velocity the
+articulation angle setpoint δsp was defined by a sine function with frequency of 0.225 Hz while the amplitude was
+slowly increased within 10 s to its maximum value of
+0.5236 rad (30◦ ).
+The course of the vehicle velocity vsp and articulation
+angle δsp setpoints is illustrated in Fig. 5.
+2) FAILURE SCENARIOS
+
+The failures of each of the four drives were considered separately. A failure was emulated by overwriting the corresponding drive torque MDi with 0 Nm. In the case of the step-steer
+maneuvers, the failure was initiated either from the beginning
+or during the stationary circular maneuver. The failure during the slalom maneuver was initiated at the moment of the
+highest steering torque demand, which enables a worst-case
+consideration.
+VOLUME 4, 2023
+
+TABLE 1. Experimental plan comprising maneuver and failure scenario.
+
+3) ANALYSIS
+
+The following values were recorded for the evaluation
+of the experiments: actual articulation angle δact , actual
+velocity vact , steering controller output MSteer and drive
+torques MD1 –MD4 .
+To quantitatively compare the performance of the two
+approaches, error metrics were applied to the evaluation
+intervals of interest. The maximum absolute deviation of the
+actual articulation angle from its setpoint is given by δ̂error ,
+while δRMSE is the root-mean-square error of the articulation
+angle deviation.
+4) RESULTING EXPERIMENTAL PLAN
+
+From preliminary tests with the reference method, we knew
+that with a positive articulation angle, the failure of the
+drive at the front left wheel (W1 ) is the most difficult
+failure to compensate, since it leads to the largest control
+deviations compared to failures of drives at other wheels.
+Therefore, mainly the failure of the drive at wheel W1 is
+considered. However, for the scenario of a sudden failure
+during a stationary circular maneuver, the experimental plan
+also includes the failures of the drives of the other wheels to
+evaluate how they affect the compensation behavior of the
+proposed method.
+The combination of driving maneuvers, failure scenarios,
+and control methods considered in this work resulted in the
+experimental plan shown in Table 1.
+III. CONTROL METHODS
+
+The vehicle considered has four independently driven wheels
+and is thus overactuated, since two drives on one axle are
+already sufficient to follow the setpoints of vehicle velocity
+vsp and articulation angle δsp (Fig. 1b).
+In a four wheel driven articulated vehicle, the available degrees of freedom can thus be used to distribute
+the drive torques MD1 –MD4 without unintentionally influencing the controlled process variable vehicle velocity vact
+and articulation angle δact .
+From this consideration, we concluded that a failure of
+a drive can be compensated immediately and completely
+VOLUME 4, 2023
+
+FIGURE 6. Integration of constrained control allocation and failure detection into
+the control method of an automated four wheel driven articulated vehicle.
+
+by suitable redistribution of the drive torques MD1 –MD4 by
+means of control allocation.
+In the following, a constrained control allocation module
+is presented which we added to the existing controller to
+provide a fault-tolerant control method. Its task is to compensate for the failure of a drive motor in such a way that the
+vehicle continues to drive without failure-induced deviation
+of velocity vact and articulation angle δact .
+A. CONCEPT OF THE PROPOSED CONTROL METHOD
+
+The proposed vehicle dynamics control with constrained
+control allocation was designed to be integrated into the
+overall vehicle control method of a steer-by-wire or an automated controlled articulated vehicle. A corresponding overall
+vehicle control structure is shown in Fig. 6. The automation function is based on the sense-plan-act paradigm [15],
+commonly used for automated driving.
+The vehicle trajectory controller realizes the planned
+motion of the trajectory by specifying the vehicle velocity vsp and articulation angle δsp . These are controlled in
+the vehicle dynamics controller by setting the total drive
+force FDrive and the steering torque MSteer . In manual driving mode, MSteer is set by the vehicle dynamics controller
+based on the driver’s steering angle input δsp , whereas
+the total drive force FDrive is determined directly by the
+driver.
+The total drive force FDrive and the steering torque MSteer
+serve as input variables for the control allocation module. It
+resolves the overactuation by deriving the four drive torques
+(actual controls) MD1 –MD4 from the two control objectives
+(MSteer , FDrive ).
+In addition to the main purpose, the fulfillment of the control objectives, the remaining degrees of freedom of the drive
+191
+
+SEIFFER et al.: CONSTRAINED CONTROL ALLOCATION IMPROVING FAULT TOLERANCE
+
+torque distribution can be used for the optimization of a secondary objective by setting up an optimization problem [16].
+Minimizing energy or maximizing driving safety by reducing the maximum driving force of the four wheels are two
+possible applications.
+The constrained control allocation must take into account
+the limitations of the drive torques Mlim,D1 –Mlim,D4 when
+distributing the drive torques. In the fault-free case, the limitations correspond to the nominal drive torque (2.2 Nm). If
+the failure of a drive is detected by the failure detection,
+this limitation is communicated to the constrained control
+allocation module and taken into account. This results in
+a distribution of the drive torques which fulfills the control action of the controller without the use of the defective
+drive.
+In the overall architecture shown, the vehicle dynamics
+control with control allocation can be understood as the inner
+control loop and the trajectory control (either conducted by
+the driver or by the controller of the automated function)
+as the outer control loop. The proposed method takes the
+approach of addressing the fault-tolerant functionality in this
+inner control loop to prevent the outer control loop from
+being affected in case of a drive failure. Therefore, the evaluation of the fault-tolerant behavior in this work is based
+on the control error of the inner control loop (articulation
+angle δ and vehicle velocity v).
+B. REFERENCE CONTROL METHOD
+
+The controller used by Wadephul et al. [10] was implemented as a reference. Velocity and articulation angle are
+each controlled in an independent PI and PID controller.
+In contrast to the control method proposed in Fig. 6, the
+control allocation approach of this reference control method
+does not consider constraints of the drive torques. Instead,
+the allocation problem is solved by specifying the following heuristic relations between the actuator torques and thus
+eliminating the degrees of freedom:
+MD3 = MD2 = MD2,3
+MD4 = MD1 = MD1,4
+
+(4)
+
+To find the mapping between the actual controls
+(MD1 –MD4 ) and the control objectives (MSteer , FDrive ) further
+assumptions are made:
+• FDrive is the sum of the four drive torques divided by
+the dynamic wheel radius rW .
+• With their respective lever arm, the two driving forces
+of an axle generate a torque about the articulated joint
+axis. The sum of both torques (taking into account the
+direction of action) results in the steering torque MSteer .
+The lever arms correspond to half the track width s1,2
+(Fig. 4).
+As for the demonstrator vehicle the track widths of both
+sections are equal we define the overall steering lever arm rS
+rS = 2s1 = 2s2
+192
+
+(5)
+
+FIGURE 7. Reference control method with PID-controllers for velocity and steering
+control with explicit ganging control allocation based on [10].
+
+With the dynamic wheel radius rW we get
+
+
+1
+1
+MD1,4 = rW
+FDrive − MSteer
+4
+rS
+
+
+1
+1
+MD2,3 = rW
+FDrive + MSteer
+4
+rS
+
+(6)
+
+This approach can also be described according to the explicit ganging method summarized by
+Oppenheimer et al. [16]. The control allocation problem
+can be formulated as
+Bδ = ddes
+with
+
+
+T
+δ = MD1 MD2 MD3 MD4
+T
+
+ddes = FDrive MSteer
+
+1
+1
+1
+1
+1
+B=
+rW − 14 rS 14 rS 14 rS − 14 rS
+
+(7)
+
+(8)
+
+where δ is the control vector, ddes the control objective vector
+and B the control effectiveness matrix.
+The ganging law becomes
+δ = Gδ pseudo
+with
+
+T
+
+δ pseudo = MD1,4 MD2,3
+
+T
+1 0 0 1
+G=
+0 1 1 0
+
+(9)
+
+(10)
+
+Solving
+BGδ pseudo = ddes
+
+(11)
+
+for the pseudo controls δ pseudo finally yields (6) again.
+The resulting control method with the two controllers and
+the control allocation is shown in Fig. 7.
+Tuning of the controller parameters on the demonstrator vehicle yielded KPv = 40.4, KIv = 20.2, KPδ = 2.23,
+VOLUME 4, 2023
+
+FIGURE 8. Proposed control method with constrained control allocation.
+
+A large value must be chosen for the weighting factor γ
+to achieve minimization of the control error rather than the
+control vector [17]. In the following we set γ = 1 and to
+achieve the required higher weighting of the second term
+relative to the first term in (14), we choose larger values
+for the elements of the weighting matrix W ddes compared to
+those of the weighting matrix W δ .
+With
+
+T
+δp = 0 0 0 0
+(16)
+the optimal control vector δ opt becomes
+
+KIδ = 2.58 and KDδ = 1.43. The parameters found on the
+real vehicle were also chosen for the controllers in the
+simulation model.
+C. PROPOSED CONTROL METHOD
+
+The proposed controller approach (see Fig. 8) differs from
+the reference solution with respect to the control allocation
+method used. Velocity and steering controllers are not modified. The fault-tolerant behavior of the proposed solution is
+taken into account by considering the drive torques limits
+Mlim,D1 –Mlim,D4 obtained from the failure detection module. For this purpose, an iterative constraint optimization
+method is chosen. Again the control allocation problem can
+be described according to equation (7) with
+T
+
+δ = MD1 MD2 MD3 MD4
+T
+
+ddes = FDrive MSteer
+
+1
+1
+1
+1
+1
+(12)
+B=
+rW −rSl rSr rSl −rSr
+A consideration of the effect of driving forces on the steering torque MSteer (see Appendix B) revealed that the steering
+lever arm rS cannot be assumed to be constant, as it was in
+the reference approach. According to the consideration, the
+pseudo steering lever arms rSr and rSl for the wheels on the
+left and right side of the vehicle are described below as a
+function of the articulation angle.
+
+
+1
+1
+rSl = s + l tan δact
+2
+2
+
+
+1
+1
+(13)
+rSr = s − l tan δact
+2
+2
+To solve the control allocation problem (7), it can be
+described as a mixed optimization problem according to
+Oppenheimer et al. [16] and Härkegård [17] with the
+objective to find a δ that minimizes
+
+
+J = W δ δ − δ p 2 + γ W ddes (Bδ − ddes )2
+(14)
+where δ p is the preferred control vector and u2 = uT u
+(2-norm). W δ and W ddes are the weighting matrices and their
+elements are defined as
+
+
+W δ = diag Wδ1 , . . . , Wδ4
+
+
+W ddes = diag Wd1 , Wd2
+(15)
+VOLUME 4, 2023
+
+δ opt = arg min W δ δ2 + W ddes (Bδ − ddes )
+δ<δ≤δ̄
+
+2
+
+(17)
+
+The vectors δ and δ̄ contain the lower and upper bounds
+and with the drive torques limits Mlim,D1 –Mlim,D4 they
+become
+T
+
+δ = −Mlim,D1 − Mlim,D2 − Mlim,D3 − Mlim,D4
+T
+
+(18)
+δ̄ = Mlim,D1 Mlim,D2 Mlim,D3 Mlim,D4
+The weighted least square problem (17) can be rewritten
+as in [17] and we get
+
+
+2
+W ddes B
+W ddes ddes )
+δ opt = arg min
+δ−
+(19)
+Wδ
+0
+δ<δ≤δ̄
+
+
+A
+
+b
+
+Therefore, the formulation solving the overdetermined
+system becomes
+δ opt = arg min Aδ − b
+δ<δ≤δ̄
+
+(20)
+
+Since MATLAB is used for both simulation and code
+generation for the vehicle controller, we used the operator “\”
+(or mldivide) [18] to receive the unconstrained least-squares
+solution of (20) as
+δ opt,unconstr = A\b
+
+(21)
+
+The control constraints are considered by an iterative
+redistribution scheme based on the one of the redistributed
+pseudo inverse approach presented in [16]. The solution of
+the unconstrained system (21) is checked for compliance
+with the limits given in the constraint vectors δ and δ̄. For
+the fault-free case the constraint vectors contain the nominal
+drive torques and in case of a failure the corresponding value
+is set to 0 Nm. If at least one of the control values violates
+the constraints, the following steps are performed until all
+control values are within the constraint limits.
+1) Set all control values δ(i) that violate the constraints to
+their corresponding limit value δ(i) or δ̄(i) respectively.
+2) Define δ lim containing all limited control values, the
+other elements are 0.
+3) Reduce the control objective ddes by the effect of the
+limited control values
+d∗des = ddes − Bδ lim
+
+(22)
+193
+
+SEIFFER et al.: CONSTRAINED CONTROL ALLOCATION IMPROVING FAULT TOLERANCE
+
+TABLE 2. Summary of the results of the simulation and the demonstrator vehicle test runs based on the two error metrics δ̂error and δRMSE . For the runs using the proposed
+method, the relative differences of the metrics with respect to the reference run are given in parentheses. For the test runs 1.1, 1.2, 2.1 and 2.2, two different intervals of the
+maneuver are evaluated.
+
+4) Define B∗ and W ∗δ by deleting all rows and/or columns
+in B and W δ that correspond to an limited control
+value.
+5) Solve the reduced least squares problem of the unconstrained controls
+
+
+W ddes B∗  W ddes d∗des )
+(23)
+δ ∗opt =
+W ∗δ
+0
+6) Return the control vector δ opt containing both constrained control values (δ lim ) and unconstrained control
+values (δ ∗opt )
+The behavior of the constrained control allocation can be
+adjusted by the specification of the matrices W δ and W ddes .
+As mentioned above, it is important that the elements in
+W ddes are significantly larger than those in W δ . By selecting
+different sizes for the individual elements in W δ , it is possible, for example, to distribute the drive torques preferentially
+to one of the vehicle axles. The specification of W ddes can be
+used accordingly to prioritize the fulfillment of the two control objectives against each other. For the given application,
+we assumed that the fulfillment of the steering control is to be
+prioritized higher than that of the drive control, which is why
+Wd1 < Wd2 was chosen. The tests considered in the simulation and on the demonstrator vehicle were
+√ the
+√ performed with
+following values: Wd1 = 10, Wd2 = 1500, Wδ1,...,4 = 2.
+IV. RESULTS AND DISCUSSION
+
+The results of the test runs both in the simulation and with the
+demonstrator vehicle are represented by uniform plots. For
+each test run considered, the measurements of the attempt
+using the reference method (index “rm”) and the proposed
+method (index “pm,”) are shown in a common plot. The
+quantities from top to bottom in the figure are: vehicle
+velocity vact , articulation angle δact , steering torque MSteer ,
+wheel torques of the reference method MD1 ,rm –MD4 ,rm and
+wheel torques of the proposed method MD1 ,pm –MD4 ,pm . The
+194
+
+resulting error metrics for each test run are summarized in
+Table 2. To illustrate the test drives of the demonstrator vehicle, they are documented in a video that can be accessed
+via [19].
+A. STEP-STEER WITHOUT DRIVE FAILURE
+
+Fig. 9 shows the result plots of the step-steer maneuver without drive failure (test runs 1.1 and 1.2) whereas the left
+column contains the results of the simulation and the right
+column those of the tests with the demonstrator vehicle.
+The target velocity was reached after about 1 s followed
+by a small overshoot of 0.05 m/s in the simulation and
+0.1 m/s on the demonstrator vehicle. In the simulation, the
+velocity was constant in the further course, while on the
+demonstrator vehicle a periodic oscillation around the setpoint value could be observed. The resulting velocity of the
+reference method and proposed method variants were identical. The period of the oscillation of the velocity corresponds
+to the duration of one round trip of the driven circle. We
+attribute the cause to the slightly tilted floor at the location
+of the test drives.
+The demonstrator vehicle reached the target articulation
+angle 0.3 s after the setpoint signal and exceeded the setpoint value by 0.03 rad (1.7◦ ) with the proposed method.
+In the further course and also during braking of the vehicle, the articulation angle remained constant with deviations
+smaller than 0.025 rad (1.4◦ ). The articulation angle in the
+simulation showed a slower control response and an overshoot of 0.08 rad (4.6◦ ) which was the largest deviation of
+the simulation from the demonstrator vehicle test results.
+We attribute this behavior to the fact that the controller
+parameters have been optimized for the demonstrator vehicle and the same parameters were used in the simulation.
+Due to deviations of the simulation model from reality, the
+controller in the simulation did not behave identically to the
+one of the demonstrator vehicle. The steering torque required
+for step steer was 2.1 Nm in the simulation and 2.3 Nm on
+VOLUME 4, 2023
+
+FIGURE 9. Results of the step-steer maneuvers without failure (test runs 1.1 and 1.2) for the two attempts with reference control method (rm) and proposed control method
+(pm). (a) Results from the simulation test runs. (b) Results from the demonstrator vehicle test runs.
+
+the demonstrator vehicle. During continuous cornering, the
+steering torque required to maintain the articulation angle
+was approximately 0.1 Nm.
+VOLUME 4, 2023
+
+As expected from the torque distribution of the reference
+method, the drive torques of the diagonally opposite wheels
+were identical. During step-steer, negative drive torques were
+195
+
+SEIFFER et al.: CONSTRAINED CONTROL ALLOCATION IMPROVING FAULT TOLERANCE
+
+applied at wheels W1 and W4 in order to generate the
+required steering torque. When the proposed method was
+used, comparable results were obtained, although different
+drive torques were applied after step-steer due to the different sizes of the pseudo lever arms of the four wheels.
+During the entire maneuver, none of the drives reached its
+maximum actuating torque of 2.2 Nm, from which it can be
+concluded that no constraint violation occurred when solving the least square problem and thus no redistribution had
+to take place.
+Overall, it can be said that the behavior of the demonstrator
+vehicle and the simulation model showed good compliance,
+apart from the behavior of the steering controller in the
+simulation as described above. On the demonstrator vehicle,
+the controllers successfully tracked the course of the set
+points, regardless of the control allocation selected (reference
+method or proposed method).
+In the following the focus is on the demonstrator vehicle
+test results and the differences between the reference method
+and the proposed methods in context of drive failures.
+
+B. STEP-STEER WITH DRIVE FAILURE
+
+Using the reference control method (test run 2.1) a failure
+of drive the at the front left wheel resulted in unintended
+cornering with an articulation angle of 0.30 rad (17◦ ) during the acceleration phase (Fig. 10). After the step-steer
+the articulation angle oscillated between 0.43 rad (25◦ ) and
+0.60 rad (34◦ ). When the vehicle decelerated the articulation
+angle was reduced to 0.02 rad (1.1◦ ).
+With the proposed control method (test run 2.2), the vehicle could be held straight when accelerating. The step steer
+angle was achieved with an overshoot of 0.07 rad (4.0◦ ),
+after which a decaying oscillation between 0.45 rad (26◦ )
+and 0.52 rad (30◦ ) occurred. During braking, the articulation
+angle was kept constant. Compared to the reference method,
+the root-mean-square error δRMSE of the entire maneuver was
+reduced by 70% from 0.124 rad to 0.037 rad (Table 2).
+The reference control method does not take the failed
+drive into account. The unrealized drive torque acts like
+an external disturbance which must be compensated by the
+controller. The controller reacts to the control deviation by
+increasing the control value (see curve Msteer,rm ). However,
+the reaction is not that fast that an immediate compensation
+of the disturbance is possible. The disturbance effect of the
+failed actuator also influences the controller dynamics, so
+that even in the steady-state case the controller no longer
+has the same stability as without failure.
+With the proposed control method, the drive failure is considered by setting the control value limitation for the failed
+actuator to 0 Nm. This results in a violation of the unconstrained solution of the least squares problem and the
+redistribution is performed throughout the maneuver. Since
+none of the other actuators reach their maximum actuating
+torque, a single iteration of the redistribution always results
+in a valid solution.
+196
+
+FIGURE 10. Results of the step-steer maneuvers with permanent failure of the front
+left drive from the demonstrator vehicle test runs 2.1 and 2.2, respectively for the two
+attempts with reference control method (rm) and proposed control method (pm).
+
+The curve of the steering torque does not deviate significantly from the corresponding curve of test run 1.2 (step-steer
+without drive failure). We see this as a proof that the control
+VOLUME 4, 2023
+
+allocation redistributes the controller output despite the failed
+actuator in such a way that the desired effect of the controller output variable is achieved. The controller dynamics
+are thus preserved.
+Compared to the other drive torques, the torque of the
+right rear wheel obtains the largest values during the maneuver. During acceleration, the maximum torque of this wheel,
+measuring 1.1 Nm, is twice as high as the drive torque of
+the other wheels.
+With regard to lateral dynamics, the results provide
+information on the extent to which the system reaches its
+limits during this maneuver in the event of failure. At constant circular speed, the failure of the front left drive results
+in a maximum required drive torque at the rear right drive
+of 0.37 Nm, which corresponds to 17% of the drive torque
+capacity of 2.2 Nm.
+More demanding than steady-state circular driving is the
+change of the articulation angle during the step steer. Here,
+the maximum drive torque is 0.53 Nm, which corresponds
+to 24% of the drive torque capability. Thus, it must be verified that the rate achieved meets the requirements in case
+of the failure. The ISO 7401 standard specifies a maximum steering wheel angle rate of 500 ◦ /s [14]. To apply this
+specification to an appropriate articulation angle rate of an
+articulated vehicle, we consider the duration required to reach
+the maximum steering angle from neutral position. Assuming
+a passenger car with 540◦ steering wheel angle difference
+from center to maximum steering wheel angle [20], a steering wheel angle rate of 500 ◦ /s corresponds to a duration of
+1.08 s. Taking into account the maximum articulation angle
+of the articulated vehicle, this results in a corresponding
+maximum articulation angle rate requirement of 0.81 rad/s.
+From Fig. 10 it can be observed that the achieved articulation angle rate is 0.97 rad/s. From this we conclude that
+the selected maneuver exceeds the requirements for the stepsteer specified in the ISO 7401 standard not only in terms
+of lateral acceleration (see Section II-C1), but also in terms
+of maximum steering rate. Yet the maximum drive torque of
+a single wheel reaches only 24% of its drive torque capacity. This indicates that with the proposed approach, higher
+lateral accelerations can be achieved without reaching the
+system limit, even in the case of a drive failure.
+C. DRIVE FAILURE WHILE CORNERING
+
+The evaluation of test runs 3.1 and 3.2 (Fig. 11) focuses on
+the period after the sudden failure of the drive. The results
+at the beginning of the maneuver were identical to the stepsteer maneuver without failure (test runs 1.1 and 1.2) and the
+behavior at the end of the maneuver were similar to that of
+the step-steer with permanent drive failure (test runs 2.1 and
+2.2). When using the reference control method, 4 s after the
+failure of the drive, the deviation of the articulation angle
+reaches 0.16 rad (9.2◦ ). After that, oscillations occurred as
+in test run 2.1. Overall, the resulting root-mean-square error
+δRMSE for the evaluation interval after the drive failure is
+0.130 rad.
+VOLUME 4, 2023
+
+FIGURE 11. Results of the step-steer maneuvers with sudden failure of the front left
+drive at t = 12 s (indicated by dotted vertical line) from the demonstrator vehicle test
+runs 3.1 and 3.2, respectively for the two attempts with reference control method (rm)
+and proposed control method (pm).
+
+The use of the proposed control method resulted in
+no failure-induced deviation of the articulation angle, and
+the resulting root-mean-square error δRMSE was reduced to
+197
+
+SEIFFER et al.: CONSTRAINED CONTROL ALLOCATION IMPROVING FAULT TOLERANCE
+
+FIGURE 12. Comparison of sudden failures of different drives during the step-steer maneuver from the demonstrator vehicle test runs, respectively for the two attempts with
+reference control method (rm) and proposed control method (pm). The time of failure is indicated by dotted vertical line. (a) Test runs 3.1 and 3.2. (b) Test runs 4.1 and 4.2.
+(c) Test runs 5.1 and 5.2. (d) Test runs 6.1 and 6.2.
+
+0.015 rad which corresponds to a change of −88% compared to the reference method. When the failure occurred,
+there was an immediate redistribution in which the drive
+torque MD4 was increased and the drive torque MD3 was
+slightly reduced. Intervention by the steering controller was
+not required, as can be seen from the unchanged course of
+the steering torque.
+D. COMPARISON OF THE DRIVE FAILURES ON
+DIFFERENT WHEELS
+
+Failures on different drives vary in terms of their effect on
+the course of the articulation angle when using the reference
+method. As can be seen from Fig. 12 and Table 2, with the
+reference method, a failure of a drive on one of the inner
+curve wheels of the demonstrator vehicle results in a larger
+maximum control error δ̂error (0.439 rad on W1 and 0.285 rad
+on W3 ) compared to a failure on the drives of the outer
+wheels (0.147 rad on W2 and 0.117 rad on W4 ).
+In all failure cases the use of the proposed method leads
+to a reduction of the maximum control error δ̂error (−93%
+on W1 , −72% on W2 , −88% on W3 , −67% on W4 ) as well
+as the root-mean-square error δRMSE (−88% on W1 , −78%
+on W2 , −84% on W3 , −60% on W4 ).
+To evaluate the performance of the failure compensation,
+we also compare the maximum deviation δ̂error in the failure
+cases with the maximum deviation in the failure-free case.
+We therefore use the maximum deviation of test run 1.1 as
+the reference value (0.039 rad). According to Table 2 in the
+test runs with the proposed method, a failure at the rear
+198
+
+right wheel resulted in the same deviation as the reference
+metric. The metric for a failure at the front right wheel is
+5% larger, and at the front left wheel and rear left wheel
+the maximum deviation in the failure case is even smaller
+than that of the reference (−21% and −15%, respectively).
+It can be concluded that using the proposed method, the
+maximum deviation errors in all four failure cases do not
+differ significantly from to the failure-free reference run and,
+on average, even lead to a better overall performance.
+When defining the test plan (see Section II-C4), the focus
+of the analysis was on the failure of the front left drive when
+cornering to the left. This was done on the basis of findings
+from preliminary tests, which showed that the failure of the
+front left wheel in this driving situation represents the worst
+case. This finding can be confirmed from the results, since
+both δ̂error and δRMSE become maximum for the drive failure
+at wheel W1 when using the reference method.
+E. DRIVE FAILURE DURING DYNAMIC DRIVING
+MANEUVER (SLALOM)
+
+The slalom maneuver test runs 7.1 and 7.2 were only conducted in simulation. Test drives with the demonstrator
+vehicle were not possible because the test site, which was
+chosen for its smooth surface in order to record measurement data without disturbance, did not offer the required
+length of about 27 m. The results are shown in Fig. 13.
+Before the failure, both the reference control method and
+the proposed control method followed the sinusoidal articulation angle setpoint with a time offset of 0.45 s and an
+VOLUME 4, 2023
+
+drive torques after the failure led to an inconsistent amplitude
+of the resulting articulation angle curve and thus to an
+inaccurate vehicle guidance behavior. Again, the course of
+the articulation angle was not influenced by the actuator
+failure when the proposed control method was used. The
+steering torque output by the controller followed the same
+sinusoidal curve as before the failure. The curves of the
+resulting drive forces showed a periodic but no longer sinusoidal curve after the failure. This is due to the pseudo
+lever arms which constantly change with the articulation
+angle.
+V. CONCLUSION
+
+FIGURE 13. Results of the slalom maneuvers with sudden failure of the front left
+drive at t = 15.9 s (indicated by dotted vertical line) from the simulation test run (test
+runs 7.1 and 7.2), respectively for the two attempts with reference control method (rm)
+and proposed control method (pm).
+
+amplitude reduction of 14%. At the moment of the highest
+steering torque the drive failure was initiated (t = 15.9 s).
+The reference method without active redistribution of the
+VOLUME 4, 2023
+
+With the simulation model and demonstrator vehicle studies we could prove that the proposed control method
+can compensate for the failure of a drive motor of the
+four-wheel-drive articulated vehicle. After the drive failure
+the vehicle continued to follow the course of the setpoints for articulation angle and velocity without negative
+influence at the same level as before, even in dynamic situations such as acceleration, deceleration or slalom driving.
+Our approach of a control allocation which we formulated as a constrained weighted least squares problem
+proved to be a suitable solution for the intended target.
+In failure-free operation the proposed controller approach
+can additionally use the available degrees of freedom of
+the drive torque distribution to achieve certain optimization
+objectives, which could be investigated in further
+research.
+With the results we also could verify the validity of the
+used correlations in the control effectiveness matrix and the
+flexible pseudo lever arms.
+The controllers for velocity and articulation angle, which
+precede the control allocation, were not the focus of this
+work and were implemented as simple PID controllers. The
+results showed that the guidance and disturbance behavior of
+the controller offers further potential for optimization, since
+control deviations occurred during the step-steer maneuver and especially during the slalom maneuver regardless
+of whether a drive has failed or not. Improvements could
+be achieved by alternative controller approaches such as
+cascaded PID controllers, gain-scheduled PID controllers,
+feedback linearization, linear–quadratic regulator or model
+predictive control.
+For use in automated vehicles, not only fault-tolerant realization of the desired articulation angle is necessary, but also
+reliable path tracking. We consider our presented approach
+for a fault-tolerant vehicle dynamics controller as a prerequisite for the fault-tolerant functionality of a higher-level
+trajectory or path tracking controller. By reliably realizing
+the output variables of the path tracking controller, it can
+continue its functionality without being affected by a drive
+failure. Considering the behavior of a path tracking controller
+in combination with the proposed vehicle dynamics controller was not part of this work and should be investigated
+in further research.
+199
+
+SEIFFER et al.: CONSTRAINED CONTROL ALLOCATION IMPROVING FAULT TOLERANCE
+
+TABLE 3. Vehicle model parameters and values for the demonstrator vehicle.
+
+the vectors with rear section coordinates (index R) are
+transformed into the front section coordinate system:
+rFCG2 →W3 = RR→F rRCG2 →W3
+rFCG2 →W4 = RR→F rRCG2 →W4
+rFCG2 →WJ = RR→F rRCG2 →WJ
+
+(27)
+
+For angular velocity and angular acceleration of CG1 applies:
+T
+
+ωFCG1 = 0 0 ψ˙1
+T
+
+d
+α FCG1 = ωFCG1 = 0 0 ψ¨1
+(28)
+dt
+And for CG2 we get
+T 
+
+T
+ωFCG2 = 0 0 ψ˙2 = 0 0 ψ˙1 − δ̇
+(29)
+and
+For the integration of the proposed control method into
+the overall control structure of a steer-by-wire or automated
+vehicle, a failure detection will be needed (Fig. 6). This
+can be a diagnostic system within the individual control
+units of the drives or a central system that detects the
+errors by analyzing various vehicle sensors or the vehicle
+behavior.
+Overall, we conclude that the proposed control approach is
+an appropriate solution in all respects to serve as a basis for
+further development of fault-tolerant drive-by-wire solutions
+for electrified articulated vehicles.
+APPENDIX A
+DERIVATION OF SYSTEM EQUATIONS
+
+This section describes the derivation of the system equation
+in detail and relates to Fig. 4. The vehicle parameters used
+in the model are described in Table 3 including the values
+identified for the demonstrator vehicle.
+The position vectors from the center of gravity CG1 of
+the front vehicle section to the contact point of the front
+wheels W1 and W2 and to the articulation joint J in coordinates of the front section coordinate system (index F) are
+found as
+
+T
+1
+rFCG1 →W1 = −lCG1
+0
+2 s1
+
+T
+rFCG1 →W2 = −lCG1 − 12 s1 0
+T
+
+rFCG1 →J = −lCG1 − l1 0 0
+(24)
+Similarly, the vectors from CG2 to the rear wheels and the
+articulated joint can be found in coordinates of the rear
+section coordinate system as
+
+T
+1
+rRCG2 →W3 = lCG2
+0
+2 s2
+
+T
+rRCG2 →W4 = lCG2 − 12 s2 0
+T
+
+rRCG2 →J = lCG2 + l2 0 0
+(25)
+With the rotation matrix
+⎡
+cos(δ)
+RR→F = ⎣− sin(δ)
+0
+200
+
+sin(δ)
+cos(δ)
+0
+
+⎤
+0
+0⎦
+1
+
+(26)
+
+T 
+
+d F
+ωCG2 = 0 0 ψ¨2 = 0 0
+dt
+The velocity of CG1 is found as
+T
+
+vFCG1 = ẋ1 ẏ1 0
+
+α FCG2 =
+
+T
+ψ¨1 − δ̈
+
+(30)
+
+(31)
+
+The acceleration is determined by deriving the velocity
+vector. It should be noted that the basis vectors are taken into
+account in the derivation, since they change their orientation
+with the vehicle. For CG1 we get:
+
+T
+aFCG1 = ẍ1 − ẏ1 ψ̇1 ÿ1 + ẋ1 ψ̇1 0
+(32)
+The velocity vector of CG2 can be calculated via an
+intermediate step by considering the velocity vFJ of the
+articulated joint J. With (31), (28) and (24) we find
+vFJ = vFCG1 + ωFCG1 × rFCG1 →J
+
+(33)
+
+With the position vector from J to CG2 and the rotational
+velocity of CG2 (29) we first get
+vFCG2 = vFJ + ωFCG2 × rFJ→CG2
+
+(34)
+
+vFCG2 = vFCG1 + ωFCG1 × rFCG1 →J
+
+
++ ωFCG2 × −rFCG2 →J
+
+(35)
+
+and finally
+
+The derivation of (33) results in
+
+
+aFJ = aFCG1 + ωFCG1 × ωFCG1 × rFCG1 →J
++ α FCG1 × rFCG1 →J
+
+(36)
+
+With (34) and (36) the acceleration of CG2 is given as
+
+
+
+aFCG2 = aFJ + ωFCG2 × ωFCG2 × −rFCG2 →J
+
+
+(37)
++ α FCG2 × −rFCG2 →J
+The velocities at the positions of the wheels are derived
+analogously and result in:
+vFW1 = vFCG1 + ωFCG1 × rFCG1 →W1
+vFW2 = vFCG1 + ωFCG1 × rFCG1 →W2
+VOLUME 4, 2023
+
+vFW3 = vFCG2 + ωFCG2 × rFCG2 →W3
+vFW4 = vFCG2 + ωFCG2 × rFCG2 →W4
+
+(38)
+
+The slip angles are calculated from the components of the
+velocity vectors of the wheels as follows:
+ 
+vy
+(39)
+α = arctan
+vx
+The components of the velocity vectors of the wheels can
+be found as
+
+
+vWi ,x = 1 0 0 vWi
+
+
+vWi ,y = 0 1 0 vWi
+(40)
+For the calculation of the slip angles at the rear wheels, the
+velocity vectors (38) must be described in the coordinate
+system of the rear section:
+−1
+
+vRW3 = RR→F
+vFW3
+−1
+
+vRW4 = RR→F
+vFW4
+(41)
+We finally get the slip angles as
+⎛
+
+⎞
+
+vFW ,y
+α1 = arctan⎝  1  ⎠
+ F 
+vW1 ,x 
+⎞
+⎛
+vFW2 ,y
+⎠
+α2 = arctan⎝ 
+ F 
+vW2 ,x 
+⎞
+⎛
+vRW3 ,y
+⎠
+α3 = arctan⎝ 
+ R 
+vW3 ,x 
+⎞
+⎛
+vRW4 ,y
+⎠
+α4 = arctan⎝ 
+ R 
+vW4 ,x 
+
+m1 aFCG1 = FFW1 + FFW2 + RF
+
+(46)
+
+From the angular acceleration (32) and the forces (43) with
+the corresponding lever arms (24) as well as the moment
+vector (45) follows the moment equilibrium of the front
+section:
+I1 α FCG1 = rCG1 →W1 × FFW1 + rFCG1 →W2 × FFW2
++ rFCG1 →J × RF − MFD
+
+m2 aFCG2 = FFW3 + FFW4 − RF
+
+(47)
+
+(48)
+
+From the angular acceleration (37) and the forces (44) with
+the corresponding lever arms (25) as well as the moment
+vector (45) follows the moment equilibrium of the rear
+section:
+I2 α FCG2 = rCG2 →W3 × FFW3 + rFCG2 →W4 × FFW4
+− rFCG2 →J × RF + MFd
+
+(49)
+
+(42)
+
+And the wheel forces of the rear section can be found as
+FFW3 = RR→F FRW3
+⎡
+⎤
+
+FD3 − FR sgn vFW3 ,x
+⎥
+⎢
+= RR→F ⎣
+⎦
+−c3,4 α3
+0
+
+VOLUME 4, 2023
+
+From the acceleration (32) and the forces (43) follows the
+equilibrium of forces of the front section:
+
+From the acceleration (37) and the forces (44) follows the
+equilibrium of forces of the rear section:
+
+The forces derived from the free body diagram (Fig. 4)
+can now be expressed vectorially.
+The wheel forces and joint forces of the front section
+become
+
+
+
+T
+FFW1 = FD1 − FR sgn vFW1 ,x
+−c1,2 α1 0
+
+
+
+T
+−c1,2 α2 0
+FFW2 = FD2 − FR sgn vFW2 ,x
+T
+
+RF = Rx Ry 0
+(43)
+
+FFW4 = RR→F FRW4
+⎡
+⎤
+
+FD4 − FR sgn vFW4 ,x
+⎥
+⎢
+= RR→F ⎣
+⎦
+−c3,4 α4
+0
+
+Since the slip angles have a singularity when the vehicle is
+standing still, the Fy component of the wheel force vectors
+have to be set to 0 in this case.
+MFD is the damping torque that includes friction in
+the articulation joint and effects that occur in the wheel
+contact while pivoting. Using the angular velocities from
+equation (28) and (29), the damping factor d results in
+
+
+(45)
+MFD = d ωFCG1 − ωFCG2
+
+(44)
+
+APPENDIX B
+DERIVATION OF PSEUDO STEERING LEVER ARMS
+
+The pseudo steering lever arms rSi have to be found so that
+MSteer = −FD1 rS1 + FD2 rS2 + FD3 rS3 − FD4 rS4
+
+(50)
+
+is the sum of the torques that the driving forces generate
+about the articulation joint axis. Not only the direct effect
+of the respective driving force on MSteer must be taken into
+account, but also the indirect effect caused by lateral axis
+force components (Fyf , Fyr ) resulting from the driving force.
+For derivation, the static free body diagram shown in Fig. 14
+is considered. It does not contain any dynamic forces or
+moments, since only the effect of the forces that can be
+directly influenced by the controller output is relevant here.
+All other influences causing the pivoting of the vehicle sections, such as the dynamic lateral wheel forces or inertial
+forces, act as counterforces, that the controller is supposed
+to compensate for by specifying MSteer .
+Accordingly MSteer results from the free body diagram as
+1
+
+MSteer = −FD1 + FD2 + FD3 − FD4 s
+2
+
+
++ Fyf + Fyr l
+
+(51)
+201
+
+SEIFFER et al.: CONSTRAINED CONTROL ALLOCATION IMPROVING FAULT TOLERANCE
+
+ACKNOWLEDGMENT
+
+Many thanks to Luca Wahl and Clemens Brauch for their
+contribution in modifying and commissioning the demonstrator vehicle and in performing the simulation and vehicle
+test runs. The authors acknowledge support by the KITPublication Fund of the Karlsruhe Institute of Technology.
+REFERENCES
+
+FIGURE 14. Static free body diagram for derivation of lateral axis forces Fyf , Fyr
+induced by driving forces FD1 –FD4 .
+
+The four equilibria of forces, one in x and one in y direction
+per vehicle section can be found as
+0 = Fx1 + Fx2 − Rx
+0 = Fyf − Ry
+
+
+0 = Rx + cos(δ) Fx3 + Fx4 + sin(δ)Fyr
+
+
+0 = Ry + cos(δ)Fyr − sin(δ) Fx3 + Fx4
+
+(52)
+
+By resolving for Fyf + Fyr we get
+ 
+
+
+1
+(53)
+Fyf + Fyr = −FD1 − FD2 + FD3 + FD4 tan δ
+2
+Finally, with (51) MSteer becomes
+
+ 
+1
+1
+s + l tan δ
+MSteer = −FD1
+2
+2
+
+l
+1
+ 
+1
+1
+s − l tan δ
+2
+2
+
+
+
+
+2
+ 
+1
+1
+s + l tan δ
+2
+2
+
+
+
+
+3
+l 
+1
+1
+s − l tan δ
+2
+2
+
+
++ FD2
+
++ FD3
+
+− FD4
+
+rS =rS
+
+
+
+rS =rSr
+
+rS =rS
+
+(54)
+
+rS4 =rSr
+
+It can be seen that the pseudo steering lever arms are
+identical on one side of the vehicle each. On the inside of
+the curve, they increase as the articulation angle increases,
+while on the outside of the curve they decrease to the same
+extent. For the dimensions of the demonstration vehicle, they
+become 0.165 m for δ = 0◦ and change to 0.286 m and
+0.044 m, respectively, at the maximum articulation angle.
+202
+
+[1] A. Jentzsch, J. Janda, G. Xu, P. Wiedenhoff, and A. Girisch. “The
+future of commercial vehicles: How new technologies are transforming
+the industry.” Accessed: Mar. 3, 2021. [Online]. Available: https://
+www.bcg.com/de-de/publications/2019/future-commercial-vehicles
+[2] R.
+Budich,
+“Untersuchungen
+zum
+Einsatz
+von
+Elektrokleinkehrmaschinen als Beitrag zur Dekarbonisierung des
+kommunalen Verkehrs,” Ph.D. dissertation, Technische Universität
+Dresden, Fakultät Verkehrswissenschaften, Dresden, Germany, 2019.
+[3] J. Jeon et al., “Autonomous robotic street sweeping: Initial attempt for
+curbside sweeping,” in Proc. IEEE Int. Conf. Robot. Automat., 2017,
+pp. 72–73.
+[4] C. Altafini, “Why to use an articulated vehicle in underground mining
+operations?” in Proc. IEEE Int. Conf. Robot. Automat., May 1999,
+pp. 3020–3025.
+[5] T. Nayl, “On autonomous articulated vehicles,” Ph.D. dissertation,
+Dept. Comput. Sci., Elect. Space Eng., Luleå Univ. Technol., Luleå,
+Sweden, 2015.
+[6] A. Pruckner, R. Stroph, and P. Pfeffer, “Drive-by-wire,” in Handbook
+of Intelligent Vehicles, A. Eskandarian, Ed. London, U.K.: Springer,
+2012, pp. 235–282.
+[7] J. Becker, M. Helmle, and O. Pink, “System architecture and
+safety requirements for automated driving,” in Automated Driving,
+D. Watzenig and M. Horn, Eds. Cham, Switzerland: Springer Int.,
+2017, pp. 265–283.
+[8] C. Huang, F. Naghdy, H. Du, and H. Huang, “Fault tolerant steer-bywire systems: An overview,” Annu. Rev. Control, vol. 47, pp. 98–111,
+Apr. 2019.
+[9] P. J. Bergmiller, Towards Functional Safety in Drive-by-Wire Vehicles.
+Cham, Switzerland: Springer Int., 2015.
+[10] J. Wadephul, D. Engelmann, P. Kautzmann, and J. Römer,
+“Development of a novel steering concept for articulated vehicles,”
+ATZ Offhighw. Worldwide, vol. 11, no. 4, pp. 54–61, 2018.
+[11] Y. He, A. Khajepour, J. McPhee, and X. Wang, “Dynamic modelling
+and stability analysis of articulated frame steer vehicles,” Int. J. Heavy
+Veh. Syst., vol. 12, no. 1, pp. 28–59, 2005.
+[12] J. Chun, W. Ping, S. Yanhua, and J. B. Michael, “Differential control
+strategy based on an equal slip rate for an all-wheel electricdrive
+underground articulated dumping truck,” J. Eng. Sci. Technol. Rev.,
+vol. 7, no. 4, pp. 163–168, 2014.
+[13] T. Xu, X. Ji, C. Fei, Y. Liu, and Y. Shen, “Research on assist-steering
+method for distributed-drive articulated heavy vehicle based on the
+co-simulation model,” SAE Int., Warrendale, PA, USA, 2020.
+[14] Road Vehicles—Lateral Transient Response Test Methods—Open-Loop
+Test Methods, Int. Org. Standard., London, U.K., ISO 7401:2011,
+2011.
+[15] B. Siciliano and O. Khatib, Springer Handbook of Robotics. Cham,
+Switzerland: Springer Int., 2016.
+[16] M. W. Oppenheimer, D. B. Doman, and M. A. Bolender, “Control
+allocation for over-actuated systems,” in Proc. 14th Mediterranean
+Conf. Control Automat., 2006, pp. 1–6.
+[17] O. Härkegård, “Efficient active set algorithms for solving constrained
+least squares problems in aircraft control allocation,” in Proc. 41st
+IEEE Conf. Decis. Control, 2002, pp. 1295–1300.
+[18] MathWorks. “Solve systems of linear equations ax = B for x MATLAB mldivide \.” Accessed: Mar. 21, 2022. [Online]. Available:
+https://www.mathworks.com/help/matlab/ref/mldivide.html
+[19] A. Seiffer, C. Brauch, N. Schmidt, and C. Haschke. “Failurecompensating control method for a four-wheel independently driven
+articulated vehicle.” Feb.–May 2022. [Online]. Available: https://doi.
+org/10.5445/IR/1000143340
+[20] Colliseum. “Lenkübersetzung-angaben der hersteller.” Accessed:
+Nov. 6, 2022. [Online]. Available: https://www.colliseum.eu/wiki/
+index.php?title=Lenk%C3%BCbersetzung&oldid=30369
+VOLUME 4, 2023
+
+ALEXANDER SEIFFER received the M.Sc. degree
+
+in mechanical engineering from the Karlsruhe
+Institute of Technology (KIT), Karlsruhe,
+Germany, in 2015, where he is currently pursuing
+the Doctoral degree with the Working Group
+Automated Mobility, SHARE at KIT (Schaeffler
+Hub for Advanced Research at Karlsruhe
+Institute of Technology) under the supervision
+of F. Gauterin. Since 2015, he has been working
+with Schaeffler Technologies AG & Co. KG.
+His research interests include automated driving,
+technical reliability and resilience, vehicle dynamics, and over-actuated
+vehicles.
+
+MICHAEL FREY received the Diploma and
+Doctoral degrees in mechanical engineering from
+the University of Karlsruhe in 1993 and 2004,
+respectively. He is the Manager of the Research
+Group Automation and the Research Group
+Suspension and Propulsion Systems, Institute of
+Vehicle System Technology. His research interests
+are autonomous driving, driver assistance systems,
+operational strategies, suspension systems, vehicle dynamics, as well as vehicle modeling and
+optimization.
+
+FRANK GAUTERIN received the Diploma degree in
+
+LUKAS SCHÜTZ received the M.Sc. degree in
+
+mechanical engineering from the Karlsruhe
+Institute of Technology (KIT), Karlsruhe,
+Germany, in 2019. He worked as a working
+student with the Working Group Automated
+Mobility, SHARE at KIT (Schaeffler Hub for
+Advanced Research at Karlsruhe Institute of
+Technology) from 2017 to 2019. Since 2019, he
+has been working with Knorr-Bremse Systeme
+für Nutzfahrzeuge GmbH as a Engineer of
+Vehicle Dynamics Control and Redundancy for
+Automated Driving.
+
+VOLUME 4, 2023
+
+physics from the University of Münster, Germany,
+in 1989, and the Dr.rer.nat. (Ph.D.) degree from the
+University of Oldenburg, Germany, in 1994. From
+1989 to 2000, he worked as an Acoustics Engineer
+and from 2000 to 2006 as the Director of the Noise
+Vibration and Harshness (NVH) Engineering
+Profit Centre, Continental AG, Hanover, Germany,
+with locations in Germany, USA, and Malaysia.
+Since 2006, he has been a Full Professor of
+Vehicle Technology with the Karlsruhe Institute of
+Technology (KIT), Germany, the Head of the Institute of Vehicle System
+Technology, and a Scientific Spokesperson, KIT Centre Mobility Systems.
+His research interests are vehicle conception, control, suspension and drive
+systems, tire road interaction, and NVH.
+
+203
+
+
