@@ -26,10 +26,11 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'mpc_node = tracter_control.mpc_node:main',
-            'gwo_tuner_node = tracter_control.gwo_tuner_node:main',
-            'path_publisher_node = tracter_control.path_publisher:main',
+            'mpc_node = simulation.mpc_node:main',
+            'gwo_tuner_node = simulation.gwo_tuner_node:main',
+            'path_publisher_node = simulation.path_publisher:main',
             'vehicle_node = tracter_control.vehicle_node:main',
+            'tracter_control_node = tracter_control.tracter_control:main',
         ],
     },
 )
