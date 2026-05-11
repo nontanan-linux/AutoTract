@@ -74,6 +74,7 @@ class PathPublisher(Node):
             msg.points.append(p)
         return msg
 
+
     def timer_callback(self):
         now = self.get_clock().now().to_msg()
         self.path_msg.header.stamp = now

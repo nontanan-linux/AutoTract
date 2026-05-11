@@ -29,3 +29,6 @@ ENV/
 *.swp
 *.bak
 *~
+tracter_ws/src/tracter_control
+tracter_ws/src/tracter_odometer
+docs/tracter_trailer

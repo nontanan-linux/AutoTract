@@ -28,6 +28,15 @@ cd tracter_ws/src/tracter_trailer
 python3 simulate.py
 ```
 
+To run the NMPC control simulation (ROS 2):
+```bash
+source tracter.env
+cd docs/mpc_controller/simulation
+python3 nmpc_control.py
+```
+
+For detailed NMPC documentation and execution guides, see [docs/mpc_controller/nmpc.md](docs/mpc_controller/nmpc.md).
+
 To view the research methodology:
 Check `docs/Research/Research_Proposal_Thai_Nontanan.md` for the latest structured methodology for NMHE, NMPC, and GWO.
 

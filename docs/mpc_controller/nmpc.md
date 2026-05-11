@@ -1627,3 +1627,63 @@ Solve time: **~0.12 ms** (Warm-started, $N=5$)
 | ลด Overshoot ที่โค้ง | เพิ่ม $w_{e_\theta}$, เพิ่ม $w_{\Delta\delta}$ |
 
 > **แนวทางการจูนเบื้องต้น:** เริ่มด้วยการให้ $Q_e = \text{diag}(10, 5, 1)$, $R = \text{diag}(0.1, 0.1)$, $R_d = \text{diag}(1, 1)$ แล้วค่อยๆ ปรับจาก Simulation ก่อน Deploy บนรถจริง
+
+---
+
+## 5. Implementation & Execution
+
+ในงานวิจัยนี้ ตัวควบคุม NMPC ถูก Implement โดยใช้ภาษา **Python** ร่วมกับไลบรารี **CasADi** และตัวแก้ปัญหา **IPOPT** โดยทำงานเป็นโหนดในระบบ **ROS 2**
+
+### 5.1 สิ่งที่ต้องติดตั้ง (Prerequisites)
+
+เพื่อให้ตัวควบคุมทำงานได้ จำเป็นต้องติดตั้งไลบรารีดังนี้:
+
+```bash
+pip install casadi numpy pyyaml
+```
+
+และต้องมีการติดตั้ง **ROS 2 (Humble หรือ Foxy)** พร้อมกับข้อความมาตรฐานของ Autoware (`autoware_auto_msgs`)
+
+### 5.2 โครงสร้างไฟล์ที่เกี่ยวข้อง
+
+* **Script:** `docs/mpc_controller/simulation/nmpc_control.py` (โหนดหลัก)
+* **Config:** `tracter_ws/src/tracter_control/config/mpc_config.yaml` (ไฟล์ตั้งค่า Weight และ Constraints)
+
+### 5.3 วิธีการรัน (How to Run)
+
+เพื่อให้ระบบทำงานได้อย่างสมบูรณ์ ต้องเปิด Terminal และรันคำสั่งตามลำดับดังนี้:
+
+1.  **Terminal 1: Vehicle Simulator**
+    ```bash
+    python3 docs/mpc_controller/vehicle_node.py
+    ```
+
+2.  **Terminal 2: Path Publisher**
+    ```bash
+    python3 docs/mpc_controller/path_publisher.py
+    ```
+
+3.  **Terminal 3: NMPC Controller**
+    ```bash
+    python3 docs/mpc_controller/simulation/nmpc_control.py
+    ```
+
+4.  **Terminal 4: Rviz**
+    ```bash
+    rviz2 -d docs/mpc_controller/simulation/test_mpc.rviz
+    ```
+
+### 5.4 รายละเอียดการทำงานล่าสุด (Latest Improvements)
+
+*   **Real-time Tracking:** ตัวควบคุมจะค้นหาจุดที่ใกล้ที่สุดบนเส้นทางใหม่ทุกๆ Loop (10Hz) เพื่อป้องกันการ "หลงทาง" เมื่ออยู่ห่างจากจุดเริ่มต้น
+*   **Topic Interface:**
+    *   **Subscribe:** `/odom` (nav_msgs/Odometry), `/mpc/reference_traj_data` (autoware_auto_planning_msgs/Trajectory)
+    *   **Publish:** `/mpc/control_cmd` (autoware_auto_control_msgs/AckermannControlCommand)
+*   **Rviz Visualization:** สามารถใช้ Autoware Rviz Plugin เพื่อแสดงผล Topic `/mpc/reference_traj` ได้โดยตรงโดยไม่ต้องแปลงเป็น Path มาตรฐาน
+
+### 5.5 การปรับจูน (Tuning)
+
+หากรถวิ่งส่ายหรือเข้าโค้งไม่แม่นยำ สามารถปรับได้ที่ `tracter_ws/src/tracter_control/config/mpc_config.yaml`:
+*   **lat_error / heading_error:** เพิ่มค่าน้ำหนักเพื่อให้รถเกาะเส้นมากขึ้น
+*   **velocity_error:** ปรับจูนเพื่อให้รถทำความเร็วได้ตามเป้าหมาย
+*   **steer_rate / steer_acc:** ปรับเพื่อให้การหักเลี้ยวและการเร่งนุ่มนวลขึ้น
