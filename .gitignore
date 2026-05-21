@@ -3,6 +3,9 @@ build/
 install/
 log/
 
+autoware/
+tracter_ws/src/
+
 # Environment files
 .env
 

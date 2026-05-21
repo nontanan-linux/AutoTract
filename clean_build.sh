@@ -3,14 +3,17 @@
 # Remove build, install, and log directories
 rm -rf build install log
 
+ccache -C
+
 # Perform a clean build with colcon
 colcon build --symlink-install \
+    --parallel-workers 1 \
     --cmake-args \
-    ' -DCMAKE_BUILD_TYPE=Release' \
-    ' -DCMAKE_EXPORT_COMPILE_COMMANDS=1' \
-    ' -GNinja' \
-    ' -DCMAKE_CXX_COMPILER_LAUNCHER=ccache' \
-    ' -DCMAKE_C_COMPILER_LAUNCHER=ccache' \
-    ' -DCMAKE_CXX_FLAGS=-fdiagnostics-color' \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_EXPORT_COMPILE_COMMANDS=1 \
+    -GNinja \
+    -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+    -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+    -DCMAKE_CXX_FLAGS="-Wno-error=maybe-uninitialized -Wno-error=uninitialized" \
     --event-handlers console_cohesion+ \
     "$@"

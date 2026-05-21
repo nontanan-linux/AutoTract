@@ -1,7 +1,7 @@
 # ข้อเสนอโครงการวิจัย: ระบบควบคุมการติดตามเส้นทางสำหรับรถลากจูงหลายพ่วง
 
 **ชื่อหัวข้อ**: การพัฒนาระบบควบคุมการติดตามเส้นทางแบบปรับตัวสำหรับรถลากจูงอัตโนมัติหลายพ่วง โดยใช้การหาค่าเหมาะที่สุดแบบเมตาเฮิวริสติกในระบบจำลอง CARLA
-(Development of an Adaptive Path Tracking Control System for a Multi-Trailer Autonomous Tow Truck using Metaheuristic Optimization in CARLA Simulator)
+( Development of Adaptive Path Tracking Control System for a Multi-Trailer Autonomous Tow Truck using Data-Driven Model Predictive Control (MPC))
 
 **ชื่อนักศึกษา**: นนทนันธ์ สมมาตร์
 
