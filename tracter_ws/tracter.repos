@@ -3,3 +3,12 @@ repositories:
     type: git
     url: https://github.com/nontanan-linux/tracter_odometer.git
     version: master
+  tracter_control:
+    type: git
+    url: https://github.com/nontanan-linux/tracter_control.git
+    version: master
+  autoware_auto_msgs:
+    type: git
+    url: https://github.com/tier4/autoware_auto_msgs.git
+    version: master
+ 
