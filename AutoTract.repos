@@ -1,9 +1,9 @@
 repositories:
-  tracter_ws/src/tracter_control:
+  tracter_ws/src/control/tracter_control:
     type: git
     url: https://github.com/nontanan-linux/tracter_control.git # Assuming similar pattern
     version: main
-  tracter_ws/src/tracter_odometer:
+  tracter_ws/src/vehicle/tracter_odometer:
     type: git
     url: https://github.com/nontanan-linux/tracter_odometer.git
     version: main

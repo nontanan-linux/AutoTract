@@ -1,14 +1,33 @@
 repositories:
-  tracter_odometer:
+  control/tracter_control:
+    type: git
+    url: https://github.com/nontanan-linux/tracter_control.git
+    version: main
+  external/autoware_auto_msgs:
+    type: git
+    url: https://github.com/tier4/autoware_auto_msgs.git
+    version: tier4/main
+  external/ros-bridge:
+    type: git
+    url: https://github.com/TUMFTM/ros-bridge.git
+    version: master
+  external/astuff_sensor_msgs:
+    type: git
+    url: https://github.com/astuff/astuff_sensor_msgs.git
+    version: master
+  external/carla_autoware_bridge:
+    type: git
+    url: https://github.com/TUMFTM/Carla-Autoware-Bridge.git
+    version: main
+  testing/towtruck_testing:
+    type: git
+    url: https://github.com/nontanan-linux/towtruck_testing.git
+    version: main
+  vehicle/tracter_odometer:
     type: git
     url: https://github.com/nontanan-linux/tracter_odometer.git
     version: master
-  tracter_control:
+  launcher/tracter_launch:
     type: git
-    url: https://github.com/nontanan-linux/tracter_control.git
-    version: master
-  autoware_auto_msgs:
-    type: git
-    url: https://github.com/tier4/autoware_auto_msgs.git
-    version: master
- 
+    url: https://github.com/nontanan-linux/tracter_launch.git
+    version: main

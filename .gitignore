@@ -21,7 +21,7 @@ ENV/
 
 # Repository management
 # (Exclude sub-repos if you use vcs or git submodules separately)
-# tracter_ws/src/tracter_control/
+# tracter_ws/src/control/tracter_control/
 
 # IDEs
 .vscode/
@@ -32,6 +32,6 @@ ENV/
 *.swp
 *.bak
 *~
-tracter_ws/src/tracter_control/
-tracter_ws/src/tracter_odometer/
+tracter_ws/src/control/tracter_control/
+tracter_ws/src/vehicle/tracter_odometer/
 docs/tracter_trailer/
