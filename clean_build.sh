@@ -1,6 +1,8 @@
+
 #!/bin/bash
 
 # Remove build, install, and log directories
+
 rm -rf build install log
 
 ccache -C
@@ -14,6 +16,7 @@ colcon build --symlink-install \
     -GNinja \
     -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
     -DCMAKE_C_COMPILER_LAUNCHER=ccache \
-    -DCMAKE_CXX_FLAGS="-Wno-error=maybe-uninitialized -Wno-error=uninitialized" \
+    -DCMAKE_CXX_FLAGS="-Wno-error=maybe-uninitialized -Wno-error=uninitialized -Wno-error=narrowing"\
     --event-handlers console_cohesion+ \
+    --packages-skip autoware_tensorrt_bevformer \
     "$@"

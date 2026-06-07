@@ -5,6 +5,7 @@ log/
 
 autoware/
 tracter_ws/src/
+carla/
 
 # Environment files
 .env
@@ -32,6 +33,7 @@ ENV/
 *.swp
 *.bak
 *~
+*_log.txt
 tracter_ws/src/control/tracter_control/
 tracter_ws/src/vehicle/tracter_odometer/
 docs/tracter_trailer/
