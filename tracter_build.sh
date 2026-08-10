@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Source environment setup if exists
+if [ -f "$(dirname "$0")/tracter.env" ]; then
+    source "$(dirname "$0")/tracter.env"
+fi
+
 # 1. ค้นหาแพ็กเกจฝั่งรถแทรกเตอร์ (ขยายผลการค้นหาให้ลึกขึ้นโดยการปล่อยพาร์ทอิสระ)
 PKGS=$(colcon list --base-paths tracter_ws --names-only)
 
@@ -22,7 +27,6 @@ echo "Building tracter packages with deep path scan..."
 colcon build --symlink-install \
     --packages-select $PKGS \
     --parallel-workers 1 \
-    # --packages-up-to pcl_recorder \
     --cmake-args \
     ' -DCMAKE_BUILD_TYPE=Release' \
     ' -DCMAKE_EXPORT_COMPILE_COMMANDS=1' \
@@ -31,5 +35,4 @@ colcon build --symlink-install \
     ' -DCMAKE_C_COMPILER_LAUNCHER=ccache' \
     ' -DCMAKE_CXX_FLAGS=-fdiagnostics-color' \
     --event-handlers console_cohesion+ \
-    # --packages-up-to pcl_recorder
     "$@"

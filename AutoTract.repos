@@ -6,8 +6,8 @@ repositories:
   tracter_ws/src/vehicle/tracter_odometer:
     type: git
     url: https://github.com/nontanan-linux/tracter_odometer.git
-    version: main
+    version: master
   docs/tracter_trailer:
     type: git
     url: https://github.com/nontanan-linux/tracter_trailer.git # Assuming similar pattern
-    version: main
+    version: master

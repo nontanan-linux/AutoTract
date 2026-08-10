@@ -1,9 +1,13 @@
-
 #!/bin/bash
+
+# Source environment setup if exists
+if [ -f "$(dirname "$0")/tracter.env" ]; then
+    source "$(dirname "$0")/tracter.env"
+fi
 
 # Remove build, install, and log directories
 
-rm -rf build install log
+#rm -rf build install log
 
 ccache -C
 
